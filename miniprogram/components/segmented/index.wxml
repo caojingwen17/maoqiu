@@ -1,0 +1,8 @@
+<view class="seg">
+  <view class="seg-slider" style="{{sliderStyle}}"></view>
+  <view wx:for="{{items}}" wx:key="index"
+    class="seg-item {{index === current ? 'active' : ''}}"
+    data-index="{{index}}" bindtap="onTap">
+    <text class="seg-text">{{item}}</text>
+  </view>
+</view>

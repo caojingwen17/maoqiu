@@ -1,0 +1,82 @@
+<!--pages/expense/index.wxml-->
+<view class="page">
+  <view class="large-title">账单</view>
+
+  <skeleton type="card" wx:if="{{loading}}" />
+
+  <view wx:elif="{{loadFail}}" class="card">
+    <empty-state image="chart" title="账单加载失败" desc="网络开小差了，请重试" btnText="重试" bindbtnTap="onRetry" />
+  </view>
+
+  <block wx:else>
+    <!-- 月度总览卡 -->
+    <view class="card">
+      <view class="ov-top">
+        <view class="ov-left">
+          <view class="ov-label">{{monthLabel}}</view>
+          <view class="ov-total t-num {{overBudget ? 'over' : ''}}">
+            ¥{{totalInt}}<text class="ov-dec">{{totalDec}}</text>
+          </view>
+          <view wx:if="{{overBudget}}" class="ov-over">已超预算 {{overPct}}%</view>
+        </view>
+        <view class="pet-pill" bindtap="onOpenPicker">{{petName}} ▾</view>
+      </view>
+      <block wx:if="{{hasBudget}}">
+        <view class="budget-bar">
+          <view class="budget-fill" style="width: {{barPct}}%;"></view>
+        </view>
+        <view class="budget-row">
+          <text>{{budgetText}}</text>
+          <text class="budget-used">已用 {{usedPct}}%</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 账单列表：按日分组 -->
+    <view wx:if="{{empty}}" class="card empty-card">
+      <empty-state image="chart" title="还没有账单" desc="点右下角 + 记一笔" />
+    </view>
+
+    <view class="card list-card" wx:for="{{groups}}" wx:key="key">
+      <view class="group-title">{{item.title}}</view>
+      <swipe-cell
+        wx:for="{{item.items}}"
+        wx:for-item="row"
+        wx:key="id"
+        data-id="{{row.id}}"
+        actions="{{[{key: 'del', text: '删除', icon: 'trash', theme: 'danger'}]}}"
+        bindaction="onSwipeAction"
+      >
+        <view class="row">
+          <record-icon type="{{row.icon}}" size="56rpx" />
+          <view class="row-grow">
+            <view class="row-t">{{row.title}}</view>
+            <view class="row-s">{{row.sub}}</view>
+          </view>
+          <view class="row-amt t-num">{{row.amountText}}</view>
+        </view>
+      </swipe-cell>
+    </view>
+
+    <view wx:if="{{loadingMore}}" class="more-tip">加载中…</view>
+    <view wx:elif="{{noMore && groups.length}}" class="more-tip">没有更多了</view>
+  </block>
+</view>
+
+<!-- 宠物筛选 sheet -->
+<sheet visible="{{pickerVisible}}" title="按宠物筛选" height="half" bindclose="onClosePicker">
+  <cell-group>
+    <cell
+      wx:for="{{petOptions}}"
+      wx:key="_id"
+      title="{{item.name}}"
+      value="{{petId === item._id ? '当前' : ''}}"
+      data-id="{{item._id}}"
+      bindtap="onPickPet"
+    />
+  </cell-group>
+</sheet>
+
+<fab bindtap="onFab" style="position: fixed; right: 32rpx; bottom: calc(env(safe-area-inset-bottom) + 48rpx); z-index: 100;" />
+
+<toast id="toast" />

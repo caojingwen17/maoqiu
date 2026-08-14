@@ -1,0 +1,64 @@
+/* toast —— §7.8 顶部毛玻璃胶囊 */
+.toast {
+  position: fixed;
+  top: calc(constant(safe-area-inset-top) + 16rpx);
+  top: calc(env(safe-area-inset-top) + 16rpx);
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  max-width: 640rpx;
+  padding: 20rpx 36rpx;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  background: rgba(250, 246, 239, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-elevated);
+  transform: translate(-50%, -160%);
+  opacity: 0;
+  transition: transform 500ms var(--spring), opacity 200ms var(--fade);
+}
+
+@media (prefers-color-scheme: dark) {
+  .toast { background: rgba(14, 14, 13, 0.78); }
+}
+
+.toast.in {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.toast.out {
+  transform: translate(-50%, -160%);
+  opacity: 0;
+  transition: transform 300ms var(--snap), opacity 200ms var(--fade);
+}
+
+.toast-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  animation: toast-icon-in 300ms var(--fade);
+}
+
+@keyframes toast-icon-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.type-success { background: var(--success); }
+.type-fail { background: var(--danger); }
+
+.toast-text {
+  font-size: 28rpx;
+  line-height: 1.35;
+  color: var(--text-primary);
+}

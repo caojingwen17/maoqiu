@@ -1,0 +1,36 @@
+/* pet-avatar —— 宠物头像 */
+.pa {
+  overflow: hidden;
+  background: var(--bg-fill);
+  flex-shrink: 0;
+}
+
+.pa.square { border-radius: var(--r-s); }
+.pa.circle { border-radius: 999rpx; }
+
+.pa-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 无头像：物种线性剪影占位 */
+.pa-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pa-species {
+  width: 56%;
+  height: 56%;
+  background: var(--text-tertiary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}

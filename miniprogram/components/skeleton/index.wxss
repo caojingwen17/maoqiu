@@ -1,0 +1,93 @@
+/* skeleton —— §7.2 骨架屏 + shimmer 高光带 */
+.sk { display: block; }
+
+.sk-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  padding: 28rpx 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.sk-row { display: flex; align-items: center; }
+.sk-col { flex: 1; margin-left: 24rpx; }
+.sk-gap { margin-top: 24rpx; }
+
+.sk-block { background: var(--bg-fill); }
+
+.sk-avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: var(--r-s);
+  flex-shrink: 0;
+}
+
+.sk-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.sk-line {
+  height: 28rpx;
+  border-radius: 8rpx;
+}
+
+.sk-line-sm { height: 22rpx; margin-top: 14rpx; }
+
+.sk-list-row { padding: 22rpx 0; }
+.sk-list-row:first-child { padding-top: 4rpx; }
+.sk-list-row:last-child { padding-bottom: 4rpx; }
+
+/* 行间 0.5px hairline */
+.sk-hairline { position: relative; }
+.sk-hairline::after {
+  content: '';
+  position: absolute;
+  left: 80rpx;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: bottom;
+}
+
+/* home 布局 */
+.sk-banner-row { margin-top: 28rpx; justify-content: space-between; }
+.sk-banner-cell { width: 28%; height: 56rpx; }
+
+.sk-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.sk-grid-card {
+  width: 47.5%;
+  box-sizing: border-box;
+}
+
+/* shimmer：120rpx 斜向高光带，1.4s 一轮（循环动画，不属 §6 过渡曲线约束） */
+.sk-shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -160rpx;
+  width: 120rpx;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: sk-shimmer 1.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sk-shimmer {
+  to { transform: translateX(110vw); }
+}
+
+/* 高光带无 token，深色模式透明度降到 0.08（§7.2 允许的例外） */
+@media (prefers-color-scheme: dark) {
+  .sk-shine {
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  }
+}

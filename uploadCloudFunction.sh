@@ -1,0 +1,1 @@
+${installPath} cloud functions deploy --e ${envId} --n pawlog --r --project ${projectPath}

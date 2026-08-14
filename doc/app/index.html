@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毛球档案袋 · 可交互 UI 原型</title>
+<style>
+:root{
+  --bg:#FAF6EF; --card:#FFFFFF;
+  --fill:rgba(70,55,30,.045); --fill-deep:rgba(70,55,30,.085);
+  --text:#2C2620; --t2:#7E7264; --t3:#B9AE9E; --line:rgba(70,55,30,.08);
+  --primary:#3E362C; --primary-pressed:#322B22; --primary-tint:rgba(62,54,44,.06);
+  --pop:#C08A4E; --pop-deep:#9C6B33; --pop-tint:rgba(192,138,78,.10);
+  --success:#34A05C; --danger:#C24E3A; --info:#4A7FC7;
+  --spring:cubic-bezier(.25,.1,.25,1); --snap:cubic-bezier(.2,.9,.25,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;user-select:none;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:#EDEAE4;color:#2C2620;min-height:100vh}
+
+.hero{text-align:center;padding:72px 24px 12px}
+.hero h1{font-size:36px;font-weight:700;letter-spacing:-.5px}
+.hero .sub{margin-top:14px;font-size:15px;color:#7E7264;line-height:1.8}
+.hero .meta{display:inline-flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.hero .tag{padding:7px 16px;background:#fff;border-radius:999px;font-size:12px;font-weight:600;color:#7E7264;box-shadow:0 2px 10px rgba(62,54,44,.06)}
+.hero .tag b{color:#3E362C}
+.hero .cta{display:inline-block;margin-top:22px;background:#3E362C;color:#FAF6EF;padding:13px 30px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:transform .2s var(--snap)}
+.hero .cta:active{transform:scale(.97)}
+.section-title{max-width:1560px;margin:52px auto 0;padding:0 40px;font-size:22px;font-weight:700;display:flex;align-items:center;gap:14px}
+.section-title::after{content:'';flex:1;height:1px;background:rgba(70,55,30,.1)}
+.section-title span{font-size:13px;font-weight:400;color:#7E7264}
+.gallery{max-width:1560px;margin:0 auto;padding:32px 40px 60px;display:flex;flex-wrap:wrap;gap:48px}
+.item{width:340px;cursor:pointer}
+.item .label{margin-top:20px}
+.item .label h3{font-size:16px;font-weight:700}
+.item .label p{margin-top:5px;font-size:12.5px;color:#7E7264;line-height:1.65}
+.phone-hint{position:absolute;inset:0;border-radius:48px;background:rgba(30,25,20,.4);opacity:0;transition:opacity .25s;display:flex;align-items:center;justify-content:center;z-index:7}
+.item:hover .phone-hint{opacity:1}
+.phone-hint span{background:#FAF6EF;color:#3E362C;font-size:14px;font-weight:600;padding:10px 22px;border-radius:999px}
+
+/* ===== 手机壳（展厅 + 模拟器共用） ===== */
+.phone{width:340px;height:700px;border-radius:48px;background:var(--bg);position:relative;overflow:hidden;
+  box-shadow:0 24px 60px rgba(62,54,44,.18),0 0 0 10px #26211b,0 0 0 12px #453d33;
+  display:flex;flex-direction:column;font-size:14px}
+
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 28px 4px;font-size:12.5px;font-weight:600;color:var(--text);flex:none}
+.sb .ic{display:flex;gap:5px;align-items:center}
+.sb .ic i{display:block;background:var(--text);border-radius:2px}
+.sig{width:15px;height:10px;clip-path:polygon(0 100%,25% 100%,25% 60%,50% 60%,50% 35%,75% 35%,75% 10%,100% 10%,100% 100%)}
+.bat{width:21px;height:10px;border-radius:3px}
+
+.nav{flex:none;padding:8px 16px 10px;display:flex;align-items:center;gap:8px;position:relative;min-height:44px}
+.nav .back{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer;border-radius:8px;transition:background .15s}
+.nav .back:active{background:var(--fill-deep)}
+.nav .nt{position:absolute;left:0;right:0;text-align:center;font-size:15px;font-weight:600;color:var(--text);pointer-events:none}
+.nav .act{margin-left:auto;font-size:14px;font-weight:600;color:var(--pop-deep);cursor:pointer;padding:6px 4px}
+.large-title{padding:6px 20px 10px;font-size:27px;font-weight:700;letter-spacing:-.5px;color:var(--text);flex:none}
+
+.body{flex:1;overflow:hidden;padding:4px 16px 12px;display:flex;flex-direction:column;gap:12px}
+
+.crd{background:var(--card);border-radius:14px;padding:14px 16px}
+.crd-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.crd-h b{font-size:14px;font-weight:600}
+.crd-h span{font-size:11px;color:var(--t2)}
+.hl{height:1px;background:var(--line);margin:10px -16px 10px 60px}
+.hl-full{height:1px;background:var(--line);margin:10px -16px}
+.press{transition:background .15s;border-radius:14px;cursor:pointer}
+.press:active{background:var(--fill)}
+
+.row{display:flex;align-items:center;gap:12px;padding:9px 0;min-height:44px}
+.row .grow{flex:1;min-width:0}
+.row .t{font-size:14px;color:var(--text)}
+.row .s{font-size:11px;color:var(--t2);margin-top:2px}
+.row .v{font-size:13px;color:var(--t2);text-align:right;font-variant-numeric:tabular-nums}
+.row .v b{color:var(--text);font-size:15px;font-weight:600}
+.chev{color:var(--t3);flex:none}
+
+.ticon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+.avatar{display:flex;align-items:center;justify-content:center;flex:none;position:relative;overflow:hidden}
+.a1{background:#F3E4D3}.a2{background:#E5E9E2}.a3{background:#EFE3E3}.a4{background:#E2E8EF}
+.a1 svg{color:#B0803B}.a2 svg{color:#6B8F4E}.a3 svg{color:#B85C5C}.a4 svg{color:#4A7FC7}
+
+.pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill.warn{color:var(--pop-deep);background:var(--pop-tint)}
+.pill.danger{color:var(--danger);background:var(--pop-tint)}
+.pill.ok{color:var(--success);background:rgba(52,160,92,.1)}
+.pill.grey{color:var(--t2);background:var(--fill)}
+
+.btn{display:flex;align-items:center;justify-content:center;height:46px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:background .12s,opacity .12s}
+.btn-p{background:var(--primary);color:#FAF6EF}
+.btn-p:active{background:var(--primary-pressed)}
+.btn-s{background:var(--primary-tint);color:var(--primary)}
+.btn-s:active{opacity:.75}
+
+.tabbar{flex:none;display:flex;background:rgba(250,246,239,.85);border-top:1px solid var(--line);padding:8px 4px 20px;backdrop-filter:blur(20px);position:relative;z-index:6}
+.tab{flex:1;text-align:center;color:var(--t3);cursor:pointer;padding:2px 0;border-radius:8px;transition:color .15s}
+.tab svg{display:block;margin:0 auto}
+.tab .lb{font-size:9px;margin-top:2px}
+.tab.on{color:var(--pop)}
+
+.seg{flex:none;display:flex;background:var(--fill);border-radius:10px;padding:2px;margin:0 16px 8px}
+.seg div{flex:1;text-align:center;font-size:12px;padding:6px 0;border-radius:8px;color:var(--t2);font-weight:500;cursor:pointer;transition:all .2s var(--snap)}
+.seg div.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 2px 6px rgba(62,54,44,.08)}
+
+.frow{display:flex;align-items:center;min-height:46px;gap:12px}
+.frow .k{width:76px;font-size:14px;color:var(--text);flex:none}
+.frow .val{flex:1;text-align:right;font-size:14px;color:var(--t2)}
+.frow .val.b{color:var(--text);font-weight:500}
+
+.fab{position:absolute;right:16px;bottom:92px;width:50px;height:50px;border-radius:50%;background:var(--primary);color:#FAF6EF;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(62,54,44,.28);z-index:5;cursor:pointer;
+  transition:transform .25s cubic-bezier(.34,1.4,.64,1)}
+.fab:active{transform:scale(.94)}
+
+.sheet-mask{position:absolute;inset:0;background:rgba(30,25,20,0);z-index:8;transition:background .3s;pointer-events:none}
+.sheet-mask.show{background:rgba(30,25,20,.32);pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-radius:20px 20px 0 0;z-index:9;padding:8px 18px 28px;
+  box-shadow:0 -8px 40px rgba(0,0,0,.12);transform:translateY(105%);transition:transform .5s var(--spring)}
+.sheet.show{transform:translateY(0)}
+.grip{width:36px;height:5px;border-radius:99px;background:var(--t3);margin:6px auto 12px;opacity:.6}
+
+.stat-strip{display:flex;background:var(--card);border-radius:14px;padding:13px 4px}
+.stat-strip .st{flex:1;text-align:center}
+.stat-strip .st+.st{border-left:1px solid var(--line)}
+.stat-strip .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat-strip .v em{font-style:normal;font-size:11px;color:var(--pop-deep)}
+.stat-strip .k{font-size:10px;color:var(--t2);margin-top:3px}
+
+.pet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pet-card{background:var(--card);border-radius:14px;padding:12px 13px;position:relative;cursor:pointer;transition:background .15s}
+.pet-card:active{background:var(--fill)}
+.pet-card .mp{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#FAF6EF;display:flex;align-items:center;justify-content:center;z-index:2;cursor:pointer;transition:transform .2s var(--snap)}
+.pet-card .mp:active{transform:scale(.88)}
+.pet-add{border:1.5px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;min-height:104px;gap:6px;cursor:pointer}
+
+.grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 4px}
+.g9{text-align:center;padding:10px 0 8px;border-radius:12px;cursor:pointer;transition:background .15s}
+.g9:active{background:var(--fill-deep)}
+.g9 .gi{width:46px;height:46px;border-radius:12px;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.g9 .gk{font-size:11px;color:var(--text);margin-top:6px}
+
+.bar{height:6px;border-radius:99px;background:var(--fill);overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;border-radius:99px}
+
+.sw{width:44px;height:26px;border-radius:99px;background:var(--fill-deep);position:relative;flex:none;cursor:pointer;transition:background .3s var(--snap)}
+.sw i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:left .3s var(--snap)}
+.sw.on{background:var(--primary)}
+.sw.on i{left:20px}
+
+.tl{position:relative;padding-left:14px}
+.tl::before{content:'';position:absolute;left:4px;top:8px;bottom:8px;width:1.5px;background:var(--line)}
+.tl-item{position:relative;padding:8px 0 8px 12px}
+.tl-item::before{content:'';position:absolute;left:-13px;top:16px;width:8px;height:8px;border-radius:50%;background:var(--c,#C08A4E);box-shadow:0 0 0 3px var(--bg)}
+.tl-date{font-size:11px;font-weight:600;color:var(--t2);padding:6px 0 2px 0;position:relative}
+.tl-date::before{content:'';position:absolute;left:-13px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--primary)}
+
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{background:var(--card);border-radius:14px;padding:16px 15px}
+.tool .tk{font-size:14px;font-weight:600;margin-top:10px}
+.tool .ts{font-size:10.5px;color:var(--t2);margin-top:3px;line-height:1.5}
+
+.album{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.album div{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.heat{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+.heat i{aspect-ratio:1;border-radius:3px;background:var(--fill)}
+.heat i.l1{background:rgba(192,138,78,.25)}.heat i.l2{background:rgba(192,138,78,.5)}.heat i.l3{background:var(--pop)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.empty{text-align:center;padding:26px 0 20px}
+.empty .et{font-size:14px;font-weight:600;color:var(--text);margin-top:10px}
+.empty .es{font-size:11.5px;color:var(--t2);margin-top:4px}
+.empty .esk{color:#3E362C;opacity:.48;display:flex;justify-content:center}
+.empty .esk svg{display:block}
+.calm{display:flex;gap:12px;align-items:center;padding:4px 2px}
+.calm .esk{color:#3E362C;opacity:.45;flex:none}
+.chart{width:100%;display:block}
+
+/* ============ 模拟器 ============ */
+.sim{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(28,24,20,.55);backdrop-filter:blur(8px)}
+.sim.open{display:flex}
+.sim-close{position:fixed;top:26px;right:32px;color:#FAF6EF;font-size:13px;font-weight:600;background:rgba(255,255,255,.14);padding:9px 20px;border-radius:999px;cursor:pointer;z-index:102}
+.sim-tip{position:fixed;bottom:24px;left:0;right:0;text-align:center;color:rgba(250,246,239,.75);font-size:12.5px;z-index:102;pointer-events:none}
+.sim-stage{transition:transform .5s var(--spring)}
+
+/* 视图栈 push/pop */
+.view{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);
+  transition:transform .5s var(--spring),opacity .4s;z-index:2;overflow:hidden}
+.view.behind{transform:translateX(-28%) scale(.98);opacity:.85;pointer-events:none}
+.view.entering{transform:translateX(100%)}
+.view.leaving{transform:translateX(100%);pointer-events:none}
+.view.scaled .scale-wrap{transform:scale(.96)}
+.scale-wrap{flex:1;display:flex;flex-direction:column;transition:transform .5s var(--spring);transform-origin:center 60%;overflow:hidden}
+
+/* Toast */
+.toast{position:absolute;top:54px;left:50%;transform:translate(-50%,-140%);z-index:50;
+  background:rgba(250,246,239,.92);backdrop-filter:blur(16px);border-radius:999px;padding:9px 18px;
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);
+  box-shadow:0 8px 28px rgba(62,54,44,.18);transition:transform .5s var(--spring);white-space:nowrap}
+.toast.show{transform:translate(-50%,0)}
+.toast .tk-ic{color:var(--success);display:flex}
+
+/* 猫爪加载 */
+.paw-loader{position:absolute;inset:0;background:var(--bg);z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
+.paw-loader svg{width:56px;height:56px;color:var(--primary)}
+.paw-loader .pt{stroke-dasharray:120;stroke-dashoffset:120;animation:trace 1.3s cubic-bezier(.4,0,.2,1) infinite}
+.paw-loader .pt:nth-child(2){animation-delay:.12s}.paw-loader .pt:nth-child(3){animation-delay:.2s}
+.paw-loader .pt:nth-child(4){animation-delay:.28s}.paw-loader .pt:nth-child(5){animation-delay:.36s}
+@keyframes trace{0%{stroke-dashoffset:120;opacity:1}55%{stroke-dashoffset:0;opacity:1}80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+.paw-loader .pk{font-size:11px;color:var(--t3)}
+
+/* 骨架微光 */
+.shimmer{position:relative;overflow:hidden;background:var(--fill);border-radius:10px}
+.shimmer::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%);animation:shim 1.4s infinite;transform:translateX(-100%)}
+@keyframes shim{100%{transform:translateX(100%)}}
+
+/* 筛选 Chip */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;flex:none;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:12px;padding:6px 14px;border-radius:999px;background:var(--fill);color:var(--t2);cursor:pointer;transition:all .2s var(--snap)}
+.chip:active{background:var(--fill-deep)}
+.chip.on{background:var(--primary);color:#FAF6EF;font-weight:600}
+/* 时间线条目可点 */
+.tl-item .press{margin:-4px -8px;padding:6px 8px;border-radius:12px}
+/* 确认弹窗 */
+.modal-mask{position:absolute;inset:0;background:rgba(30,25,20,0);z-index:40;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-mask.show{opacity:1;pointer-events:auto;background:rgba(30,25,20,.4)}
+.modal{width:262px;background:var(--card);border-radius:16px;overflow:hidden;text-align:center;transform:scale(.92);transition:transform .25s var(--snap)}
+.modal-mask.show .modal{transform:scale(1)}
+.modal .mb{padding:20px 18px 16px}
+.modal h4{font-size:15px;font-weight:700}
+.modal p{font-size:12px;color:var(--t2);margin-top:8px;line-height:1.6}
+.modal .mrow{display:flex;border-top:1px solid var(--line)}
+.modal .mrow div{flex:1;padding:12px 0;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.modal .mrow div:active{background:var(--fill)}
+.modal .mrow div+div{border-left:1px solid var(--line)}
+.modal .mdel{color:var(--danger)}
+.footer{text-align:center;padding:16px 24px 70px;font-size:12px;color:#A79C8D;line-height:1.9}
+@media (max-height:860px){.sim-stage{transform:scale(.86)}.sim.open .sim-stage.fit{transform:scale(.86)}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>毛球档案袋 · 可交互 UI 原型</h1>
+  <div class="sub">设计语言 v2.2 · 米白奶油 · iOS 原生质感<br>点击下方任意手机，或直接从首页开始体验完整交互</div>
+  <div class="meta">
+    <div class="tag">页面底 <b>#FAF6EF</b></div>
+    <div class="tag">行动色 <b>#3E362C</b></div>
+    <div class="tag">点缀色 <b>#C08A4E</b></div>
+    <div class="tag">动效 <b>cubic-bezier(.25,.1,.25,1)</b></div>
+  </div>
+  <div class="cta" id="cta-open">▶ 打开交互模拟器</div>
+</div>
+
+<div id="app"></div>
+
+<div class="footer">
+  毛球档案袋 PawLog · 可交互原型 v2.0 · 依据《PRD v1.1》《设计语言 v2.2》产出<br>
+  模拟器内支持：Tab 切换 · 卡片 push 进详情 · FAB 唤起九宫格 · 开关 · Toast · 猫爪加载 · 弹层弹簧动效
+</div>
+
+<div class="sim" id="sim">
+  <div class="sim-close" id="sim-close">✕ 退出模拟器</div>
+  <div class="sim-stage fit" id="sim-stage"></div>
+  <div class="sim-tip">点击卡片进入详情 · 点右下角 + 唤起快捷记录 · 底部 Tab 可切换页面 · 按 ESC 退出</div>
+</div>
+
+<script>
+/* ================= 矢量图标库 ================= */
+const I = (p, s=20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  paw: s => I('<ellipse cx="5.4" cy="8.3" rx="1.65" ry="2.2" transform="rotate(-24 5.4 8.3)"/><ellipse cx="9.2" cy="5" rx="1.6" ry="2.25" transform="rotate(-10 9.2 5)"/><ellipse cx="14.8" cy="5" rx="1.6" ry="2.25" transform="rotate(10 14.8 5)"/><ellipse cx="18.6" cy="8.3" rx="1.65" ry="2.2" transform="rotate(24 18.6 8.3)"/><path d="M12 11.2c3 0 5.6 2.1 5.6 4.6 0 1.9-1.5 3.4-3.4 3.4-1 0-1.5-.4-2.2-.4-.7 0-1.2.4-2.2.4-1.9 0-3.4-1.5-3.4-3.4 0-2.5 2.6-4.6 5.6-4.6z"/>', s),
+  plus: s => I('<path d="M12 5v14M5 12h14"/>', s),
+  chevL: s => I('<path d="M15 6l-6 6 6 6"/>', s),
+  chevR: s => I('<path d="M9 6l6 6-6 6"/>', s),
+  chart: s => I('<path d="M4 4v15.5h16"/><path d="M8 15.5v-4M12.5 15.5v-7M17 15.5v-2.5"/>', s),
+  gear: s => I('<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M18 6l-1.7 1.7M7.7 16.3 6 18M18 18l-1.7-1.7M7.7 7.7 6 6"/>', s),
+  syringe: s => I('<path d="M17.5 3.5l3 3M15 5l4 4M14 6.5L7 13.5l3.5 3.5 7-7.5M7 13.5l-3.5 6 1.5.5M10.5 17l1 3"/>', s),
+  shield: s => I('<path d="M12 3.5l7 2.6v5.2c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2V6.1z"/><path d="M9.5 12l2 2 3.5-3.8"/>', s),
+  scale: s => I('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9a4 4 0 018 0z"/><path d="M12 9V7.2M8 16.5h8"/>', s),
+  coin: s => I('<circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.2 9.7c0-1.2 1.2-2 2.8-2s2.8.8 2.8 2-1 1.7-2.8 2-2.8.8-2.8 2 1.2 2 2.8 2 2.8-.8 2.8-2"/>', s),
+  bowl: s => I('<path d="M4 11h16c0 4-3 7-6.5 7.7v1.8h-3v-1.8C7 18 4 15 4 11z"/><path d="M9 7.5c.8-1.5 2.2-1.5 3 0M13 7.5c.8-1.5 2.2-1.5 3 0"/>', s),
+  pill: s => I('<rect x="4.5" y="9.5" width="15" height="6" rx="3" transform="rotate(-35 12 12.5)"/><path d="M9.8 9.2l4.6 6.6"/>', s),
+  drop: s => I('<path d="M12 3.5s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>', s),
+  flag: s => I('<path d="M6 20.5v-16"/><path d="M6 5h11.5l-2.8 3.8L17.5 12.5H6"/>', s),
+  camera: s => I('<path d="M4 8.5h3.2l1.6-2.5h6.4l1.6 2.5H20v10.5H4z"/><circle cx="12" cy="13" r="3.2"/>', s),
+  box: s => I('<path d="M4 8l8-4 8 4v8.5l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8.5"/>', s),
+  download: s => I('<path d="M12 4v10M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/>', s),
+  bell: s => I('<path d="M6 16.5v-5.8a6 6 0 0112 0v5.8l1.5 2.5h-15z"/><path d="M10 20.5a2.2 2.2 0 004 0"/>', s),
+  search: s => I('<circle cx="10.5" cy="10.5" r="6"/><path d="M15.2 15.2L20 20"/>', s),
+  mapPin: s => I('<path d="M12 21s-6.5-5.3-6.5-10.5a6.5 6.5 0 0113 0C18.5 15.7 12 21 12 21z"/><circle cx="12" cy="10.3" r="2.3"/>', s),
+  calc: s => I('<rect x="5.5" y="3.5" width="13" height="17" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01"/>', s),
+  refresh: s => I('<path d="M19.5 12a7.5 7.5 0 11-2.2-5.3M19.5 4v4h-4"/>', s),
+  fileText: s => I('<path d="M6 3.5h8L18.5 8v12.5H6z"/><path d="M13.5 3.5V8H18M9 12.5h6M9 16h6"/>', s),
+  poop: s => I('<path d="M7 18.5a3 3 0 01-1-5.8 2.6 2.6 0 012.2-4.6A2.9 2.9 0 0114 5.5a2.9 2.9 0 013.8 3.4 3 3 0 01.2 6.1z"/><path d="M7 18.5h10"/>', s),
+  check: s => I('<path d="M4.5 12.5l5 5 10-11"/>', s),
+  vomit: s => I('<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5"/><path d="M12 8a4 4 0 1 0 4 4"/><path d="M17 4.5c.8-.6 2-.4 2.4.5M19.5 7.2h1.4"/>', s),
+  cross: s => I('<path d="M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z"/>', s),
+  glass: s => I('<path d="M6.5 3.5h11l-1.6 15.2a2 2 0 0 1-2 1.8h-3.8a2 2 0 0 1-2-1.8z"/><path d="M7.1 9.5h9.8"/>', s),
+  bone: s => I('<path d="M8.2 8.2l7.6 7.6M6.4 5.2a1.8 1.8 0 1 1 2.3 2.5M5.2 6.4a1.8 1.8 0 1 1 2.5 2.3M17.6 18.8a1.8 1.8 0 1 1-2.3-2.5M18.8 17.6a1.8 1.8 0 1 1-2.5-2.3"/>', s),
+  heart: s => I('<path d="M12 20.3C7.2 16.4 3.8 13.2 3.8 9.6 3.8 7.1 5.7 5 8.1 5c1.5 0 3 .8 3.9 2.1C12.9 5.8 14.4 5 15.9 5c2.4 0 4.3 2.1 4.3 4.6 0 3.6-3.4 6.8-8.2 10.7z"/>', s),
+  dots: s => I('<circle cx="5.5" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.15" fill="currentColor" stroke="none"/>', s),
+  pencil: s => I('<path d="M4 20l1-4.2L16.6 4.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19z"/><path d="M14.5 6.3l3.2 3.2"/>', s),
+  walk: s => I('<circle cx="13" cy="5" r="1.8"/><path d="M9 20.5l2.2-5-2-2.2 2.3-4.3M11.5 9l2.5 2.5 3.5.8M11.5 9l-3 1.6-1.6 3"/>', s),
+};
+const TC = {weight:'#C08A4E',vaccine:'#4A7FC7',deworm:'#7D6BAE',medical:'#D24B42',medication:'#A87BA8',feed:'#B0803B',expense:'#4E8A68',groom:'#5A9EA8',poop:'#8A7355',milestone:'#A8902E',walk:'#6B8F4E',water:'#5E8FB8',vomit:'#B26E4B',surgery:'#C25B5B',snack:'#B39A4A',heat:'#C77F9A',custom:'#8A8378',daily:'#CB7A5A'};
+const tint = h => h + '1A';
+
+/* ================= 公共构建器 ================= */
+const sb = () => `<div class="sb"><span>9:41</span><div class="ic"><i class="sig"></i><i class="bat"></i></div></div>`;
+const tabbar = on => `<div class="tabbar">${[['宠物','paw','home'],['提醒','bell','reminders'],['统计','chart','stats'],['我的','gear','mine']]
+  .map(([lb,ic,v])=>`<div class="tab${v===on?' on':''}" data-tab="${v}">${ICON[ic](20)}<div class="lb">${lb}</div></div>`).join('')}</div>`;
+const nav = (t,act='') => `<div class="nav"><div class="back" data-pop>${ICON.chevL(20)}</div><div class="nt">${t}</div>${act}</div>`;
+const lt = t => `<div class="large-title">${t}</div>`;
+const ticon = (ic,c,s=34,is=18) => `<div class="ticon" style="width:${s}px;height:${s}px;background:${tint(c)};color:${c}">${ICON[ic](is)}</div>`;
+const avatar = (cls,s=44,is=22,round=10) => `<div class="avatar ${cls}" style="width:${s}px;height:${s}px;border-radius:${round}px">${ICON.paw(is)}</div>`;
+const petRow = (cls,name,sub,s=44) => `<div style="display:flex;gap:10px;align-items:center">${avatar(cls,s,Math.round(s/2))}<div><div style="font-size:15px;font-weight:600">${name}</div><div style="font-size:10.5px;color:var(--t2);margin-top:2px">${sub}</div></div></div>`;
+
+/* ================= 视图模板（评审意见 #1-#4 已落地） ================= */
+const V = {};
+
+/* ---------- 首页（Tab） ---------- */
+V.home = () => `
+${sb()}<div style="flex:none;display:flex;align-items:flex-end;gap:10px;padding:6px 20px 10px">
+  <div class="press" data-push="members" style="display:flex;flex:none;margin-bottom:9px;cursor:pointer">${['a1','a2','a3'].map((c,i)=>`<div class="avatar ${c}" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--bg);margin-left:${i?-7:0}px">${ICON.paw(10)}</div>`).join('')}</div>
+  <div class="large-title" style="padding:0;flex:1">我的毛孩子们</div>
+  <div class="press" data-tab="reminders" style="position:relative;width:38px;height:38px;flex:none;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer;margin-bottom:8px;box-shadow:0 1px 4px rgba(70,55,30,.08)">${ICON.bell(19)}<i style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:1.5px solid var(--card)"></i></div>
+</div>
+<div class="body">
+  <div class="crd">
+    <div class="crd-h"><b>今日待办</b><span data-push="reminders" style="cursor:pointer">全部提醒 ›</span></div>
+    <div class="row press" data-done="体外驱虫">${avatar('a1',30,15,50)}<div class="grow"><div class="t">豆豆 · 体外驱虫</div></div><span class="pill danger">逾期 2 天</span><span class="chev">${ICON.chevR(13)}</span></div>
+    <div class="hl" style="margin-left:-16px"></div>
+    <div class="row press" data-done="狂犬疫苗">${avatar('a2',30,15,50)}<div class="grow"><div class="t">咪咪 · 狂犬疫苗</div></div><span class="pill warn">明天</span><span class="chev">${ICON.chevR(13)}</span></div>
+  </div>
+  <div class="stat-strip">
+    <div class="st" data-push="expenses" style="cursor:pointer"><div class="v">¥326</div><div class="k">本月花销</div></div>
+    <div class="st"><div class="v">12<em> 次</em></div><div class="k">本周打卡</div></div>
+    <div class="st" data-tab="stats" style="cursor:pointer"><div class="v"><em>豆豆 ↑0.1kg</em></div><div class="k">体重变化 · 8月10日</div></div>
+  </div>
+  ${newPet&&showGuide?`<div class="crd" style="padding:12px 14px 6px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+      <b style="font-size:13px">三件事，让档案更好用</b>
+      <span class="press" data-guide-close style="color:var(--t3);font-size:12px;padding:4px 6px;cursor:pointer;line-height:1">✕</span>
+    </div>
+    ${[['1','补全生日','有生日才有年龄和纪念日提醒','已打开档案编辑 · 生日行聚焦（演示略）'],
+       ['2','记第一条体重','开始生成趋势曲线','已打开体重表单（演示略）'],
+       ['3','开启微信提醒','疫苗到期直接服务通知你','调起订阅消息授权（演示略）']].map(([n,t,s,ts])=>`
+    <div class="row press" data-toast="${ts}" style="min-height:40px;padding:7px 0">
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--pop-tint);color:var(--pop-deep);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">${n}</span>
+      <div class="grow"><div class="t" style="font-size:13px">${t}</div><div class="s">${s}</div></div>
+      <span class="chev">${ICON.chevR(13)}</span>
+    </div>`).join('')}
+  </div>`:''}
+  <div class="pet-grid">
+    <div class="pet-card" data-push="detail"><div class="mp" data-sheet="quickAdd" data-pet="豆豆">${ICON.plus(11)}</div>
+      ${petRow('a1','豆豆','英短 · 3岁2月 · 到家368天')}
+      <div class="hl-full" style="margin:9px -13px 8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:700">4.2 kg</span><span style="font-size:10px;font-weight:600;color:var(--pop-deep)">疫苗 12天</span></div>
+    </div>
+    <div class="pet-card" data-push="detail"><div class="mp" data-sheet="quickAdd" data-pet="咪咪">${ICON.plus(11)}</div>
+      ${petRow('a2','咪咪','柯基 · 1岁8月 · 到家214天')}
+      <div class="hl-full" style="margin:9px -13px 8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:700">5.1 kg</span><span style="font-size:10px;font-weight:600;color:var(--pop-deep)">驱虫 5天</span></div>
+    </div>
+    ${newPet?`<div class="pet-card" data-toast="新宠物的详情页结构同豆豆（演示略）"><div class="mp" data-sheet="quickAdd" data-pet="${newPet.name}">${ICON.plus(11)}</div>
+      ${petRow('a3',newPet.name,newPet.sub)}
+      <div class="hl-full" style="margin:9px -13px 8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:700">${newPet.weight}</span><span style="font-size:10px;font-weight:600;color:var(--pop-deep)">到家 0 天</span></div>
+    </div>`:''}
+    <div class="pet-add" data-push="petForm">${ICON.plus(14)} 添加宠物</div>
+  </div>
+</div>
+<div class="fab" data-sheet="quickAdd">${ICON.plus(22)}</div>
+${tabbar('home')}`;
+
+/* ---------- 时间线数据（驱动筛选与详情展开） ---------- */
+const GROUPS = {'全部':null,'健康':['weight','vaccine','deworm','medical','medication','surgery'],'喂养':['feed','water','snack'],'花销':['expense'],'日常':['daily','poop','vomit','groom','walk','heat','milestone','custom']};
+const REC = {
+  1:{type:'weight',icon:'scale',color:TC.weight,typename:'体重',value:'4.2 kg',title:'体重 <b>4.2 kg</b>',sub:'比上次 ↑0.1kg · 爸爸 记',fields:[['日期','2026年8月10日 20:14'],['对比','比上次（8月3日 4.1kg）↑ 0.1kg'],['记录人','爸爸']],note:'最近换粮后胃口不错，继续观察',photos:['a1','a3','a2']},
+  2:{type:'feed',icon:'bowl',color:TC.feed,typename:'喂食',value:'45 g',title:'晚餐 · 鸡肉冻干粮',sub:'45g · 全部吃完 · 妈妈 记',fields:[['餐次','晚餐'],['品牌','鸡肉冻干粮'],['克数','45 g'],['状态','全部吃完'],['日期','2026年8月10日 19:00'],['记录人','妈妈']],note:'',photos:[]},
+  3:{type:'vaccine',icon:'syringe',color:TC.vaccine,typename:'疫苗',value:'猫三联 第2针',title:'猫三联疫苗 · 第 2 针',sub:'瑞鹏宠物医院 · 下次 2026-11-08 · 妈妈 记',pill:'已建提醒',fields:[['医院','瑞鹏宠物医院'],['批号','20260715B'],['下次日期','2026-11-08（已自动创建提醒）'],['日期','2026年8月8日 14:30'],['记录人','妈妈']],note:'打针时很乖，留观 30 分钟无异常',photos:['a4','a2']},
+  4:{type:'daily',icon:'camera',color:TC.daily,typename:'日常',title:'日常',sub:'17:32 · 妈妈 记',fields:[['日期','2026年8月10日 17:32'],['记录人','妈妈']],note:'在阳台晒太阳睡成一团，爪子还搭在花盆上，太可爱了',photos:['a3','a1','a4']},
+};
+const TL_DATA = [
+  {date:'8月10日 周日', ids:[1,4,2]},
+  {date:'8月8日 周五', ids:[3]},
+];
+function tlHTML(filter='全部'){
+  const allow = GROUPS[filter];
+  let html = '', empty = true;
+  for(const g of TL_DATA){
+    const ids = g.ids.filter(id => !allow || allow.includes(REC[id].type));
+    if(!ids.length) continue; empty = false;
+    html += `<div class="tl-date">${g.date}</div>` + ids.map(id => { const r = REC[id];
+      if(r.type==='daily') return `
+      <div class="tl-item" style="--c:${r.color}" data-rec="${id}"><div class="press">
+        <div style="display:flex;gap:10px;align-items:center">${ticon(r.icon,r.color)}<div class="grow"><div class="t">${r.typename}</div><div class="s">${r.sub}</div></div><span class="chev">${ICON.chevR(13)}</span></div>
+        ${r.note?`<div style="font-size:13.5px;line-height:1.65;color:var(--text);margin-top:9px">${r.note}</div>`:''}
+        ${r.photos.length?`<div class="album" style="margin-top:9px">${r.photos.map(c=>`<div class="${c}">${ICON.paw(24)}</div>`).join('')}</div>`:''}
+      </div></div>`;
+      return `
+      <div class="tl-item" style="--c:${r.color}" data-rec="${id}"><div class="press" style="display:flex;gap:10px;align-items:center">${ticon(r.icon,r.color)}<div class="grow"><div class="t">${r.title}</div><div class="s">${r.sub}</div></div>${r.pill?`<span class="pill warn">${r.pill}</span>`:`<span class="chev">${ICON.chevR(13)}</span>`}</div></div>`}).join('');
+  }
+  if(empty) return `<div class="empty">${ticon('paw','#B9AE9E',52,26)}<div class="et">该分类下暂无记录</div><div class="es">换个分类，或点右下角 + 记一笔</div></div>`;
+  return html;
+}
+
+/* ---------- 宠物详情（push） ---------- */
+V.detail = (seg='时间线', filter='全部') => `
+${sb()}${nav('','<div class="act" data-toast="打开档案编辑（演示略）">编辑</div>')}
+<div class="body" style="flex:none;padding-bottom:0;gap:0">
+  <div class="crd" style="display:flex;gap:14px;align-items:center">
+    ${avatar('a1',56,28)}
+    <div class="grow">
+      <div style="font-size:19px;font-weight:700;display:flex;align-items:center;gap:6px">豆豆 <span style="font-size:13px;color:var(--info)">♀</span></div>
+      <div style="font-size:11.5px;color:var(--t2);margin-top:3px">英国短毛猫 · 3岁2个月 · 已绝育</div>
+      <div style="font-size:10.5px;color:var(--t3);margin-top:2px">到家 368 天</div>
+    </div>
+    <span class="pill grey">目标 4.5kg</span>
+  </div>
+  <div class="crd press" data-tab="reminders" style="display:flex;align-items:center;gap:9px;padding:9px 14px;margin-top:10px">
+    <span style="color:#4A7FC7;display:flex">${ICON.bell(15)}</span>
+    <div style="font-size:12.5px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">下次事项 · <b style="color:var(--text);font-weight:600">狂犬疫苗 11-08</b></div>
+    <span class="chev" style="margin-left:auto">${ICON.chevR(13)}</span>
+  </div>
+</div>
+<div class="seg" data-seg="detail" style="margin-top:14px">${['时间线','健康','花销','相册'].map(s=>`<div class="${s===seg?'on':''}" data-segv="${s}">${s}</div>`).join('')}</div>
+${seg==='时间线'?`<div class="chips">${Object.keys(GROUPS).map(g=>`<div class="chip${g===filter?' on':''}" data-chip="${g}">${g}</div>`).join('')}</div>`:''}
+<div class="body" style="padding-top:2px">
+${seg==='时间线'?`<div class="crd"><div class="tl">${tlHTML(filter)}</div></div>`
+:seg==='健康'?`<div class="crd"><div class="crd-h"><b>进行中</b><span>疗程打卡 ›</span></div>
+  <div class="row">${ticon('pill',TC.medication)}<div class="grow"><div class="t">速诺 50mg · 疗程第 3/7 天</div><div class="s">每日 3 次 · 下次 20:00</div>
+    <div class="bar" style="margin:8px 0 5px"><i style="width:43%;background:${TC.medication}"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2)"><span>今日已服 2/3 次</span><span style="color:var(--pop-deep);font-weight:600">坚持打卡，勿漏服</span></div>
+  </div><span class="pill warn">进行中</span></div>
+</div>
+<div class="crd"><div class="crd-h"><b>体重趋势</b><span>近 90 天 ›</span></div>
+  <svg class="chart" viewBox="0 0 300 80" height="80"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C08A4E" stop-opacity=".16"/><stop offset="1" stop-color="#C08A4E" stop-opacity="0"/></linearGradient></defs>
+  <line x1="0" y1="26" x2="300" y2="26" stroke="#B9AE9E" stroke-width="1" stroke-dasharray="4 4"/>
+  <path d="M0,56 L60,52 L120,54 L180,44 L240,46 L300,38 L300,80 L0,80 Z" fill="url(#ag)"/>
+  <polyline points="0,56 60,52 120,54 180,44 240,46 300,38" fill="none" stroke="#C08A4E" stroke-width="2" stroke-linecap="round"/><circle cx="300" cy="38" r="3.5" fill="#C08A4E"/></svg></div>
+<div class="crd">
+  <div class="row">${ticon('syringe',TC.vaccine)}<div class="grow"><div class="t">疫苗 · 猫三联第2针</div><div class="s">8月8日 · 瑞鹏宠物医院</div></div><span class="pill warn">下次 11-08</span></div>
+  <div class="hl"></div>
+  <div class="row">${ticon('shield',TC.deworm)}<div class="grow"><div class="t">体外驱虫 · 大宠爱</div><div class="s">7月9日 · 周期 30 天</div></div><span class="pill danger">逾期 2 天</span></div>
+</div>`
+:seg==='花销'?`<div class="crd"><div class="crd-h"><b>8月花销</b><span>全部账单 ›</span></div>
+  <div style="font-size:26px;font-weight:700;font-variant-numeric:tabular-nums">¥198<span style="font-size:13px;color:var(--t3);font-weight:500">.50</span></div>
+  <div class="press" data-push="expenses" style="margin:12px -6px 0;padding:4px 6px 2px">
+    <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;gap:2px">
+      <i style="width:60%;background:${TC.feed}"></i><i style="width:30%;background:${TC.medical}"></i><i style="width:10%;background:${TC.custom}"></i>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px;font-size:10.5px;color:var(--t2);align-items:center">
+      <span style="display:flex;align-items:center;gap:4px"><i class="dot" style="width:6px;height:6px;background:${TC.feed}"></i>粮食 60%</span>
+      <span style="display:flex;align-items:center;gap:4px"><i class="dot" style="width:6px;height:6px;background:${TC.medical}"></i>医疗 30%</span>
+      <span style="display:flex;align-items:center;gap:4px"><i class="dot" style="width:6px;height:6px;background:${TC.custom}"></i>其他 10%</span>
+      <span style="margin-left:auto;color:var(--t3)">进账单 ›</span>
+    </div>
+  </div>
+  <div class="hl-full"></div>
+  <div class="row">${ticon('bowl',TC.expense)}<div class="grow"><div class="t">鸡肉冻干粮 1.5kg</div><div class="s">粮食 · 8月10日 · 妈妈 记</div></div><div class="v"><b>-¥128</b></div></div></div>`
+:`<div class="album" style="padding:2px">${['a1','a3','a2','a4','a1','a2'].map(c=>`<div class="${c}">${ICON.paw(26)}</div>`).join('')}</div>
+<div class="crd press" data-toast="打开成长对比（演示略）" style="display:flex;gap:10px;align-items:center">${ticon('camera',TC.milestone)}<div class="grow"><div class="t" style="font-size:13px;font-weight:600">成长对比</div><div class="s">选两张照片，拼「小时候 vs 现在」</div></div><span class="chev">${ICON.chevR(14)}</span></div>`}
+</div>`;
+
+/* ---------- 体重表单（push） ---------- */
+V.weightForm = (pet='豆豆') => `
+${sb()}${nav('记体重')}
+<div class="body">
+  <div class="crd" style="display:flex;gap:12px;align-items:center">
+    ${avatar(pet==='咪咪'?'a2':'a1',40,20)}
+    <div class="grow"><div class="t" style="font-weight:600">${pet}</div><div class="s">${pet==='咪咪'?'柯基':'英国短毛猫'}</div></div>
+    <span class="pill grey" data-toast="切换宠物（演示略）" style="cursor:pointer">换一只</span>
+  </div>
+  <div class="crd press" data-toast="唤起自定义大键盘（演示略）" style="text-align:center;padding:26px 16px 20px">
+    <div style="font-size:42px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px">4.2<span style="font-size:16px;font-weight:500;color:var(--t3)"> kg</span></div>
+    <div style="font-size:11px;color:var(--t2);margin-top:6px">点击数字唤起大键盘 · 支持输入「斤」自动换算</div>
+  </div>
+  <div class="crd">
+    <div class="frow"><span class="k">日期</span><span class="val b">2026年8月11日 · 今天</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl-full" style="margin:4px -16px 4px 88px"></div>
+    <div class="frow"><span class="k">备注</span><span class="val">选填</span></div>
+  </div>
+  <div class="crd" style="display:flex;gap:10px;align-items:center">
+    ${ticon('scale',TC.weight)}
+    <div class="grow"><div class="t" style="font-size:13px">上次记录 · 8月3日 <b>4.1 kg</b></div></div>
+    <span class="pill warn">↑ 0.1kg</span>
+  </div>
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-save data-stoast="已记下啦 · 比上次 ↑0.1kg">保存</div>
+  <div style="text-align:center;font-size:13px;color:var(--pop-deep);font-weight:600;padding:10px 0 2px;cursor:pointer" data-save-more>保存并再记一条</div>
+</div>`;
+
+/* ---------- 通用记录表单（PRD §8：共用骨架 + 类型专属字段区） ---------- */
+const NAME2KEY = {'体重':'weight','喂食':'feed','日常':'daily','疫苗':'vaccine','驱虫':'deworm','就医':'medical','花销':'expense','便便':'poop','洗护':'groom','呕吐':'vomit','用药':'medication','手术':'surgery','遛狗':'walk','饮水':'water','零食':'snack','发情':'heat','里程碑':'milestone','自定义':'custom'};
+const FORM_DEF = {
+  daily:{name:'日常',color:TC.daily,icon:'camera',again:1,saveToast:'已记下啦 · 已存入时间线'},
+  feed:{name:'喂食',color:TC.feed,icon:'bowl',again:1,fields:[
+    {k:'chips',label:'餐次',opts:['早餐','午餐','晚餐','加餐'],sel:2},
+    {k:'input',label:'食物',val:'鸡肉冻干粮'},
+    {k:'input',label:'克数',val:'45',unit:'g'},
+    {k:'chips',label:'状态',opts:['全部吃完','有剩余','没怎么吃'],sel:0}]},
+  vaccine:{name:'疫苗',color:TC.vaccine,icon:'syringe',saveToast:'已记下啦 · 已创建下次提醒',fields:[
+    {k:'chips',label:'疫苗',opts:['猫三联','狂犬','猫白血病','其他'],sel:0},
+    {k:'chips',label:'针次',opts:['第1针','第2针','第3针','加强针'],sel:1},
+    {k:'input',label:'医院',val:'瑞鹏宠物医院'},
+    {k:'input',label:'批号',ph:'选填'},
+    {k:'row',label:'下次日期',val:'2026-11-08'},
+    {k:'switch',label:'自动创建下次提醒',hint:'到期前 3 天推送全体家庭成员',on:1}]},
+  deworm:{name:'驱虫',color:TC.deworm,icon:'shield',saveToast:'已记下啦 · 库存 -1 支 · 下次提醒已安排',fields:[
+    {k:'chips',label:'类型',opts:['体外','体内','内外同驱'],sel:0},
+    {k:'stock',label:'药品',name:'大宠爱（体外）',left:2,unit:'支'},
+    {k:'stock',label:'备用药品',name:'福来恩（体外）',out:1,unit:'支'},
+    {k:'chips',label:'周期',opts:['15 天','30 天','90 天'],sel:1},
+    {k:'switch',label:'下次到期提醒',hint:'做完一次，自动安排下次',on:1}]},
+  medical:{name:'就医',color:TC.medical,icon:'fileText',fields:[
+    {k:'input',label:'医院',val:'瑞鹏宠物医院'},
+    {k:'input',label:'症状',ph:'如：呕吐两天'},
+    {k:'input',label:'诊断',ph:'选填'},
+    {k:'input',label:'费用',unit:'元',ph:'选填，计入账单'}]},
+  expense:{name:'花销',color:TC.expense,icon:'coin',again:1,saveToast:'已记账',fields:[
+    {k:'input',label:'金额',val:'128',unit:'元'},
+    {k:'chips',label:'分类',opts:['粮食','零食','医疗','用品','玩具','美容','寄养','保险','其他'],sel:0},
+    {k:'input',label:'明细',val:'鸡肉冻干粮 1.5kg'}]},
+  poop:{name:'便便',color:TC.poop,icon:'poop',again:1,fields:[
+    {k:'chips',label:'性状',opts:['正常','软便','稀便','便秘','带血'],sel:0},
+    {k:'chips',label:'颜色',opts:['棕色','黄色','发黑','发绿','灰白'],sel:0}]},
+  groom:{name:'洗护',color:TC.groom,icon:'drop',fields:[
+    {k:'mchips',label:'项目（可多选）',opts:['洗澡','剪指甲','梳毛','洁耳','美容'],sels:[0,1]},
+    {k:'input',label:'门店',ph:'选填'}]},
+  vomit:{name:'呕吐',color:TC.vomit,icon:'vomit',fields:[
+    {k:'chips',label:'呕吐物',opts:['未消化食物','毛球','黄水','白沫','带血'],sel:1},
+    {k:'chips',label:'次数',opts:['1 次','2 次','3 次及以上'],sel:0}]},
+  medication:{name:'用药',color:TC.medication,icon:'pill',saveToast:'已记下啦 · 用药提醒全员推送',fields:[
+    {k:'input',label:'药品',val:'速诺'},
+    {k:'input',label:'剂量',val:'50mg'},
+    {k:'chips',label:'频次',opts:['每日 1 次','每日 2 次','每日 3 次'],sel:2},
+    {k:'input',label:'疗程',val:'7',unit:'天'},
+    {k:'switch',label:'用药打卡提醒',hint:'到点推送，完成后全员可见',on:1}]},
+  surgery:{name:'手术',color:TC.surgery,icon:'cross',fields:[
+    {k:'input',label:'手术名称',ph:'如：绝育'},
+    {k:'input',label:'医院',ph:'选填'},
+    {k:'input',label:'费用',unit:'元',ph:'选填，计入账单'}]},
+  walk:{name:'遛狗',color:TC.walk,icon:'walk',again:1,fields:[
+    {k:'input',label:'时长',val:'35',unit:'分钟'}]},
+  water:{name:'饮水',color:TC.water,icon:'glass',again:1,fields:[
+    {k:'input',label:'水量',val:'120',unit:'ml'}]},
+  snack:{name:'零食',color:TC.snack,icon:'bone',again:1,fields:[
+    {k:'input',label:'零食',val:'冻干鹌鹑'},
+    {k:'chips',label:'数量',opts:['少量','适量','吃多了'],sel:1}]},
+  heat:{name:'发情',color:TC.heat,icon:'heart',fields:[
+    {k:'row',label:'开始日期',val:'2026年8月11日 · 今天'},
+    {k:'mchips',label:'表现（可多选）',opts:['叫春','乱尿','烦躁','食欲差'],sels:[0]}]},
+  milestone:{name:'里程碑',color:TC.milestone,icon:'flag',fields:[
+    {k:'input',label:'标题',ph:'如：第一次握手'},
+    {k:'row',label:'日期',val:'2026年8月11日 · 今天'}]},
+  custom:{name:'自定义',color:TC.custom,icon:'pencil',fields:[
+    {k:'input',label:'标题',ph:'给这类记录起个名'},
+    {k:'input',label:'内容',ph:'记点什么'}]},
+};
+const ffield = f => {
+  if(f.k==='chips'||f.k==='mchips') return `<div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">${f.label}</div><div style="display:flex;flex-wrap:wrap;gap:8px">${f.opts.map((o,i)=>`<div class="chip${(f.k==='chips'?i===(f.sel||0):(f.sels||[]).includes(i))?' on':''}" data-fchip="${f.k==='mchips'?'m':'s'}">${o}</div>`).join('')}</div></div>`;
+  if(f.k==='input') return `<div class="frow"><span class="k">${f.label}</span><span class="val${f.val?' b':''}">${f.val||f.ph||'选填'}${f.unit?` <span style="color:var(--t3)">${f.unit}</span>`:''}</span></div>`;
+  if(f.k==='row') return `<div class="frow"><span class="k">${f.label}</span><span class="val b">${f.val}</span><span class="chev">${ICON.chevR(14)}</span></div>`;
+  if(f.k==='stock'){
+    if(f.out) return `<div class="frow press" data-push="stockForm" style="cursor:pointer"><span class="k">${f.label}</span><span class="val" style="color:var(--danger);font-weight:500">${f.name} · 库存不足，点我补货</span><span class="chev" style="color:var(--danger)">${ICON.chevR(14)}</span></div>
+  <div style="font-size:10.5px;color:var(--danger);padding:0 0 8px 88px;line-height:1.5">剩余 0 ${f.unit} · 点上方行进入库表单，保存后回到本表单继续记</div>`;
+    return `<div class="frow"><span class="k">${f.label}</span><span class="val b">${f.name} · <span style="color:${f.left<=1?'var(--danger)':'var(--t2)'};font-weight:400">剩 ${f.left} ${f.unit}</span></span><span class="chev">${ICON.chevR(14)}</span></div>
+  <div style="font-size:10.5px;color:var(--t3);padding:0 0 8px 88px;line-height:1.5">关联囤货 · 保存后自动消耗 1 ${f.unit}，库存不足时提醒你补货</div>`;
+  }
+  if(f.k==='switch') return `<div class="frow"><div class="grow"><div class="t" style="font-size:14px">${f.label}</div>${f.hint?`<div class="s">${f.hint}</div>`:''}</div><div class="sw${f.on?' on':''}"><i></i></div></div>`;
+  return '';
+};
+V.recordForm = (key, pet) => { const d = FORM_DEF[key]; pet = pet || curPet;
+  const RESULT = {vaccine:1,deworm:1,medical:1,medication:1,surgery:1};
+  const hl = `<div class="hl-full" style="margin:2px -16px 2px 0"></div>`;
+  const dateRow = `<div class="frow"><span class="k">日期</span><span class="val b">2026年8月11日 · 今天</span><span class="chev">${ICON.chevR(14)}</span></div>`;
+  const body = key==='daily' ? `
+  <div class="crd press" data-toast="聚焦输入（演示略）" style="min-height:96px;font-size:14.5px;line-height:1.7;color:var(--t3)">此刻的可爱，写下来…（也可以只发照片）</div>
+  <div class="crd"><div style="font-size:12px;color:var(--t2);margin-bottom:9px">照片 · 1~9 张</div>
+    <div class="album"><div class="a3">${ICON.paw(24)}</div><div class="press" style="border:1.5px dashed var(--t3);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t3)" data-toast="调起相机/相册（演示略）">${ICON.plus(20)}</div></div></div>
+  <div class="crd">${dateRow}</div>` : `
+  <div class="crd">${d.fields.map(f=>ffield(f)).join(hl)}</div>
+  <div class="crd">${dateRow}${hl}
+    <div class="frow press" data-toast="调起相机/相册（演示略）"><span class="k">照片</span><span class="val">选填</span><span class="chev" style="color:var(--pop-deep)">${ICON.camera(16)}</span></div>${hl}
+    <div class="frow"><span class="k">备注</span><span class="val">选填</span></div></div>`;
+  return `
+${sb()}${nav('记'+d.name)}
+<div class="body">
+  <div class="crd" style="display:flex;gap:12px;align-items:center">
+    ${avatar(pet==='咪咪'?'a2':'a1',40,20)}
+    <div class="grow"><div class="t" style="font-weight:600">${pet}</div><div class="s">${pet==='咪咪'?'柯基':'英国短毛猫'}</div></div>
+    ${ticon(d.icon,d.color)}
+  </div>
+  ${body}
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-save ${RESULT[key]?`data-result="${key}"`:''} data-stoast="${d.saveToast||'已记下啦'}">保存</div>
+  ${d.again?`<div style="text-align:center;font-size:13px;color:var(--pop-deep);font-weight:600;padding:10px 0 2px;cursor:pointer" data-save-more>保存并再记一条</div>`:''}
+</div>`};
+
+/* ---------- 提醒管理（push） ---------- */
+V.reminders = (asTab) => `
+${sb()}${asTab
+  ? `<div style="flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding-right:16px">${lt('提醒')}
+    <div class="press" data-push="reminderForm" style="display:flex;align-items:center;gap:4px;padding:7px 13px;border-radius:99px;background:var(--primary);color:#FBF7EF;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px">${ICON.plus(13)} 新建</div>
+  </div>`
+  : nav('提醒','<div class="act" data-push="reminderForm">+ 新建</div>')}
+<div class="seg"><div class="on">进行中</div><div data-toast="查看已完成（演示略）">已完成</div></div>
+<div class="body">
+  <div class="crd" style="background:rgba(74,127,199,.07);display:flex;gap:10px;align-items:center;padding:12px 14px">
+    ${ticon('bell','#4A7FC7',30,16)}
+    <div class="grow"><div class="t" style="font-size:12.5px">开启微信通知，不再错过疫苗提醒</div></div>
+    <span style="font-size:12px;font-weight:600;color:var(--info);cursor:pointer" data-toast="调起订阅消息授权（演示略）">去开启</span>
+  </div>
+  <div class="crd">
+    <div style="font-size:11px;font-weight:600;color:var(--danger);margin-bottom:4px">已逾期</div>
+    <div class="row press" data-done="体外驱虫"><i class="dot" style="background:${TC.deworm}"></i><div class="grow"><div class="t">豆豆 · 体外驱虫</div><div class="s">每 30 天 · 上次 7月9日 · 记录自动生成</div></div><span class="pill danger">逾期 2 天</span></div>
+    <div class="hl" style="margin-left:-16px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--pop-deep);margin:8px 0 4px">今天</div>
+    <div class="row press" data-done="速诺 50mg"><i class="dot" style="background:${TC.medication}"></i><div class="grow"><div class="t">豆豆 · 速诺 50mg</div><div class="s">每日 3 次 · 已服 2 次 · 全员推送</div></div><span class="pill warn">第 3 次</span></div>
+    <div class="hl" style="margin-left:-16px"></div>
+    <div class="row press" data-done="梳毛"><i class="dot" style="background:${TC.groom}"></i><div class="grow"><div class="t">咪咪 · 梳毛</div><div class="s">每天 21:00 · 手动创建 · 完成自动记一笔洗护</div></div><span class="pill warn">21:00</span></div>
+    <div class="hl" style="margin-left:-16px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--t2);margin:8px 0 4px">未来 7 天</div>
+    <div class="row press" data-done="狂犬疫苗"><i class="dot" style="background:${TC.vaccine}"></i><div class="grow"><div class="t">咪咪 · 狂犬疫苗</div><div class="s">每年 · 瑞鹏宠物医院</div></div><span class="pill grey">明天</span></div>
+    <div class="hl" style="margin-left:-16px"></div>
+    <div class="row press" data-done="刷牙"><i class="dot" style="background:${TC.groom}"></i><div class="grow"><div class="t">豆豆 · 刷牙</div><div class="s">每 3 天 · 下次周四 · 手动创建</div></div><span class="pill grey">周四</span></div>
+  </div>
+</div>${asTab?tabbar('reminders'):''}`;
+
+/* ---------- 新建提醒（push）：日常护理提醒不走记一笔 ---------- */
+V.reminderForm = () => `
+${sb()}${nav('新建提醒')}
+<div class="body">
+  <div class="crd" style="padding:11px 16px 5px">
+    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">给哪只</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px">
+      <div class="chip on" data-fchip="s">豆豆</div><div class="chip" data-fchip="s">咪咪</div>
+    </div>
+  </div>
+  <div class="crd" style="padding:11px 16px 5px">
+    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">事项</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px">
+      ${['梳毛','刷牙','剪指甲','清理猫砂','洗水碗','滴眼药','自定义'].map((o,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s">${o}</div>`).join('')}
+    </div>
+  </div>
+  <div class="crd" style="padding:11px 16px 5px">
+    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">周期</div>
+    <div class="frow" style="min-height:52px;gap:10px;padding-bottom:6px">
+      <span style="font-size:14px;color:var(--text)">每</span>
+      <span class="press" data-toast="唤起数字键盘 · 1~99（演示略）" style="min-width:44px;text-align:center;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;padding:6px 10px;border-radius:10px;background:var(--fill);cursor:pointer">1</span>
+      <div style="display:flex;gap:6px">
+        ${['天','周','月'].map((u,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s" style="padding:6px 12px">${u}</div>`).join('')}
+      </div>
+      <span class="val" style="font-size:11px">如：每 3 天刷一次牙</span>
+    </div>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow"><span class="k">提醒时间</span><span class="val b">21:00</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow"><div class="grow"><div class="t" style="font-size:14px">通知全体家庭成员</div><div class="s">关闭则只提醒我</div></div><div class="sw on"><i></i></div></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow"><div class="grow"><div class="t" style="font-size:14px">完成后自动记一笔</div><div class="s">梳毛打卡 → 自动写入洗护记录</div></div><div class="sw on"><i></i></div></div>
+  </div>
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-save data-stoast="已创建 · 今天 21:00 首次提醒">创建提醒</div>
+</div>`;
+
+/* ---------- 新增宠物：所有 PRD 支持物种均必须可见，并按物种收敛字段 ---------- */
+const SPECIES_FORM = {
+  '猫': { breed:'美国短毛猫', identity:'绝育', identityOpts:['已绝育','未绝育','不确定'], hint:'生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  '狗': { breed:'柯基', identity:'绝育', identityOpts:['已绝育','未绝育','不确定'], hint:'生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  '兔': { breed:'选填', identity:'绝育', identityOpts:['已绝育','未绝育','不确定'], hint:'生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  '仓鼠': { breed:'选填', identity:'性别', identityOpts:['♀ 雌性','♂ 雄性','不确定'], hint:'不知道生日也没关系，可以只记录到家日期' },
+  '鸟': { breed:'选填', identity:'性别', identityOpts:['♀ 雌性','♂ 雄性','不确定'], hint:'不知道生日也没关系，可以只记录到家日期' },
+  '鱼': { breed:'品种（如：斗鱼/孔雀鱼）', identity:'数量', identityOpts:['1 条','2–10 条','10 条以上'], hint:'群养鱼可填写鱼缸名称，数量与入缸日期更有用' },
+  '爬宠': { breed:'种类（如：豹纹守宫）', identity:'性别', identityOpts:['♀ 雌性','♂ 雄性','不确定'], hint:'可在保存后补充饲养箱、适温和湿度信息' },
+  '其他': { breed:'品种或种类（选填）', identity:'性别', identityOpts:['♀ 雌性','♂ 雄性','不确定'], hint:'先建立档案，后续记录可使用日常和自定义类型' }
+};
+V.petForm = (species='猫') => { const f = SPECIES_FORM[species] || SPECIES_FORM['其他']; return `
+${sb()}${nav('新增宠物')}
+<div class="body">
+  <div class="crd press" data-toast="调起相机/相册选头像（演示略）" style="display:flex;flex-direction:column;align-items:center;padding:20px 16px 16px;gap:8px">
+    ${avatar('a4',64,32,18)}
+    <span style="font-size:11px;color:var(--pop-deep);font-weight:600">上传照片</span>
+  </div>
+  <div class="crd">
+    <div class="frow"><span class="k">名字</span><span class="val b">煤球</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">类型</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${Object.keys(SPECIES_FORM).map(o=>`<div class="chip${o===species?' on':''}" data-species="${o}">${o}</div>`).join('')}</div>
+      <div class="s" style="margin-top:8px">选择类型后，只展示适合它的档案字段</div></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div class="frow"><span class="k">${species==='鱼'?'鱼缸/名称':'品种/种类'}</span><span class="val b">${f.breed}</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">${f.identity}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${f.identityOpts.map((o,i)=>`<div class="chip${i===1?' on':''}" data-fchip="s">${o}</div>`).join('')}</div></div>
+  </div>
+  <div class="crd">
+    <div class="frow"><span class="k">生日</span><span class="val b">2026年5月12日</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div class="frow"><span class="k">到家日期</span><span class="val b">2026年8月12日 · 今天</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    ${['猫','狗','兔'].includes(species)?`<div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">绝育</div><div style="display:flex;flex-wrap:wrap;gap:8px">${['已绝育','未绝育','不确定'].map((o,i)=>`<div class="chip${i===1?' on':''}" data-fchip="s">${o}</div>`).join('')}</div></div>`:''}
+  </div>
+  <div style="font-size:10.5px;color:var(--t3);text-align:center;line-height:1.6">${f.hint}<br>填了生日，纪念日前 7 天会提醒全家</div>
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-savepet>加入档案袋</div>
+</div>`; };
+
+/* ---------- 家庭成员（push） ---------- */
+V.members = () => `
+${sb()}${nav('家庭成员')}
+<div class="body">
+  <div class="crd" style="display:flex;gap:12px;align-items:center;padding:16px">
+    ${avatar('a1',44,24)}
+    <div class="grow"><div style="font-size:15px;font-weight:700">三口之家的档案袋</div><div class="s" style="margin-top:2px">空间名可自定义 · 2 只宠物 · 共同记录 486 条</div></div>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow" style="min-height:52px">${avatar('a1',34,17)}<div class="grow" style="margin-left:10px"><div class="t">爸爸</div><div class="s">2026年3月2日 加入</div></div><span class="pill" style="color:var(--pop-deep);background:var(--pop-tint)">创建者</span></div>
+    <div class="hl" style="margin:0 -16px 0 44px"></div>
+    <div class="frow" style="min-height:52px">${avatar('a2',34,17)}<div class="grow" style="margin-left:10px"><div class="t">妈妈</div><div class="s">2026年3月5日 加入</div></div><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 44px"></div>
+    <div class="frow" style="min-height:52px">${avatar('a3',34,17)}<div class="grow" style="margin-left:10px"><div class="t">奶奶</div><div class="s">2026年5月18日 加入</div></div><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 44px"></div>
+    <div class="frow press" data-push="invite" style="min-height:48px">${ticon('paw',TC.weight,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">邀请链接落地页预览</span><span class="chev">${ICON.chevR(14)}</span></div>
+  </div>
+  <div style="font-size:10.5px;color:var(--t3);padding:0 6px;line-height:1.7">所有成员可查看全部档案并添加记录；移出成员后其历史记录仍会保留并显示昵称。</div>
+</div>
+<div style="flex:none;padding:6px 16px 26px"><div class="btn btn-p" data-toast="调起微信分享卡片（演示略）">邀请家庭成员</div></div>`;
+
+/* ---------- 统计（Tab） ---------- */
+V.stats = () => `${sb()}${lt('统计')}
+<div class="chips" style="padding-top:0">
+  <div class="chip on" data-fchip="s">全部</div>
+  <div class="chip" data-fchip="s" style="display:flex;align-items:center;gap:6px;padding:4px 13px 4px 5px">${avatar('a1',18,9,50)}豆豆</div>
+  <div class="chip" data-fchip="s" style="display:flex;align-items:center;gap:6px;padding:4px 13px 4px 5px">${avatar('a2',18,9,50)}咪咪</div>
+</div>
+<div class="seg"><div>本月</div><div class="on">近半年</div><div>今年</div></div>
+<div class="body">
+  <div class="crd">
+    <div class="crd-h"><b>体重曲线</b><span>豆豆 ›</span></div>
+    <svg class="chart" viewBox="0 0 300 96" height="96">
+      <defs><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E362C" stop-opacity=".14"/><stop offset="1" stop-color="#3E362C" stop-opacity="0"/></linearGradient></defs>
+      <line x1="0" y1="30" x2="300" y2="30" stroke="#B9AE9E" stroke-width="1" stroke-dasharray="4 4"/>
+      <path d="M0,66 L50,62 L100,64 L150,52 L200,54 L250,44 L300,40 L300,96 L0,96 Z" fill="url(#ag2)"/>
+      <polyline points="0,66 50,62 100,64 150,52 200,54 250,44 300,40" fill="none" stroke="#3E362C" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3)"><span>3月</span><span>4月</span><span>5月</span><span>6月</span><span>7月</span><span>8月</span></div>
+  </div>
+  <div class="crd">
+    <div class="crd-h"><b>花销趋势</b><span>半年 ¥1,842 ›</span></div>
+    <div style="display:flex;align-items:flex-end;gap:10px;height:60px;padding:0 4px">
+      ${[38,52,30,64,44,56].map((h,i)=>`<div style="flex:1;height:${h}px;border-radius:99px 99px 4px 4px;background:${i===5?'var(--primary)':'var(--primary-tint)'}"></div>`).join('')}
+    </div>
+    <div style="display:flex;font-size:9px;color:var(--t3);text-align:center;margin-top:5px">${['3月','4月','5月','6月','7月','8月'].map(m=>`<span style="flex:1">${m}</span>`).join('')}</div>
+  </div>
+  <div class="crd">
+    <div class="crd-h"><b>打卡热力</b><span>近 98 天</span></div>
+    <div class="heat">${Array.from({length:98},()=>{const r=Math.random();return `<i class="${r>.82?'l3':r>.62?'l2':r>.42?'l1':''}"></i>`}).join('')}</div>
+  </div>
+  <div class="crd press" data-toast="12 月可生成年度报告分享图（演示略）" style="display:flex;gap:10px;align-items:center;background:var(--pop-tint)">
+    ${ticon('flag',TC.milestone)}
+    <div class="grow"><div class="t" style="font-weight:600">2026 年度报告 · 12 月生成</div><div class="s">疫苗/就医/花销/体重变化年度总结，届时可生成分享图</div></div>
+    <span class="chev">${ICON.chevR(14)}</span>
+  </div>
+</div>
+${tabbar('stats')}`;
+
+/* ---------- 我的（Tab） ---------- */
+V.mine = () => `${sb()}${lt('我的')}
+<div class="body" style="gap:10px">
+  <div class="crd" style="display:flex;gap:12px;align-items:center;padding:14px 16px">
+    ${avatar('a1',44,24)}
+    <div class="grow"><div style="font-size:16px;font-weight:700">毛球档案袋</div><div class="s" style="margin-top:2px">每只毛孩子，都值得一个装满成长的档案袋</div></div>
+    <span class="pill grey">v1.0.0</span>
+  </div>
+  <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">协作与数据</div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow press" data-push="members" style="min-height:46px">${ticon('paw','#3E362C',30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">家庭成员</span><span class="val">3 位成员</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-push="stock" style="min-height:46px">${ticon('box',TC.expense,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">囤货</span><span class="val">1 件临期 · 2 件该补货</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-push="expenses" style="min-height:46px">${ticon('coin',TC.weight,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">记账与预算</span><span class="val">本月 ¥326 / ¥600</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-push="backup" style="min-height:46px">${ticon('download',TC.vaccine,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">数据备份</span><span class="val">上次 8月1日</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-toast="归档宠物列表（演示略）" style="min-height:46px">${ticon('fileText',TC.custom,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">归档宠物</span><span class="val">时间线只读 · 可恢复</span><span class="chev">${ICON.chevR(14)}</span></div>
+  </div>
+  <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">偏好</div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">外观模式</span><span class="val">跟随系统</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow press" data-toast="默认提醒周期设置（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">默认周期</span><span class="val">疫苗 1 年 · 驱虫 30 天</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow press" data-toast="提醒提前天数设置（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">提醒提前天数</span><span class="val">提前 7 天进待办</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow" style="min-height:46px"><div class="grow"><div class="t" style="font-size:14px">微信提醒通知</div><div class="s">已授权 · 剩余 3 次推送额度 · 管理授权需在微信设置中操作</div></div><span class="pill ok">已授权</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">小程序内待办提醒</span><div class="sw on"><i></i></div></div>
+  </div>
+  <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">工具箱</div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow press" data-push="toolAge" style="min-height:46px">${ticon('calc',TC.weight,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">年龄换算</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-toast="喂食量计算器（演示略）" style="min-height:46px">${ticon('bowl',TC.feed,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">喂食量计算</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-push="toolFood" style="min-height:46px">${ticon('search',TC.groom,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">安全食物查询</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow press" data-toast="附近医院（演示略）" style="min-height:46px">${ticon('mapPin',TC.medical,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">附近医院</span><span class="chev">${ICON.chevR(14)}</span></div>
+  </div>
+  <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">关于</div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow press" data-toast="已清除缓存（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">清除缓存</span><span class="val">12.6MB</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow press" data-toast="打开意见反馈（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">意见反馈</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">版本</span><span class="val">v1.0.0</span></div>
+  </div>
+</div>
+${tabbar('mine')}`;
+
+/* ---------- 记账 / 备份（push，精简版） ---------- */
+V.expenses = () => `${sb()}${nav('账单')}
+<div style="flex:none;display:flex;align-items:center;justify-content:center;gap:18px;padding:0 16px 6px">
+  <span class="chev press" data-toast="上一月（演示略）" style="padding:6px">${ICON.chevL(16)}</span><b style="font-size:15px">2026年8月</b><span class="chev press" data-toast="下一月（演示略）" style="padding:6px">${ICON.chevR(16)}</span>
+</div>
+<div class="chips" style="padding-top:0">${['全部','粮食','医疗','用品','其他'].map((c,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s">${c}</div>`).join('')}</div>
+<div class="body" style="padding-top:2px">
+  <div class="crd">
+    <div style="font-size:11px;color:var(--t2)">8月总支出</div>
+    <div style="font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px">¥326<span style="font-size:14px;font-weight:500;color:var(--t3)">.50</span></div>
+    <div class="bar" style="margin-top:14px"><i style="width:54%;background:var(--pop)"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2)"><span>预算 ¥600</span><span style="color:var(--pop-deep);font-weight:600">已用 54%</span></div>
+  </div>
+  <div class="crd">
+    <div class="row">${ticon('bowl',TC.expense)}<div class="grow"><div class="t">鸡肉冻干粮 1.5kg</div><div class="s">粮食 · 8月10日 · 妈妈 记</div></div><div class="v"><b>-¥128.00</b></div></div>
+    <div class="hl"></div>
+    <div class="row">${ticon('fileText',TC.medical)}<div class="grow"><div class="t">肠胃炎复诊</div><div class="s">医疗 · 8月8日 · 爸爸 记</div></div><div class="v"><b>-¥380.00</b></div></div>
+  </div>
+</div>`;
+
+/* ---------- 囤货（push）：余量 + 保质期 + 记录联动扣减 ---------- */
+V.stock = () => { const bar = (pct,color) => `<div style="height:5px;border-radius:99px;background:var(--fill-deep);overflow:hidden;margin-top:8px"><div style="width:${pct}%;height:100%;border-radius:99px;background:${color}"></div></div>`;
+return `${sb()}${nav('囤货')}
+<div class="body">
+  <div class="crd" style="background:rgba(192,138,78,.08);display:flex;gap:10px;align-items:center;padding:12px 14px">
+    ${ticon('bell',TC.weight,30,16)}
+    <div class="grow"><div class="t" style="font-size:12.5px">大宠爱 34 天后到期</div><div class="s">将在到期前 1 个月 / 15 天 / 3 天 / 当天通知全家</div></div>
+  </div>
+  <div class="crd">
+    <div class="row">${ticon('bowl',TC.feed)}<div class="grow"><div class="t">鸡肉冻干粮</div><div class="s">余量约 1.0kg · 预计还能撑 12 天</div>${bar(68,'var(--success)')}</div><span class="pill grey">保质期 2027-03</span></div>
+    <div class="hl"></div>
+    <div class="row">${ticon('shield',TC.deworm)}<div class="grow"><div class="t">大宠爱 · 体外驱虫</div><div class="s">剩 2 支 · 每次驱虫自动消耗 1 支</div>${bar(40,TC.weight)}</div><span class="pill warn">9月15日到期</span></div>
+    <div class="hl"></div>
+    <div class="row">${ticon('bone',TC.snack)}<div class="grow"><div class="t">冻干鹌鹑</div><div class="s">剩 1 包 · 近 14 天消耗 6 包</div>${bar(12,'var(--danger)')}</div><span class="pill danger">该买了</span></div>
+    <div class="hl"></div>
+    <div class="row">${ticon('box',TC.custom)}<div class="grow"><div class="t">豆腐猫砂</div><div class="s">余量约 1/5 袋 · 预计还能撑 5 天</div>${bar(20,'var(--danger)')}</div><span class="pill danger">该买了</span></div>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow" style="min-height:50px"><span class="k" style="width:auto;flex:1;text-align:left">临期提醒</span><span class="val">前 1 个月 / 15 天 / 3 天 / 当天</span><div class="sw on"><i></i></div></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow" style="min-height:50px"><span class="k" style="width:auto;flex:1;text-align:left">低库存补货提醒</span><span class="val">低于阈值时提醒</span><div class="sw on"><i></i></div></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow" style="min-height:50px"><span class="k" style="width:auto;flex:1;text-align:left">记录联动扣减</span><span class="val">驱虫 / 喂食 / 用药</span><div class="sw on"><i></i></div></div>
+  </div>
+</div>
+<div class="fab" data-push="stockForm">${ICON.plus(22)}</div>`;};
+
+/* ---------- 入库表单（push）：囤货闭环的关键页 ---------- */
+V.stockForm = () => `
+${sb()}${nav('入库')}
+<div class="body">
+  <div class="crd">
+    <div class="frow"><span class="k">名称</span><span class="val b">大宠爱（体外驱虫）</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">分类</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${['粮食','猫砂','药品','用品'].map((o,i)=>`<div class="chip${i===2?' on':''}" data-fchip="s">${o}</div>`).join('')}</div></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div class="frow"><span class="k">数量</span><span class="val b">3 <span style="color:var(--t3)">支</span></span></div>
+  </div>
+  <div class="crd">
+    <div class="frow"><span class="k">保质期</span><span class="val b">2027-09-15</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div style="font-size:10.5px;color:var(--t3);padding:0 0 8px 88px;line-height:1.5">食品、药品建议填写，临期会提醒你</div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div class="frow"><span class="k">补货阈值</span><span class="val b">低于 1 支 提醒补货</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">扣减模式</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${['按量','按件'].map((o,i)=>`<div class="chip${i===1?' on':''}" data-fchip="s">${o}</div>`).join('')}</div>
+      <div class="s" style="margin-top:8px">按件：每次驱虫/用药自动 -1 件；按量：按日均消耗估算余量</div></div>
+  </div>
+  <div class="crd"><div class="frow"><div class="grow"><div class="t" style="font-size:14px">同时记一笔花销</div><div class="s">入库金额将计入本月账单</div></div><div class="sw on"><i></i></div></div></div>
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-save data-stoast="已入库 · 大宠爱 +3 支">入库</div>
+</div>`;
+
+V.backup = () => `${sb()}${nav('数据备份与导出')}
+<div class="body">
+  <div class="crd" style="text-align:center;padding:24px 16px">
+    ${ticon('download',TC.weight,52,26)}
+    <div style="font-size:15px;font-weight:700;margin-top:10px">全部数据安全</div>
+    <div style="font-size:11px;color:var(--t2);margin-top:5px;line-height:1.7">2 只宠物 · 486 条记录 · 132 张照片 · 共 2.4MB<br>上次备份：2026年8月1日 22:14</div>
+    <div class="btn btn-p" style="margin:16px 24px 0;height:42px" data-toast="备份完成，已保存至云端">立即备份</div>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow" style="min-height:50px">${ticon('refresh','#7A7A76',30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">从备份恢复</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl" style="margin:0 -16px 0 40px"></div>
+    <div class="frow" style="min-height:50px">${ticon('fileText',TC.medical,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">导出病历 PDF</span><span class="val">就诊时给医生看</span><span class="chev">${ICON.chevR(14)}</span></div>
+  </div>
+</div>`;
+
+/* ---------- 工具箱（push） ---------- */
+V.toolbox = () => `${sb()}${nav('工具箱')}
+<div class="body">
+  <div class="tool-grid">
+    <div class="tool press" data-push="toolAge">${ticon('calc',TC.weight,40,20)}<div class="tk">年龄换算</div><div class="ts">猫狗年龄换算成人类年龄，一键带入档案生日</div></div>
+    <div class="tool press" data-toast="喂食量计算器（演示略）">${ticon('bowl',TC.feed,40,20)}<div class="tk">喂食量计算</div><div class="ts">按体重与绝育状态，算每日建议克数</div></div>
+    <div class="tool press" data-push="toolFood">${ticon('search',TC.groom,40,20)}<div class="tk">安全食物查询</div><div class="ts">这个能不能吃？四档色标速查</div></div>
+    <div class="tool press" data-toast="附近医院（演示略）">${ticon('mapPin',TC.medical,40,20)}<div class="tk">附近医院</div><div class="ts">基于位置找宠物医院，存档常去医生</div></div>
+  </div>
+  <div style="font-size:10.5px;color:var(--t3);text-align:center;line-height:1.7">工具可从档案自动带入生日、体重等信息<br>是档案的延伸，不用重复输入</div>
+</div>`;
+
+V.toolAge = () => `${sb()}${nav('年龄换算')}
+<div class="body">
+  <div class="crd" style="padding:11px 16px 5px">
+    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">用档案里的毛孩子</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px">
+      <div class="chip on" data-fchip="s" style="display:flex;align-items:center;gap:6px;padding:4px 13px 4px 5px">${avatar('a1',18,9,50)}豆豆</div>
+      <div class="chip" data-fchip="s" style="display:flex;align-items:center;gap:6px;padding:4px 13px 4px 5px">${avatar('a2',18,9,50)}咪咪</div>
+    </div>
+    <div class="s" style="padding-bottom:8px">选择后自动带入出生日期，也可手动输入</div>
+  </div>
+  <div class="crd">
+    <div class="frow"><span class="k">出生日期</span><span class="val b">2023年6月10日</span><span class="chev">${ICON.chevR(14)}</span></div>
+    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
+    <div class="frow"><span class="k">物种</span><span class="val b">猫</span><span class="chev">${ICON.chevR(14)}</span></div>
+  </div>
+  <div class="crd" style="text-align:center;padding:24px 16px">
+    <div style="font-size:12px;color:var(--t2)">豆豆 · 猫 · 3 岁 2 个月</div>
+    <div style="font-size:24px;font-weight:700;margin-top:8px">豆豆相当于人类 <span style="color:var(--pop-deep)">28 岁</span></div>
+    <div class="s" style="margin-top:10px;line-height:1.6">猫龄换算：第 1 年 ≈ 15 岁，第 2 年 ≈ +9 岁<br>之后每年 +4 岁</div>
+  </div>
+</div>`;
+
+V.toolFood = () => `${sb()}${nav('安全食物查询')}
+<div style="flex:none;padding:2px 16px 10px">
+  <div class="press" data-toast="搜索食物（演示略）" style="display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:12px;padding:10px 14px;color:var(--t3);font-size:13px;cursor:pointer">${ICON.search(16)} 搜一搜：这个能不能吃？</div>
+</div>
+<div class="body" style="padding-top:0">
+  <div class="crd" style="display:flex;justify-content:space-between;padding:10px 14px">
+    ${[['剧毒','var(--danger)'],['有害','#B26E4B'],['少量可','var(--pop-deep)'],['安全','var(--success)']].map(([k,c])=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)"><i class="dot" style="width:7px;height:7px;background:${c}"></i>${k}</span>`).join('')}
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    ${[['巧克力','剧毒 · 可可碱中毒，立即就医','var(--danger)'],['葡萄','剧毒 · 可致急性肾衰竭','var(--danger)'],['洋葱','有害 · 破坏红细胞，熟食也不行','#B26E4B'],['胡萝卜','安全 · 少量熟食，助消化','var(--success)']].map(([n,s,c],i)=>`${i?`<div class="hl" style="margin:0 -16px"></div>`:''}
+    <div class="frow" style="min-height:48px"><i class="dot" style="background:${c}"></i><div class="grow" style="margin-left:10px"><div class="t" style="font-size:14px">${n}</div><div class="s">${s}</div></div><span class="pill" style="color:${c};background:var(--fill)">${s.split(' · ')[0]}</span></div>`).join('')}
+  </div>
+  <div style="text-align:center;font-size:10px;color:var(--t3);line-height:1.6;padding-bottom:4px">仅供参考，不能替代兽医诊疗</div>
+</div>`;
+
+/* ---------- 邀请落地页（被邀请人视角，push） ---------- */
+V.invite = () => `${sb()}
+<div class="body" style="justify-content:center;gap:14px">
+  <div style="text-align:center;padding:4px 0">
+    <div style="font-size:11.5px;color:var(--t2)">爸爸 邀请你加入家庭空间</div>
+    <div style="font-size:21px;font-weight:700;margin-top:6px">三口之家的档案袋</div>
+  </div>
+  <div style="display:flex;gap:10px">
+    ${[['a1','豆豆','英短 · 3岁2月'],['a2','咪咪','柯基 · 1岁8月']].map(([c,n,s])=>`
+    <div class="crd" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px">${avatar(c,52,26,14)}<div style="text-align:center"><div style="font-size:14px;font-weight:700">${n}</div><div class="s" style="margin-top:2px">${s}</div></div></div>`).join('')}
+  </div>
+  <div class="crd" style="display:flex;align-items:center;gap:10px;padding:12px 14px">
+    <div style="display:flex">${['a1','a2','a3'].map((c,i)=>`<div class="avatar ${c}" style="width:26px;height:26px;border-radius:50%;border:2px solid var(--card);margin-left:${i?-8:0}px">${ICON.paw(12)}</div>`).join('')}</div>
+    <div class="grow"><div class="t" style="font-size:13px;font-weight:600">3 位成员已在记录</div><div class="s">加入后可查看全部档案并共同记录</div></div>
+  </div>
+</div>
+<div style="flex:none;padding:6px 16px 26px">
+  <div class="btn btn-p" data-toast="已加入，和爸爸一起记录吧">加入家庭</div>
+  <div style="text-align:center;font-size:10.5px;color:var(--t3);padding-top:10px">加入即表示同意家庭成员可见你的记录</div>
+</div>`;
+
+V.inviteFull = () => `${sb()}
+<div class="body" style="justify-content:center">
+  <div class="crd" style="padding:30px 16px 26px">
+    ${esk('catBox','这个家庭满员啦','「三口之家的档案袋」已有 5 位成员（最多 5 人）<br>可让创建者移出闲置成员后，再点链接加入')}
+  </div>
+</div>
+<div style="flex:none;padding:6px 16px 26px"><div class="btn btn-s" data-toast="已通知创建者（演示略）">提醒创建者腾出位置</div></div>`;
+
+/* ---------- 被移出家庭（全屏异常态） ---------- */
+V.kicked = () => `${sb()}
+<div class="body" style="justify-content:center">
+  <div class="crd" style="padding:30px 16px 26px">
+    ${esk('dogCable','你已不在该家庭','「三口之家的档案袋」的创建者已将你移出<br>家庭数据不再可见；你加入前的个人数据仍保留')}
+  </div>
+</div>
+<div style="flex:none;padding:6px 16px 26px"><div class="btn btn-p" data-toast="回到个人空间（演示略）">回到我的个人空间</div></div>`;
+
+/* ---------- 记录详情卡（时间线单条点击展开） ---------- */
+V.recordDetail = (id) => { const r = REC[id]; return `
+${sb()}${nav('记录详情','<div class="act" data-toast="进入编辑模式（演示略）">编辑</div>')}
+<div class="body">
+  <div class="crd" style="display:flex;gap:14px;align-items:center;padding:18px 16px">
+    ${ticon(r.icon, r.color, 48, 24)}
+    <div class="grow">
+      <div style="font-size:11px;color:var(--t2)">${r.typename} · 豆豆</div>
+      <div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:3px">${r.value}</div>
+    </div>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    ${r.fields.map(([k,v],i)=>`${i?`<div class="hl" style="margin:0 -16px 0 76px"></div>`:''}<div class="frow" style="min-height:44px"><span class="k" style="width:64px;font-size:13px;color:var(--t2)">${k}</span><span class="val b" style="font-size:13px">${v}</span></div>`).join('')}
+  </div>
+  ${r.note?`<div class="crd"><div style="font-size:11px;color:var(--t2);margin-bottom:6px">备注</div><div style="font-size:13.5px;line-height:1.65">${r.note}</div></div>`:''}
+  ${r.photos.length?`<div class="album">${r.photos.map(c=>`<div class="${c}">${ICON.paw(26)}</div>`).join('')}</div>`:''}
+  <div class="press" data-del style="text-align:center;padding:13px;font-size:14px;font-weight:600;color:var(--danger);cursor:pointer;background:var(--card);border-radius:14px">删除这条记录</div>
+</div>
+<div class="modal-mask" id="del-modal">
+  <div class="modal">
+    <div class="mb"><h4>删除这条${r.typename}记录？</h4><p>删除后无法恢复，家庭成员的时间线中也会同步消失。</p></div>
+    <div class="mrow"><div data-cancel-del>取消</div><div class="mdel" data-confirm-del>删除</div></div>
+  </div>
+</div>`};
+
+/* ---------- 快捷记录弹层（评审意见 #4：FAB 唤起带宠物选择行；两页分类可翻页） ---------- */
+const QA_PAGES = [
+  [['scale','体重',TC.weight],['bowl','喂食',TC.feed],['camera','日常',TC.daily],
+   ['syringe','疫苗',TC.vaccine],['shield','驱虫',TC.deworm],['fileText','就医',TC.medical],
+   ['pill','用药',TC.medication],['coin','花销',TC.expense],['dots','更多','#7A7A76']],
+  [['poop','便便',TC.poop],['drop','洗护',TC.groom],['vomit','呕吐',TC.vomit],
+   ['cross','手术',TC.surgery],['walk','遛狗',TC.walk],['glass','饮水',TC.water],
+   ['bone','零食',TC.snack],['heart','发情',TC.heat],['flag','里程碑',TC.milestone],
+   ['pencil','自定义',TC.custom]]
+];
+V.quickAddSheet = (pet='豆豆', page=1) => `
+<div class="grip"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <b style="font-size:16px">记一笔</b>
+  <div style="display:flex;gap:6px;align-items:center">
+    ${['豆豆','咪咪'].map(p=>`<div class="pet-pick" data-pet-pick="${p}" style="display:flex;align-items:center;gap:5px;padding:4px 10px 4px 4px;border-radius:999px;cursor:pointer;${p===pet?`background:var(--primary-tint);box-shadow:inset 0 0 0 1.5px var(--primary)`:`background:var(--fill)`}">
+      ${avatar(p==='咪咪'?'a2':'a1',22,11,50)}<span style="font-size:11px;font-weight:${p===pet?'600':'400'};color:${p===pet?'var(--text)':'var(--t2)'}">${p}</span>
+      ${p===pet?`<span style="color:var(--primary);display:flex">${ICON.check(11)}</span>`:''}
+    </div>`).join('')}
+  </div>
+</div>
+<div class="grid9">
+  ${QA_PAGES[page-1].map(([ic,k,c])=>
+    `<div class="g9" data-record="${k}"><div class="gi" style="background:${tint(c)};color:${c}">${ICON[ic](22)}</div><div class="gk">${k}</div></div>`).join('')}
+</div>
+<div style="text-align:center;margin-top:12px;display:flex;justify-content:center;gap:5px">
+  ${[1,2].map(n=>`<i class="dot" data-sheetpage="${n}" style="cursor:pointer;${n===page?'background:var(--primary);width:14px;border-radius:99px':'background:var(--t3)'}"></i>`).join('')}
+</div>
+<div style="text-align:center;font-size:10px;color:var(--t3);margin-top:8px">${page===1?'第 1 页 · 高频分类（点「更多」翻页）':'第 2 页 · 低频分类'} · 记录人：爸爸（我） · 单宠家庭自动跳过宠物选择</div>`;
+
+V.completeTaskSheet = (name) => { const medical = /疫苗|驱虫|用药/.test(name); return `
+<div class="grip"></div><div style="padding:0 16px 20px"><div style="font-size:18px;font-weight:700">完成「${name}」</div>
+<div class="s" style="line-height:1.6;margin-top:6px">${medical?'完成后可同时留下健康记录，家庭成员会看到由谁完成。':'确认后会同步给家庭成员，并按周期安排下一次。'}</div>
+${medical?`<div class="crd press" data-done-choice="record" style="margin-top:14px"><div class="t" style="font-weight:700">同时记一笔</div><div class="s">预填本次${name}，保存后再完成任务</div></div>`:''}
+<div class="crd press" data-done-choice="only" ${medical?'':'style="margin-top:14px"'}><div class="t" style="font-weight:700">${medical?'仅完成':'确认完成'}</div><div class="s">${medical?'不新增记录，仍会推进下一次提醒':'同步给家庭成员，并按周期安排下一次'}</div></div>
+<div class="crd press" data-done-choice="delay"><div class="t" style="font-weight:700">延后 3 天</div><div class="s">改为 8月14日 提醒，不算逾期</div></div>
+<div data-close-sheet style="text-align:center;padding:14px 0 2px;color:var(--pop-deep);font-weight:600;cursor:pointer">取消</div></div>`; };
+
+/* ---------- 保存结果卡（低频高价值类型：疫苗/驱虫/就医/手术/用药） ---------- */
+V.resultSheet = (type) => { const medical = type==='medical'; return `
+<div class="grip"></div><div style="padding:0 16px 20px;text-align:center">
+<div style="width:44px;height:44px;border-radius:50%;background:rgba(52,160,92,.12);color:var(--success);display:flex;align-items:center;justify-content:center;margin:2px auto 10px">${ICON.check(22)}</div>
+<div style="font-size:17px;font-weight:700">已记下啦</div>
+<div class="s" style="margin-top:6px;line-height:1.6">下次提醒：2026-11-08 · 到期前 3 天推送全家</div>
+<div class="crd press" data-toast="打开提醒周期编辑（演示略）" style="margin-top:14px;display:flex;align-items:center;text-align:left"><div class="grow"><div class="t" style="font-weight:600">修改周期</div><div class="s">默认按上次周期自动安排</div></div><span class="chev">${ICON.chevR(14)}</span></div>
+${medical?`<div class="crd press" data-record="花销" style="display:flex;align-items:center;text-align:left">${ticon('coin',TC.expense,30,15)}<div class="grow" style="margin-left:10px"><div class="t" style="font-weight:600">同步记一笔花销 ¥380</div><div class="s">预填金额与分类 = 医疗，两笔记录互相关联</div></div><span class="chev">${ICON.chevR(14)}</span></div>`:''}
+<div class="btn btn-p" data-result-done style="margin-top:6px">完成</div></div>`; };
+
+/* ================= 模拟器引擎 ================= */
+const stage = document.getElementById('sim-stage');
+const sim = document.getElementById('sim');
+let simPhone, stack = [], curTab = 'home', curPet = '豆豆', curQAPage = 1, doneSet = new Set(), newPet = null, pendingDone = '', showGuide = false;
+
+function phoneShell(inner, z, cls='') {
+  return `<div class="view ${cls}" style="z-index:${z}"><div class="scale-wrap">${inner}</div>
+    <div class="sheet-mask" data-close-sheet></div>
+    <div class="sheet"></div></div>`;
+}
+function buildSim() {
+  doneSet = new Set(); newPet = null; showGuide = false;
+  simPhone = document.createElement('div');
+  simPhone.className = 'phone';
+  simPhone.innerHTML = phoneShell(V.home(), 2, 'root') +
+    `<div class="paw-loader" id="paw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse class="pt" cx="5.4" cy="8.3" rx="1.65" ry="2.2" transform="rotate(-24 5.4 8.3)"/>
+        <ellipse class="pt" cx="9.2" cy="5" rx="1.6" ry="2.25" transform="rotate(-10 9.2 5)"/>
+        <ellipse class="pt" cx="14.8" cy="5" rx="1.6" ry="2.25" transform="rotate(10 14.8 5)"/>
+        <ellipse class="pt" cx="18.6" cy="8.3" rx="1.65" ry="2.2" transform="rotate(24 18.6 8.3)"/>
+        <path class="pt" d="M12 11.2c3 0 5.6 2.1 5.6 4.6 0 1.9-1.5 3.4-3.4 3.4-1 0-1.5-.4-2.2-.4-.7 0-1.2.4-2.2.4-1.9 0-3.4-1.5-3.4-3.4 0-2.5 2.6-4.6 5.6-4.6z"/>
+      </svg>
+      <div class="pk">猫咪每天睡 12~16 小时</div>
+    </div>`;
+  stage.innerHTML = ''; stage.appendChild(simPhone);
+  stack = [simPhone.querySelector('.view')];
+  setTimeout(() => { const p = simPhone.querySelector('#paw'); p.style.opacity = 0; setTimeout(() => p.remove(), 400); }, 1100);
+}
+function push(name, arg) {
+  const top = stack[stack.length - 1];
+  top.classList.add('behind');
+  const div = document.createElement('div');
+  div.innerHTML = phoneShell(V[name](arg), 2 + stack.length);
+  const nv = div.firstElementChild;
+  nv.classList.add('entering');
+  simPhone.appendChild(nv);
+  requestAnimationFrame(() => requestAnimationFrame(() => nv.classList.remove('entering')));
+  stack.push(nv);
+}
+function pop() {
+  if (stack.length < 2) return;
+  const top = stack.pop();
+  top.classList.add('leaving');
+  stack[stack.length - 1].classList.remove('behind');
+  setTimeout(() => top.remove(), 520);
+}
+function switchTab(name) {
+  while (stack.length > 1) { const v = stack.pop(); v.remove(); }
+  curTab = name;
+  const root = stack[0];
+  root.querySelector('.scale-wrap').innerHTML = V[name](name === 'reminders' ? 1 : undefined);
+  root.querySelector('.sheet').classList.remove('show');
+  root.querySelector('.sheet-mask').classList.remove('show');
+}
+function showSheet(html) {
+  const v = stack[stack.length - 1];
+  const sh = v.querySelector('.sheet');
+  sh.innerHTML = html;
+  sh.classList.add('show');
+  v.querySelector('.sheet-mask').classList.add('show');
+  v.querySelector('.scale-wrap').parentElement.classList.add('scaled');
+}
+function openSheet() { showSheet(V.quickAddSheet(curPet, curQAPage = 1)); }
+function closeSheet() {
+  const v = stack[stack.length - 1];
+  v.querySelector('.sheet').classList.remove('show');
+  v.querySelector('.sheet-mask').classList.remove('show');
+  v.classList.remove('scaled');
+}
+function toast(msg) {
+  const v = stack[stack.length - 1];
+  let t = v.querySelector('.toast');
+  if (!t) { t = document.createElement('div'); t.className = 'toast'; v.appendChild(t); }
+  t.innerHTML = `<span class="tk-ic">${ICON.check(15)}</span>${msg}`;
+  requestAnimationFrame(() => t.classList.add('show'));
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* 事件委托 */
+document.addEventListener('click', e => {
+  if (!sim.classList.contains('open')) return;
+  const q = sel => e.target.closest(sel);
+  const sheetEl = q('[data-sheet]');
+  if (sheetEl) { e.stopPropagation(); if (sheetEl.dataset.pet) curPet = sheetEl.dataset.pet; openSheet(); return; }
+  if (q('[data-pet-pick]')) { curPet = q('[data-pet-pick]').dataset.petPick; stack[stack.length-1].querySelector('.sheet').innerHTML = V.quickAddSheet(curPet, curQAPage); return; }
+  if (q('[data-sheetpage]')) { curQAPage = +q('[data-sheetpage]').dataset.sheetpage; stack[stack.length-1].querySelector('.sheet').innerHTML = V.quickAddSheet(curPet, curQAPage); return; }
+  if (q('[data-record]')) {
+    const type = q('[data-record]').dataset.record;
+    if (type === '更多') { curQAPage = 2; stack[stack.length-1].querySelector('.sheet').innerHTML = V.quickAddSheet(curPet, 2); return; }
+    closeSheet();
+    setTimeout(() => { type === '体重' ? push('weightForm', curPet) : push('recordForm', NAME2KEY[type]); }, 180);
+    curQAPage = 1; return;
+  }
+  if (q('[data-species]')) {
+    const species = q('[data-species]').dataset.species;
+    stack[stack.length-1].querySelector('.scale-wrap').innerHTML = V.petForm(species);
+    return;
+  }
+  const fchip = q('[data-fchip]');
+  if (fchip) {
+    if (fchip.dataset.fchip === 'm') { fchip.classList.toggle('on'); }
+    else { fchip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('on')); fchip.classList.add('on'); }
+    return;
+  }
+  if (q('[data-close-sheet]') && stack[stack.length-1].querySelector('.sheet.show')) { closeSheet(); return; }
+  if (q('[data-guide-close]')) { showGuide = false; stack[0].querySelector('.scale-wrap').innerHTML = V.home(); return; }
+  if (q('[data-savepet]')) {
+    const selectedSpecies = stack[stack.length-1].querySelector('[data-species].on');
+    const species = selectedSpecies ? selectedSpecies.dataset.species : '猫';
+    newPet = {name:'煤球', sub:species + ' · 新加入 · 弟弟', weight:'— kg'};
+    showGuide = true;
+    stack[0].querySelector('.scale-wrap').innerHTML = V.home();
+    toast('煤球已加入档案袋'); setTimeout(pop, 600); return;
+  }
+  if (q('[data-save]')) { const b = q('[data-save]');
+    if (b.dataset.result) { showSheet(V.resultSheet(b.dataset.result)); return; }
+    toast(b.dataset.stoast || '已记下啦'); setTimeout(pop, 600); return; }
+  if (q('[data-save-more]')) { toast('已保存，继续记下一笔'); return; }
+  const recEl = q('[data-rec]');
+  if (recEl) { push('recordDetail', +recEl.dataset.rec); return; }
+  const chipEl = q('[data-chip]');
+  if (chipEl) { const top = stack[stack.length-1]; top.querySelector('.scale-wrap').innerHTML = V.detail('时间线', chipEl.dataset.chip); return; }
+  if (q('[data-del]')) { const m = stack[stack.length-1].querySelector('#del-modal'); if(m){ m.classList.add('show'); } return; }
+  if (q('[data-cancel-del]')) { stack[stack.length-1].querySelector('#del-modal').classList.remove('show'); return; }
+  if (q('[data-confirm-del]')) { stack[stack.length-1].querySelector('#del-modal').classList.remove('show'); toast('已删除'); setTimeout(pop, 500); return; }
+  if (q('[data-done]')) {
+    pendingDone = q('[data-done]').dataset.done;
+    showSheet(V.completeTaskSheet(pendingDone)); return;
+  }
+  if (q('[data-result-done]')) { closeSheet(); setTimeout(pop, 350); return; }
+  if (q('[data-done-choice]')) {
+    const choice = q('[data-done-choice]').dataset.doneChoice;
+    closeSheet();
+    if (choice === 'record') { push('recordForm', pendingDone.includes('驱虫') ? 'deworm' : pendingDone.includes('疫苗') ? 'vaccine' : 'medication'); return; }
+    if (choice === 'delay') { toast(`已延后 3 天 · 「${pendingDone}」改为 8月14日 提醒`); return; }
+    const name = pendingDone;
+    toast(`已完成「${name}」· 爸爸刚刚完成，已同步家庭成员`);
+    doneSet.add(name);
+    if (doneSet.size >= 2) {
+      const card = stack[0].querySelector('.scale-wrap .crd');
+      if (card) card.innerHTML = `<div class="calm">${SKETCH.dogSun.replace('88','64').replace('66','48')}<div><div style="font-size:14px;font-weight:600">今天一切安好</div><div class="s" style="margin-top:2px">所有待办已完成 · 家庭成员同步可见</div></div></div>`;
+    }
+    return;
+  }
+  if (q('[data-pop]')) { pop(); return; }
+  if (q('[data-tab]')) { switchTab(q('[data-tab]').dataset.tab); return; }
+  if (q('[data-push]')) { push(q('[data-push]').dataset.push); return; }
+  const segv = q('[data-segv]');
+  if (segv) { const top = stack[stack.length-1]; top.querySelector('.scale-wrap').innerHTML = V.detail(segv.dataset.segv); return; }
+  if (q('.sw')) { q('.sw').classList.toggle('on'); toast(q('.sw').classList.contains('on') ? '已开启' : '已关闭'); return; }
+  if (q('[data-toast]')) { toast(q('[data-toast]').dataset.toast); return; }
+});
+
+function openSim() { sim.classList.add('open'); document.body.style.overflow = 'hidden'; buildSim(); }
+function closeSim() { sim.classList.remove('open'); document.body.style.overflow = ''; }
+document.getElementById('cta-open').onclick = openSim;
+document.getElementById('sim-close').onclick = closeSim;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSim(); });
+sim.addEventListener('click', e => { if (e.target === sim) closeSim(); });
+
+/* ================= 空状态素描插画（单色线条，零 emoji） ================= */
+const SK = (p, w=88, h=66) => `<div class="esk"><svg width="${w}" height="${h}" viewBox="0 0 88 66" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg></div>`;
+const SKETCH = {
+  // 猫坐档案盒：无宠物
+  boxCat: SK('<path d="M18 34h52v24H18z"/><path d="M18 34l9-9h34l9 9"/><path d="M27 25h12M49 25h12"/><circle cx="44" cy="26" r="9"/><path d="M37 20l-3-7 8 3M51 20l3-7-8 3"/><path d="M40.5 26h.01M47.5 26h.01"/><path d="M64 50q10-2 9-12"/>'),
+  // 猫爪拿笔：无记录
+  pawPen: SK('<circle cx="26" cy="16" r="4"/><circle cx="38" cy="12" r="4.2"/><circle cx="50" cy="12" r="4.2"/><circle cx="62" cy="16" r="4"/><path d="M44 24c9 0 16 6.5 16 13.5 0 5.4-4.3 9.7-9.7 9.7-2.9 0-4-1.2-6.3-1.2s-3.4 1.2-6.3 1.2c-5.4 0-9.7-4.3-9.7-9.7C28 30.5 35 24 44 24z"/><path d="M58 46l16-16 5 5-16 16-7 2z"/><path d="M69 35l5 5"/>'),
+  // 躺平的狗 + 太阳：一切安好
+  dogSun: SK('<circle cx="16" cy="14" r="6"/><path d="M16 4v3M16 21v3M6 14h3M23 14h3M9 7l2 2M23 19l2 2"/><path d="M30 52q0-12 17-12h9q16 0 16 12z"/><circle cx="66" cy="36" r="9"/><path d="M61 30q-7-6-3-11M71 30q7-6 3-11"/><path d="M63 36h.01M69 36h.01"/><path d="M40 52v6M56 52v6M30 46q-7-2-6-10"/><path d="M76 20l4-4M80 24l4-4"/>'),
+  // 相框爪印：无照片
+  framePaw: SK('<rect x="18" y="8" width="52" height="42" rx="5"/><path d="M18 42l14-12 10 9 8-7 20 16"/><circle cx="60" cy="18" r="3"/><circle cx="38" cy="24" r="1.6"/><circle cx="44" cy="21" r="1.7"/><circle cx="50" cy="24" r="1.6"/><path d="M44 27c3.4 0 6 2.5 6 5.4 0 2.2-1.8 4-4 4-1.2 0-1.5-.5-2-.5s-.8.5-2 .5c-2.2 0-4-1.8-4-4 0-2.9 2.6-5.4 6-5.4z"/>'),
+  // 咬网线的狗：网络错误
+  dogCable: SK('<circle cx="26" cy="32" r="11"/><path d="M17 26q-9 2-7 12M35 26q9 2 7 12"/><path d="M22 32h.01M30 32h.01M26 37h.01"/><rect x="54" y="28" width="11" height="9" rx="2.5"/><path d="M54 30.5h-5M54 34.5h-5M65 32.5h4"/><path d="M71 32.5q9 0 9 9v6"/><path d="M76 50l4 4M80 50l-4 4"/>'),
+  // 猫守纸箱：暂无备份
+  catBox: SK('<rect x="22" y="34" width="44" height="24" rx="2"/><path d="M22 40h44"/><circle cx="44" cy="24" r="9"/><path d="M37 18l-3-7 8 3M51 18l3-7-8 3"/><path d="M40.5 24h.01M47.5 24h.01"/><path d="M50 33q8 4 2 9"/>'),
+  // 空纸箱：库存为空
+  openBox: SK('<path d="M20 32h48v26H20z"/><path d="M20 32l-8-8M20 32l10-8M68 32l8-8M68 32l-10-8"/><path d="M44 18v-6M36 16l-3-4M52 16l3-4" stroke-dasharray="3 4"/><path d="M34 46h20"/>'),
+};
+const esk = (sk, title, sub, btn='') => `<div class="empty">${SKETCH[sk]}<div class="et">${title}</div><div class="es">${sub}</div>${btn?`<div class="btn btn-s" style="margin:14px auto 0;max-width:210px;height:40px">${btn}</div>`:''}</div>`;
+
+/* 空状态页（展厅） */
+V.esHome = () => `${sb()}${lt('我的毛孩子们')}
+<div class="body"><div class="crd" style="padding:34px 16px 28px">
+  ${esk('boxCat','还没有毛孩子','建立第一份档案，疫苗驱虫不再靠脑记','+ 添加第一只毛孩子')}
+</div></div>${tabbar('home')}`;
+V.esTimeline = () => `${sb()}${nav('','编辑')}
+<div class="body" style="flex:none;padding-bottom:0;gap:0"><div class="crd" style="display:flex;gap:14px;align-items:center">${avatar('a1',56,28)}
+<div class="grow"><div style="font-size:19px;font-weight:700">豆豆 <span style="font-size:13px;color:var(--info)">♀</span></div>
+<div style="font-size:11.5px;color:var(--t2);margin-top:3px">英国短毛猫 · 3岁2个月</div></div></div></div>
+<div class="seg" style="margin-top:14px"><div class="on">时间线</div><div>健康</div><div>花销</div><div>相册</div></div>
+<div class="chips">${Object.keys(GROUPS).map((g,i)=>`<div class="chip${i===0?' on':''}">${g}</div>`).join('')}</div>
+<div class="body"><div class="crd" style="padding:28px 16px 24px">${esk('pawPen','还没有记录','点右下角 + 记下第一笔','+ 记一笔')}</div></div>`;
+V.esCalm = () => `${sb()}${lt('我的毛孩子们')}
+<div class="body">
+  <div class="crd"><div class="calm">${SKETCH.dogSun.replace('88','64').replace('66','48')}<div><div style="font-size:14px;font-weight:600">今天一切安好</div><div class="s" style="margin-top:2px">没有临期事项 · 此卡片 3 秒后自动收起</div></div></div></div>
+  <div class="stat-strip"><div class="st"><div class="v">¥326</div><div class="k">本月花销</div></div><div class="st"><div class="v">12<em> 次</em></div><div class="k">本周打卡</div></div><div class="st"><div class="v"><em>豆豆 ↑0.1kg</em></div><div class="k">体重变化 · 8月10日</div></div></div>
+  <div class="pet-grid"><div class="pet-card"><div class="mp">${ICON.plus(11)}</div>${petRow('a1','豆豆','英短 · 3岁2月 · 到家368天')}<div class="hl-full" style="margin:9px -13px 8px"></div><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:700">4.2 kg</span><span style="font-size:10px;font-weight:600;color:var(--t3)">暂无临期事项</span></div></div>
+  <div class="pet-add" data-push="petForm">${ICON.plus(14)} 添加宠物</div></div>
+</div>${tabbar('home')}`;
+V.esAlbum = () => `${sb()}${nav('豆豆的相册','对比')}
+<div class="body"><div class="crd" style="padding:34px 16px 28px">${esk('framePaw','还没有照片','记录时附上照片，会自动聚到这里')}</div></div>`;
+V.esNetwork = () => `${sb()}${nav('提醒')}
+<div class="body"><div class="crd" style="padding:34px 16px 28px">${esk('dogCable','网络开小差了','检查网络后点重试，表单内容已保留','重新加载')}</div></div>`;
+V.esStock = () => `${sb()}${lt('库存')}
+<div class="body"><div class="crd" style="padding:30px 16px 26px">${esk('openBox','还没有库存物品','记下猫粮余量，快吃完时我提醒你','+ 录入第一件物品')}</div></div>${tabbar('mine')}`;
+
+/* ================= 展厅（静态快照，点击进模拟器） ================= */
+const GALLERY = [
+  ['核心流程', [['home','首页 · 宠物卡片墙','成员头像组收进大标题行；待办点整行弹「记一笔/仅完成/延后3天」；新宠物保存后顶部出现可关闭的三步引导条。'],
+    ['detail','宠物详情 · 时间线','头卡下仅保留一行「下次事项」（记一笔由首页 FAB/卡片 + 承担，详情页主角是时间线）；健康 Tab 顶部为进行中的疗程卡；花销 Tab 含 Top3 分类占比条。'],
+    ['weightForm','添加记录 · 体重表单','大数字输入 + 上次对比 + 保存后 Toast 反馈。'],
+    ['petForm','新增宠物','8 物种字段自适应，保存即入卡片墙并触发新手引导条；编辑态底部含归档 / 删除入口（演示略）。'],
+    ['members','家庭成员管理','创建者 chip + 邀请按钮 + 邀请落地页预览入口，PRD 第 15 章。']]],
+  ['健康与提醒', [['reminders','提醒管理','逾期/今天/未来7天分组；点整行弹完成面板（同时记一笔 / 仅完成 / 延后 3 天）。'],
+    ['stock','囤货','余量条 + 保质期 + 记录联动扣减；FAB 进入库表单。'],
+    ['stockForm','入库表单','名称/分类/数量/保质期/补货阈值/扣减模式/记账开关，驱虫缺货红色行的落点。']]],
+  ['数据视图', [['stats','统计页','顶部宠物筛选横条 + 折线/柱状/热力三卡 + 底部常驻年度报告卡。'],
+    ['expenses','记账页','月份切换 + 分类筛选 chip + 预算进度条。'],
+    ['backup','数据备份与导出','工具产品的信任基石。']]],
+  ['系统', [['mine','我的 · 设置','协作与数据 / 偏好 / 工具箱 / 关于 四组；微信通知改为授权状态行。'],
+    ['toolbox','工具箱','年龄换算 / 喂食量计算 / 安全食物查询 / 附近医院，档案的延伸。'],
+    ['toolAge','工具 · 年龄换算','「用档案里的毛孩子」chips 一键带入生日，结果卡直接出换算。'],
+    ['toolFood','工具 · 安全食物查询','剧毒/有害/少量可/安全 四档色标 + 底部固定免责声明。'],
+    ['invite','邀请落地页','被邀请人视角：空间名 + 宠物封面 + 成员头像组 + 加入家庭按钮。'],
+    ['inviteFull','邀请落地页 · 满员','最多 5 人的异常态快照。']]],
+  ['空状态 Empty States', [['esHome','首页 · 无宠物','猫坐档案盒素描 + 主按钮，首次进入的唯一画面。'],
+    ['esTimeline','时间线 · 无记录','猫爪拿笔素描 + 「记一笔」次按钮。'],
+    ['esCalm','待办 · 一切安好','躺平的狗 + 太阳；卡片 3 秒后自动收起。'],
+    ['esAlbum','相册 · 无照片','相框爪印素描，说明照片来源引导。'],
+    ['esNetwork','网络错误','咬网线的狗；强调表单内容已保留。'],
+    ['esStock','库存 · 无物品','空纸箱 + 价值引导文案 + 录入按钮。'],
+    ['kicked','被移出家庭','全屏说明页 +「回到我的个人空间」主按钮。']]]
+];
+document.getElementById('app').innerHTML = GALLERY.map(([sec, items]) => `
+  <div class="section-title">${sec}<span>${items.length} 个页面 · 点击进模拟器</span></div>
+  <div class="gallery">${items.map(([v, name, desc]) => `
+    <div class="item" data-open="${v}">
+      <div class="phone">${phoneShell(V[v](), 2, 'root')}
+        <div class="phone-hint"><span>点击进入交互演示</span></div>
+      </div>
+      <div class="label"><h3>${name}</h3><p>${desc}</p></div>
+    </div>`).join('')}
+  </div>`).join('');
+document.querySelectorAll('[data-open]').forEach(el => el.onclick = () => {
+  openSim();
+  const v = el.dataset.open;
+  if (v !== 'home') {
+    if (['stats','mine','reminders'].includes(v)) switchTab(v);
+    else push(v);
+  }
+});
+</script>
+</body>
+</html>

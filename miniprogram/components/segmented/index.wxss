@@ -1,0 +1,42 @@
+/* segmented —— §7.11 分段选择器 */
+.seg {
+  position: relative;
+  display: inline-flex;
+  background: var(--bg-fill);
+  border-radius: var(--r-s);
+  padding: 4rpx;
+}
+
+.seg-slider {
+  position: absolute;
+  top: 4rpx;
+  bottom: 4rpx;
+  background: var(--bg-card);
+  border-radius: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  transition: left 300ms var(--snap), width 300ms var(--snap);
+}
+
+.seg-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64rpx;
+  padding: 0 28rpx; /* 宽度自适应文字（§7.11），由 JS 实测定位滑块 */
+  box-sizing: border-box;
+}
+
+.seg-text {
+  font-size: 28rpx;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 200ms var(--fade);
+}
+
+.seg-item.active .seg-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}

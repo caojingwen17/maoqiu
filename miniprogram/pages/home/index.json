@@ -1,0 +1,16 @@
+{
+  "navigationBarTitleText": "毛球档案袋",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#FAF6EF",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "skeleton": "/components/skeleton/index",
+    "empty-state": "/components/empty-state/index",
+    "swipe-cell": "/components/swipe-cell/index",
+    "pet-avatar": "/components/pet-avatar/index",
+    "record-icon": "/components/record-icon/index",
+    "sheet": "/components/sheet/index",
+    "fab": "/components/fab/index",
+    "toast": "/components/toast/index"
+  }
+}

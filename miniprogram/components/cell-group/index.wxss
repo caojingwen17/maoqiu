@@ -1,0 +1,7 @@
+/* cell-group —— inset-grouped 白卡容器（§7.4） */
+.cell-group {
+  display: block;
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  overflow: hidden;
+}

@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "记一笔",
+  "usingComponents": {
+    "pet-avatar": "/components/pet-avatar/index",
+    "photo-picker": "/components/photo-picker/index",
+    "float-input": "/components/float-input/index",
+    "num-keyboard": "/components/num-keyboard/index",
+    "sheet": "/components/sheet/index",
+    "segmented": "/components/segmented/index",
+    "record-icon": "/components/record-icon/index",
+    "paw-loading": "/components/paw-loading/index",
+    "toast": "/components/toast/index"
+  }
+}

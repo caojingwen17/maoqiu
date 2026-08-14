@@ -1,0 +1,21 @@
+<view wx:if="{{rendered}}" class="sheet-root">
+
+  <view class="sheet-mask {{active ? 'show' : ''}}" bindtap="onMaskTap"></view>
+
+  <view class="sheet-panel {{active ? 'show' : ''}} {{dragging ? 'dragging' : ''}} {{expanded ? 'full' : height}}"
+    style="transform: translateY({{active ? (dragY > 0 ? dragY + 'px' : '0px') : '110%'}});">
+
+    <!-- 抓握条 + 毛玻璃头部（.glass 工具类不进 isolated 组件，样式本地化） -->
+    <view class="sheet-header" catchtouchstart="onHeaderTouchStart"
+      catchtouchmove="onHeaderTouchMove" catchtouchend="onHeaderTouchEnd"
+      catchtouchcancel="onHeaderTouchEnd">
+      <view class="sheet-grabber"></view>
+      <view wx:if="{{title}}" class="sheet-title">{{title}}</view>
+    </view>
+
+    <scroll-view scroll-y class="sheet-body">
+      <slot></slot>
+    </scroll-view>
+
+  </view>
+</view>

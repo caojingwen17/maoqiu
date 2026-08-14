@@ -1,0 +1,342 @@
+/* pages/pet/edit/index.wxss
+ * iOS 分组列表表单：设计文档 §8.3 + doc/index.html .frow 视觉
+ */
+page {
+  /* ♀ 粉色无全局 token，页面局部定义后仍走 var() 引用 */
+  --pink: #B87B8E;
+}
+
+/* ---------- 分组白卡 ---------- */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  padding: 8rpx 32rpx;
+  margin: 24rpx 32rpx 0;
+}
+
+/* ---------- 表单行 .frow：左标签 + 右值/› ---------- */
+.frow {
+  display: flex;
+  align-items: center;
+  min-height: 92rpx;
+  gap: 24rpx;
+  padding: 0 4rpx;
+  margin: 0 -4rpx;
+}
+.k {
+  width: 152rpx;
+  flex: none;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+.val {
+  flex: 1;
+  text-align: right;
+  font-size: 28rpx;
+  color: var(--text-tertiary);
+}
+.val.b {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.val-flex { flex: 1; min-width: 0; }
+
+.chev {
+  width: 28rpx;
+  height: 28rpx;
+  background: var(--text-tertiary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  flex: none;
+}
+
+/* hairline：左缩进对齐值起始位；hl-full 贯通（输入框块之间） */
+.hl,
+.hl-full {
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+}
+.hl { margin: 0 -32rpx 0 176rpx; }
+.hl-full { margin: 0 -32rpx; }
+
+.row-hover { background: var(--bg-fill-deep); border-radius: var(--r-s); }
+.txt-hover { opacity: 0.6; }
+.chip-hover { background: var(--bg-fill-deep); }
+
+.err-text {
+  font-size: 24rpx;
+  color: var(--danger);
+  padding: 8rpx 4rpx 12rpx;
+}
+
+.block-pad { padding: 16rpx 0 20rpx; }
+
+/* 组件宿主默认 inline，块级化并留纵向间距 */
+float-input {
+  display: block;
+  margin: 12rpx 0;
+}
+
+.k-line {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  padding: 8rpx 0 12rpx;
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+}
+.k-tip { font-size: 20rpx; color: var(--text-tertiary); }
+
+/* ---------- 头像行 ---------- */
+.avatar-box {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  flex: none;
+}
+.avatar-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.35);
+  color: #FAF6EF;
+  font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar-fail {
+  flex: none;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--danger);
+  padding: 8rpx 0 8rpx 16rpx;
+}
+
+/* ---------- 物种图标单选 ---------- */
+.sp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+.sp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 6rpx;
+  border-radius: var(--r-s);
+  flex: 1;
+}
+.sp.on { background: var(--primary-tint); }
+.sp-name {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+}
+.sp.on .sp-name {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ---------- Chip（性别 / 性格标签） ---------- */
+.chips-inline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding-bottom: 16rpx;
+}
+.chip {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  background: var(--bg-fill);
+  border-radius: var(--r-s);
+  padding: 12rpx 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.chip.on {
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-weight: 600;
+}
+.g-ic { font-size: 28rpx; }
+.g-ic.male { color: var(--info); }
+.g-ic.female { color: var(--pink); }
+
+/* ---------- 开关 ---------- */
+.sw {
+  width: 88rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  background: var(--bg-fill-deep);
+  position: relative;
+  flex: none;
+  transition: background var(--t-fade) var(--fade);
+}
+.sw-knob {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  transition: transform var(--t-snap) var(--snap);
+}
+.sw.on { background: var(--primary); }
+.sw.on .sw-knob { transform: translateX(36rpx); }
+
+/* ---------- 折叠组头 ---------- */
+.fold-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 92rpx;
+  padding: 0 4rpx;
+  margin: 0 -4rpx;
+}
+.fold-t {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.fold-chev {
+  transition: transform var(--t-snap) var(--snap);
+}
+.fold-chev.open { transform: rotate(90deg); }
+
+/* ---------- 标签输入（过敏源 / 禁忌食物 / 自定义性格） ---------- */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+}
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: var(--primary);
+  background: var(--primary-tint);
+  border-radius: var(--r-s);
+  padding: 8rpx 16rpx;
+}
+.tag-x {
+  width: 20rpx;
+  height: 20rpx;
+  background: var(--text-secondary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.tag-input {
+  flex: 1;
+  min-width: 200rpx;
+  height: 56rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+
+/* ---------- 医生电话行 ---------- */
+.phone-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.phone-row .grow { flex: 1; min-width: 0; }
+.phone-btn {
+  flex: none;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--info);
+  padding: 16rpx 0 16rpx 16rpx;
+}
+
+/* ---------- 删除宠物 ---------- */
+.delete-card {
+  display: flex;
+  justify-content: center;
+  padding-top: 32rpx;
+  padding-bottom: 32rpx;
+}
+.delete-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.page-foot { height: 200rpx; }
+
+/* ---------- 吸底保存按钮 ---------- */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  background: var(--bg-page);
+  padding: 16rpx 32rpx calc(env(safe-area-inset-bottom) + 24rpx);
+}
+.btn-p {
+  height: 100rpx;
+  border-radius: var(--r-l);
+  background: var(--primary);
+  color: var(--bg-page);
+  font-size: 32rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-p.disabled { opacity: 0.6; }
+
+/* ---------- 品种选择弹层 ---------- */
+.breed-search {
+  padding: 8rpx 8rpx 16rpx;
+}
+.breed-input {
+  height: 80rpx;
+  background: var(--bg-fill);
+  border-radius: var(--r-l);
+  padding: 0 28rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+.breed-item {
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  border-radius: var(--r-s);
+}
+.breed-none {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  padding: 48rpx 0;
+}
+
+/* 按压只变色：hover 规则置于末尾保证覆盖基础底色 */
+.chip.chip-hover { background: var(--bg-fill-deep); }
+.sp.row-hover { background: var(--bg-fill-deep); }

@@ -1,0 +1,99 @@
+/* 毛球档案袋 · 全局样式
+ * 设计 token 原样落地自《设计语言文档 v2.2》§10 CSS Token 速查
+ */
+
+page {
+  /* 行动色：炭棕（按钮/选中/FAB） */
+  --primary: #3E362C;
+  --primary-pressed: #322B22;
+  --primary-tint: rgba(62, 54, 44, 0.06);
+  --primary-mid: rgba(62, 54, 44, 0.12);
+
+  /* 点缀色：焦糖（状态/提醒/Tab选中，全产品唯一彩色） */
+  --pop: #C08A4E;
+  --pop-deep: #9C6B33;
+  --pop-tint: rgba(192, 138, 78, 0.10);
+
+  /* 功能色 */
+  --success: #34A05C;
+  --warning: #C08A4E;
+  --danger: #D24B42;
+  --info: #4A7FC7;
+
+  --bg-page: #FAF6EF;
+  --bg-card: #FFFFFF;
+  --bg-fill: rgba(70, 55, 30, 0.045);
+  --bg-fill-deep: rgba(70, 55, 30, 0.085);
+  --text-primary: #2C2620;
+  --text-secondary: #7E7264;
+  --text-tertiary: #B9AE9E;
+  --hairline: rgba(70, 55, 30, 0.08);
+
+  /* 圆角 */
+  --r-s: 12rpx; --r-m: 20rpx; --r-l: 28rpx;
+
+  /* 动效 */
+  --spring: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --snap: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --fade: ease-out;
+  --t-spring: 500ms; --t-snap: 350ms; --t-fade: 200ms; --t-press: 100ms;
+
+  /* 阴影（仅悬浮层） */
+  --shadow-elevated: 0 8rpx 40rpx rgba(0, 0, 0, 0.12);
+  --shadow-fab: 0 6rpx 24rpx rgba(62, 54, 44, 0.28);
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  page {
+    --primary: #EAE4D8;
+    --primary-pressed: #D8D1C2;
+    --primary-tint: rgba(234, 228, 216, 0.10);
+    --primary-mid: rgba(234, 228, 216, 0.18);
+    --pop: #D3A266;
+    --pop-deep: #D3A266;
+    --pop-tint: rgba(211, 162, 102, 0.14);
+    --bg-page: #0E0E0D;
+    --bg-card: #1C1C1A;
+    --bg-fill: rgba(255, 255, 255, 0.07);
+    --bg-fill-deep: rgba(255, 255, 255, 0.11);
+    --text-primary: #F0F0EE;
+    --text-secondary: #9A9A95;
+    --text-tertiary: #5E5E5A;
+    --hairline: rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* 页面基础样式：米白底 + 暖黑正文 + Body 字号阶梯 */
+page {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 32rpx;
+  line-height: 1.35;
+}
+
+/* 发丝线工具类（0.5px，左缩进 32rpx，使用方需 position: relative） */
+.hairline-b::after {
+  content: '';
+  position: absolute; left: 32rpx; right: 0; bottom: 0;
+  height: 1px; background: var(--hairline);
+  transform: scaleY(0.5); transform-origin: bottom;
+}
+
+/* 毛玻璃工具类（导航栏 / Tab 栏 / 弹层头部专用） */
+.glass {
+  background: rgba(250, 246, 239, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(14, 14, 13, 0.78);
+  }
+}
+
+/* 数字等宽：体重、金额等数据对齐用 */
+.t-num {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,53 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/calendar/index",
+    "pages/stats/index",
+    "pages/mine/index",
+    "pages/pet/detail/index",
+    "pages/pet/edit/index",
+    "pages/record/edit/index",
+    "pages/reminder/index",
+    "pages/expense/index"
+  ],
+  "window": {
+    "backgroundColor": "#FAF6EF",
+    "navigationBarBackgroundColor": "#FAF6EF",
+    "navigationBarTitleText": "毛球档案袋",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#B9AE9E",
+    "selectedColor": "#C08A4E",
+    "backgroundColor": "#FAF6EF",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "宠物",
+        "iconPath": "images/icons/tab-paw.png",
+        "selectedIconPath": "images/icons/tab-paw-active.png"
+      },
+      {
+        "pagePath": "pages/calendar/index",
+        "text": "日历",
+        "iconPath": "images/icons/tab-calendar.png",
+        "selectedIconPath": "images/icons/tab-calendar-active.png"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "统计",
+        "iconPath": "images/icons/tab-chart.png",
+        "selectedIconPath": "images/icons/tab-chart-active.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "images/icons/tab-gear.png",
+        "selectedIconPath": "images/icons/tab-gear-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

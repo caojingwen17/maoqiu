@@ -1,0 +1,9 @@
+{
+  "name": "pawlog",
+  "version": "1.0.0",
+  "description": "毛球档案袋 PawLog 核心业务云函数（单函数 action 路由）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

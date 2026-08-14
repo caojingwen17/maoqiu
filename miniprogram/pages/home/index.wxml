@@ -1,0 +1,162 @@
+<view class="page">
+
+  <!-- 大标题 + 右上角 Plain 文字按钮（编辑模式时切换为「完成」） -->
+  <view class="home-header">
+    <view class="large-title">我的毛孩子们</view>
+    <view wx:if="{{editing}}" class="header-action" hover-class="header-action-press" bindtap="onExitEdit">完成</view>
+    <view wx:elif="{{!loading && !loadError && pets.length > 0}}" class="header-action" hover-class="header-action-press" bindtap="goAddPet">+ 添加</view>
+  </view>
+
+  <!-- 首屏骨架屏（不转圈） -->
+  <skeleton wx:if="{{loading}}" type="home" />
+
+  <!-- 错误态：可点重试 -->
+  <empty-state wx:elif="{{loadError}}" image="paw-box" title="网络开小差了"
+    desc="数据没拉取成功，请检查网络后重试" btnText="点我重试" bindbtnTap="onRetry" />
+
+  <!-- 无宠物空态 -->
+  <empty-state wx:elif="{{pets.length === 0}}" image="paw-box" title="还没有毛孩子"
+    desc="每只毛孩子，都值得一份完整的档案" btnText="添加第一只毛孩子" bindbtnTap="goAddPet" />
+
+  <block wx:else>
+
+    <!-- 全局待办区（条件渲染；无待办时「今天一切安好」3 秒后折叠收起） -->
+    <view wx:if="{{todoState !== 'none'}}" class="todo-wrap {{todoState === 'peace-hide' ? 'collapsing' : ''}}">
+      <view class="todo-card">
+        <block wx:if="{{todoState === 'list'}}">
+          <view class="todo-head" hover-class="row-press" bindtap="goReminders">
+            <text class="todo-title">今日待办</text>
+            <text class="todo-more">共 {{todoTotal}} 条 ›</text>
+          </view>
+          <swipe-cell wx:for="{{todos}}" wx:key="_id" actions="{{todoActions}}"
+            data-index="{{index}}" bindaction="onTodoAction">
+            <view class="todo-row {{index < todos.length - 1 ? 'with-line' : ''}}">
+              <pet-avatar src="{{item.petAvatar}}" species="{{item.petSpecies}}" size="60rpx" />
+              <view class="todo-text">{{item.title}}</view>
+              <view class="pill pill-{{item.pillClass}}">{{item.pillText}}</view>
+            </view>
+          </swipe-cell>
+        </block>
+        <view wx:else class="peace">今天一切安好</view>
+      </view>
+    </view>
+
+    <!-- 统计速览条：一张整宽卡片三列，列间 hairline 竖分隔 -->
+    <view class="stat-strip">
+      <view class="st" hover-class="st-press" bindtap="goExpense">
+        <view class="v t-num {{banner.expenseOver ? 'over' : ''}}">{{banner.expenseText}}<text wx:if="{{banner.expenseOver}}" class="over-badge">{{banner.overText}}</text></view>
+        <view class="k">本月花销</view>
+      </view>
+      <view class="st" hover-class="st-press" bindtap="goStats">
+        <view class="v t-num">{{banner.checkins}}<text class="unit"> 次</text></view>
+        <view class="k">本周打卡</view>
+      </view>
+      <view class="st" hover-class="st-press" bindtap="goStats">
+        <view class="v t-num {{banner.weightClass}}">{{banner.weightText}}</view>
+        <view class="k">体重变化</view>
+      </view>
+    </view>
+
+    <!-- 宠物卡片网格（仅 1 只时单列大卡） -->
+    <view class="pet-grid {{pets.length === 1 ? 'single' : ''}}">
+      <view wx:for="{{pets}}" wx:key="_id"
+        class="pet-card {{editing ? 'shaking' : ''}}"
+        hover-class="{{editing ? 'none' : 'pet-card-press'}}"
+        data-index="{{index}}"
+        bindtap="onPetTap" bindlongpress="onPetLongPress">
+
+        <!-- 右上角小「+」：快捷记录并预选该宠物 -->
+        <view wx:if="{{!editing}}" class="mp" catchtap="onQuickAdd" data-id="{{item._id}}">
+          <view class="mp-icon"
+            style="-webkit-mask-image: url('{{plusUri}}'); mask-image: url('{{plusUri}}');"></view>
+        </view>
+
+        <view class="pet-head">
+          <pet-avatar src="{{item.avatar}}" species="{{item.species}}"
+            size="{{pets.length === 1 ? '144rpx' : '104rpx'}}" />
+          <view class="pet-info">
+            <view class="pet-name-row">
+              <text class="pet-name">{{item.name}}</text>
+              <text class="pet-gender {{item.genderClass}}">{{item.genderSymbol}}</text>
+            </view>
+            <view class="pet-sub">{{item.subText}}</view>
+            <view wx:if="{{pets.length === 1 && item.adoptText}}" class="pet-adopt">{{item.adoptText}}</view>
+          </view>
+        </view>
+
+        <view class="pet-hl"></view>
+
+        <view class="pet-data">
+          <text class="pet-weight t-num {{item.hasWeight ? '' : 'muted'}}">{{item.weightText}}<text wx:if="{{item.weightNew}}" class="new-badge">· 新</text></text>
+          <text wx:if="{{item.reminderText}}" class="pet-reminder {{item.reminderClass}}">{{item.reminderText}}</text>
+        </view>
+      </view>
+
+      <!-- 网格末尾固定的虚线添加卡片 -->
+      <view class="pet-add" hover-class="pet-add-press" bindtap="goAddPet">
+        <view class="pet-add-icon"
+          style="-webkit-mask-image: url('{{plusUri}}'); mask-image: url('{{plusUri}}');"></view>
+        <text>添加宠物</text>
+      </view>
+    </view>
+
+  </block>
+
+  <!-- 右下角 FAB：滚动超过一屏 shrink -->
+  <fab wx:if="{{!loading && !loadError && pets.length > 0}}" shrink="{{fabShrink}}" bindtap="onFabTap"
+    style="position: fixed; right: 32rpx; bottom: calc(env(safe-area-inset-bottom) + 140rpx); z-index: 90;" />
+
+  <!-- 快捷记录九宫格弹层（half 档，宠物选择在同一 sheet 内切换视图） -->
+  <sheet visible="{{sheetVisible}}" height="half" bindclose="onSheetClose">
+
+    <!-- 标题行「记一笔」+ 当前宠物选择器 -->
+    <view class="qs-head">
+      <text class="qs-title">{{sheetView === 'grid' ? '记一笔' : '选择宠物'}}</text>
+      <view wx:if="{{sheetView === 'grid' && quickPet}}" class="qs-pet" hover-class="row-press" bindtap="onToggleSheetView">
+        <pet-avatar src="{{quickPet.avatar}}" species="{{quickPet.species}}" size="44rpx" shape="circle" />
+        <text class="qs-pet-name">{{quickPet.name}}</text>
+        <view class="qs-chev"
+          style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+      </view>
+      <view wx:elif="{{sheetView === 'pets'}}" class="qs-back" hover-class="header-action-press" bindtap="onToggleSheetView">完成</view>
+    </view>
+
+    <!-- 九宫格视图：两页 swiper + 小圆点指示 -->
+    <block wx:if="{{sheetView === 'grid'}}">
+      <swiper class="qs-swiper" current="{{gridPage}}" bindchange="onGridSwipe">
+        <swiper-item wx:for="{{grids}}" wx:key="index">
+          <view class="grid9">
+            <view wx:for="{{item}}" wx:for-item="cell" wx:key="label" class="g9"
+              hover-class="g9-press" data-type="{{cell.navType}}" bindtap="onGridCellTap">
+              <view class="gi" style="background: {{cell.tint}};">
+                <record-icon type="{{cell.iconType}}" size="44rpx" color="{{cell.color}}" />
+              </view>
+              <view class="gk">{{cell.label}}</view>
+            </view>
+          </view>
+        </swiper-item>
+      </swiper>
+      <view class="qs-dots">
+        <view class="qs-dot {{gridPage === 0 ? 'on' : ''}}" data-page="0" bindtap="onDotTap"></view>
+        <view class="qs-dot {{gridPage === 1 ? 'on' : ''}}" data-page="1" bindtap="onDotTap"></view>
+      </view>
+    </block>
+
+    <!-- 宠物选择视图 -->
+    <block wx:else>
+      <view class="qs-pets">
+        <view wx:for="{{pets}}" wx:key="_id"
+          class="qs-pet-row {{index < pets.length - 1 ? 'with-line' : ''}}"
+          hover-class="row-press" data-id="{{item._id}}" bindtap="onPickPet">
+          <pet-avatar src="{{item.avatar}}" species="{{item.species}}" size="72rpx" shape="circle" />
+          <text class="qs-pet-row-name">{{item.name}}</text>
+          <view wx:if="{{item._id === selectedPetId}}" class="qs-check"
+            style="-webkit-mask-image: url('{{checkUri}}'); mask-image: url('{{checkUri}}');"></view>
+        </view>
+      </view>
+    </block>
+
+  </sheet>
+
+  <toast id="toast" />
+</view>

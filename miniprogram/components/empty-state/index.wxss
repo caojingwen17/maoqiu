@@ -1,0 +1,58 @@
+/* empty-state —— §7.10 单色素描空状态 */
+.es {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 96rpx 64rpx;
+  box-sizing: border-box;
+}
+
+/* 插画：Primary 40% 透明度单色线条画；入场上浮淡入 400ms */
+.es-illo {
+  width: 240rpx;
+  height: 180rpx;
+  background: var(--primary);
+  opacity: 0.4;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  animation: es-in 400ms var(--fade) both;
+}
+
+@keyframes es-in {
+  from { opacity: 0; transform: translateY(16rpx); }
+  to { opacity: 0.4; transform: translateY(0); }
+}
+
+.es-title {
+  margin-top: 40rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.es-desc {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Secondary 按钮（§7.5）：Primary-Tint 底 + Primary 字 */
+.es-btn {
+  margin-top: 40rpx;
+  padding: 20rpx 56rpx;
+  border-radius: var(--r-l);
+  background: var(--primary-tint);
+  color: var(--text-primary);
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.es-btn-hover { opacity: 0.85; }

@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "提醒",
+  "usingComponents": {
+    "segmented": "/components/segmented/index",
+    "swipe-cell": "/components/swipe-cell/index",
+    "sheet": "/components/sheet/index",
+    "float-input": "/components/float-input/index",
+    "skeleton": "/components/skeleton/index",
+    "empty-state": "/components/empty-state/index",
+    "toast": "/components/toast/index"
+  }
+}

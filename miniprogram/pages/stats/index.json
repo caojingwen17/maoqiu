@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "统计",
+  "usingComponents": {
+    "segmented": "/components/segmented/index",
+    "skeleton": "/components/skeleton/index",
+    "empty-state": "/components/empty-state/index",
+    "toast": "/components/toast/index"
+  }
+}

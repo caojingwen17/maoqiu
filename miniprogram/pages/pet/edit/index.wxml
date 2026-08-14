@@ -1,0 +1,211 @@
+<!--pages/pet/edit/index.wxml-->
+<skeleton wx:if="{{loading}}" type="card" />
+
+<block wx:if="{{!loading}}">
+
+  <!-- 必填组 -->
+  <view class="card">
+    <view class="frow" bindtap="onAvatarTap" hover-class="row-hover">
+      <text class="k">头像</text>
+      <view class="val-flex"></view>
+      <view class="avatar-box">
+        <pet-avatar src="{{form.avatar}}" species="{{form.species || 'other'}}" size="96rpx" shape="circle" />
+        <view wx:if="{{avatarUploading}}" class="avatar-mask t-num">{{avatarProgress}}%</view>
+      </view>
+      <view wx:if="{{avatarFailed}}" class="avatar-fail" catchtap="onAvatarRetry">重试</view>
+    </view>
+    <view class="hl-full"></view>
+    <float-input label="名字" value="{{form.name}}" error="{{errors.name}}" bindinput="onNameInput" />
+    <view class="hl-full"></view>
+    <view class="block-pad">
+      <view class="sp-row">
+        <view wx:for="{{speciesList}}" wx:key="key"
+          class="sp {{form.species === item.key ? 'on' : ''}}"
+          data-key="{{item.key}}" bindtap="onSpeciesTap" hover-class="row-hover">
+          <pet-avatar species="{{item.key}}" size="64rpx" shape="square" />
+          <text class="sp-name">{{item.name}}</text>
+        </view>
+      </view>
+      <view wx:if="{{errors.species}}" class="err-text">{{errors.species}}</view>
+    </view>
+    <view class="hl-full"></view>
+    <view class="frow">
+      <text class="k">性别</text>
+      <view class="val-flex chips-inline">
+        <view class="chip {{form.gender === 'male' ? 'on' : ''}}" data-v="male" bindtap="onGenderTap" hover-class="chip-hover">
+          <text class="g-ic male">♂</text>弟弟
+        </view>
+        <view class="chip {{form.gender === 'female' ? 'on' : ''}}" data-v="female" bindtap="onGenderTap" hover-class="chip-hover">
+          <text class="g-ic female">♀</text>妹妹
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 基础组 -->
+  <view class="card">
+    <view wx:if="{{isCatOrDog}}" class="frow" bindtap="onBreedTap" hover-class="row-hover">
+      <text class="k">品种</text>
+      <text class="val {{form.breed ? 'b' : ''}}">{{form.breed || '请选择'}}</text>
+      <view class="chev" style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+    </view>
+    <float-input wx:else label="品种" value="{{form.breed}}" bindinput="onBreedInput" />
+    <view class="hl"></view>
+    <picker mode="date" value="{{birthDateStr}}" end="{{todayStr}}" bindchange="onBirthChange">
+      <view class="frow" hover-class="row-hover">
+        <text class="k">出生日期</text>
+        <text class="val {{form.birthDate ? 'b' : ''}}">{{birthDateStr || '请选择'}}</text>
+        <view class="chev" style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+      </view>
+    </picker>
+    <view wx:if="{{errors.birthDate}}" class="err-text">{{errors.birthDate}}</view>
+    <view class="hl"></view>
+    <picker mode="date" value="{{adoptDateStr}}" start="{{birthDateStr}}" end="{{todayStr}}" bindchange="onAdoptChange">
+      <view class="frow" hover-class="row-hover">
+        <text class="k">到家日期</text>
+        <text class="val {{form.adoptDate ? 'b' : ''}}">{{adoptDateStr || '请选择'}}</text>
+        <view class="chev" style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+      </view>
+    </picker>
+    <view wx:if="{{errors.adoptDate}}" class="err-text">{{errors.adoptDate}}</view>
+    <view class="hl"></view>
+    <float-input label="毛色" value="{{form.color}}" bindinput="onColorInput" />
+    <view class="hl"></view>
+    <view class="frow">
+      <text class="k">是否绝育</text>
+      <view class="val-flex"></view>
+      <view class="sw {{form.neutered ? 'on' : ''}}" catchtap="onNeuteredTap">
+        <view class="sw-knob"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 身份组（折叠） -->
+  <view class="card">
+    <view class="fold-h" data-key="identity" bindtap="onFoldTap" hover-class="row-hover">
+      <text class="fold-t">身份信息</text>
+      <view class="chev fold-chev {{folds.identity ? 'open' : ''}}"
+        style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+    </view>
+    <block wx:if="{{folds.identity}}">
+      <view class="hl-full"></view>
+      <float-input label="芯片号" value="{{form.chipNo}}" bindinput="onChipInput" />
+      <view class="hl-full"></view>
+      <float-input label="证件号" value="{{form.certNo}}" bindinput="onCertInput" />
+      <view class="hl-full"></view>
+      <float-input label="保险公司" value="{{form.insCompany}}" bindinput="onInsCompanyInput" />
+      <view class="hl-full"></view>
+      <float-input label="保单号" value="{{form.insPolicyNo}}" bindinput="onInsPolicyInput" />
+      <view class="hl-full"></view>
+      <picker mode="date" value="{{insExpireStr}}" bindchange="onInsExpireChange">
+        <view class="frow" hover-class="row-hover">
+          <text class="k">保险到期日</text>
+          <text class="val {{form.insExpireAt ? 'b' : ''}}">{{insExpireStr || '请选择'}}</text>
+          <view class="chev" style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+        </view>
+      </picker>
+    </block>
+  </view>
+
+  <!-- 医疗组（折叠） -->
+  <view class="card">
+    <view class="fold-h" data-key="medical" bindtap="onFoldTap" hover-class="row-hover">
+      <text class="fold-t">医疗信息</text>
+      <view class="chev fold-chev {{folds.medical ? 'open' : ''}}"
+        style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+    </view>
+    <block wx:if="{{folds.medical}}">
+      <view class="hl-full"></view>
+      <float-input label="常去医院" value="{{form.vetHospital}}" bindinput="onVetHospitalInput" />
+      <view class="hl-full"></view>
+      <float-input label="医生" value="{{form.vetDoctor}}" bindinput="onVetDoctorInput" />
+      <view class="hl-full"></view>
+      <view class="phone-row">
+        <float-input class="grow" label="医生电话" type="digit" value="{{form.vetPhone}}" bindinput="onVetPhoneInput" />
+        <view wx:if="{{form.vetPhone}}" class="phone-btn" catchtap="onCallDoctor" hover-class="txt-hover">拨打</view>
+      </view>
+      <view class="hl-full"></view>
+      <view class="block-pad">
+        <view class="k-line">过敏源</view>
+        <view class="tags-row">
+          <view wx:for="{{form.allergies}}" wx:key="*this" class="tag"
+            data-field="allergies" data-index="{{index}}" catchtap="onTagRemove">
+            {{item}}
+            <view class="tag-x" style="-webkit-mask-image: url('{{closeUri}}'); mask-image: url('{{closeUri}}');"></view>
+          </view>
+          <input class="tag-input" placeholder="输入后回车添加" value="{{allergyInput}}"
+            data-field="allergies" bindinput="onTagTyping" bindconfirm="onTagConfirm" confirm-type="done" />
+        </view>
+      </view>
+      <view class="hl-full"></view>
+      <view class="block-pad">
+        <view class="k-line">禁忌食物</view>
+        <view class="tags-row">
+          <view wx:for="{{form.forbiddenFood}}" wx:key="*this" class="tag"
+            data-field="forbiddenFood" data-index="{{index}}" catchtap="onTagRemove">
+            {{item}}
+            <view class="tag-x" style="-webkit-mask-image: url('{{closeUri}}'); mask-image: url('{{closeUri}}');"></view>
+          </view>
+          <input class="tag-input" placeholder="输入后回车添加" value="{{foodInput}}"
+            data-field="forbiddenFood" bindinput="onTagTyping" bindconfirm="onTagConfirm" confirm-type="done" />
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 性格组（折叠） -->
+  <view class="card">
+    <view class="fold-h" data-key="traits" bindtap="onFoldTap" hover-class="row-hover">
+      <text class="fold-t">性格与目标</text>
+      <view class="chev fold-chev {{folds.traits ? 'open' : ''}}"
+        style="-webkit-mask-image: url('{{chevUri}}'); mask-image: url('{{chevUri}}');"></view>
+    </view>
+    <block wx:if="{{folds.traits}}">
+      <view class="hl-full"></view>
+      <view class="block-pad">
+        <view class="k-line">性格标签<text class="k-tip">最多 5 个</text></view>
+        <view class="chips-wrap">
+          <view wx:for="{{traitChips}}" wx:key="name"
+            class="chip {{item.on ? 'on' : ''}}"
+            data-name="{{item.name}}" bindtap="onTraitTap" hover-class="chip-hover">{{item.name}}</view>
+        </view>
+        <view class="tags-row">
+          <view wx:for="{{customTraits}}" wx:key="*this" class="tag"
+            data-field="traits" data-name="{{item}}" catchtap="onTagRemove">
+            {{item}}
+            <view class="tag-x" style="-webkit-mask-image: url('{{closeUri}}'); mask-image: url('{{closeUri}}');"></view>
+          </view>
+          <input class="tag-input" placeholder="自定义标签，回车添加" value="{{traitInput}}"
+            bindinput="onTraitInput" bindconfirm="onTraitConfirm" confirm-type="done" />
+        </view>
+      </view>
+      <view class="hl-full"></view>
+      <float-input label="目标体重（kg）" type="digit" value="{{form.weightGoal}}"
+        error="{{errors.weightGoal}}" bindinput="onGoalInput" />
+    </block>
+  </view>
+
+  <!-- 删除宠物（仅编辑态） -->
+  <view wx:if="{{isEdit}}" class="card delete-card" bindtap="onDeleteTap" hover-class="row-hover">
+    <text class="delete-text">删除宠物</text>
+  </view>
+
+  <view class="page-foot"></view>
+</block>
+
+<!-- 吸底保存按钮 -->
+<view wx:if="{{!loading}}" class="footer">
+  <view class="btn-p {{saving ? 'disabled' : ''}}" bindtap="onSave">{{saving ? '保存中…' : '保存'}}</view>
+</view>
+
+<!-- 品种选择半屏弹层 -->
+<sheet visible="{{breedSheet}}" title="选择品种" height="half" bindclose="onBreedClose">
+  <view class="breed-search">
+    <input class="breed-input" placeholder="搜索品种" value="{{breedKeyword}}" bindinput="onBreedSearch" />
+  </view>
+  <view wx:for="{{breedOptions}}" wx:key="*this" class="breed-item"
+    data-name="{{item}}" bindtap="onBreedPick" hover-class="row-hover">{{item}}</view>
+  <view wx:if="{{!breedOptions.length}}" class="breed-none">没有匹配的品种</view>
+</sheet>
+
+<toast id="toast" />

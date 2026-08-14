@@ -1,0 +1,316 @@
+/* pages/mine/index.wxss —— 我的 · 设置页（对照 doc/index.html「我的 · 设置」效果图） */
+
+.page {
+  padding: 0 32rpx 96rpx;
+}
+
+.large-title {
+  padding: 16rpx 8rpx 24rpx;
+  font-size: 68rpx;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.group-label {
+  margin: 32rpx 8rpx 16rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+/* —— 品牌卡 —— */
+.brand-card {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+  border-radius: var(--r-m);
+  background: var(--bg-card);
+}
+
+.brand-logo {
+  width: 88rpx;
+  height: 88rpx;
+  flex-shrink: 0;
+  background: var(--primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.brand-main {
+  flex: 1;
+  min-width: 0;
+  margin: 0 24rpx;
+}
+
+.brand-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.brand-slogan {
+  margin-top: 6rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.pill-grey {
+  flex-shrink: 0;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  background: var(--bg-fill);
+}
+
+/* —— 数据备份卡（Pop-Tint 浅底突出） —— */
+.backup-card {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 28rpx 32rpx;
+  border-radius: var(--r-m);
+  background: var(--pop-tint);
+}
+
+.backup-icon {
+  width: 48rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+  background: var(--pop-deep);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.backup-main {
+  flex: 1;
+  min-width: 0;
+  margin: 0 24rpx;
+}
+
+.backup-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.backup-sub {
+  margin-top: 4rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.backup-btn {
+  flex-shrink: 0;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: var(--r-s);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 26rpx;
+  font-weight: 500;
+  transition: background var(--t-press) var(--fade);
+}
+
+.backup-btn-hover {
+  background: var(--bg-fill-deep);
+}
+
+/* —— 意见反馈按钮（对齐 cell 行样式，置于通用组卡片末尾） —— */
+.contact-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  background: var(--bg-card);
+  border-radius: 0;
+  font-size: 32rpx;
+  line-height: 1.35;
+  text-align: left;
+  transition: background var(--t-press) var(--fade);
+}
+
+/* 覆盖 button 默认边框，改为顶部 hairline 分隔（对齐 cell 组内分隔线） */
+.contact-btn::after {
+  content: '';
+  position: absolute;
+  left: 32rpx;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: top;
+  border: none;
+}
+
+.contact-btn-hover {
+  background: var(--bg-fill-deep);
+}
+
+.contact-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.contact-arrow {
+  width: 28rpx;
+  height: 28rpx;
+  background: var(--text-tertiary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* —— sheet 通用 —— */
+.sheet-body {
+  padding: 8rpx 32rpx 64rpx;
+}
+
+.opt-list {
+  border-radius: var(--r-s);
+  background: var(--bg-fill);
+  overflow: hidden;
+}
+
+.opt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  transition: background var(--t-press) var(--fade);
+}
+
+.opt-row-hover {
+  background: var(--bg-fill-deep);
+}
+
+.opt-on {
+  background: var(--primary-tint);
+}
+
+.opt-name {
+  font-size: 30rpx;
+  color: var(--text-primary);
+}
+
+.opt-check {
+  width: 36rpx;
+  height: 36rpx;
+  background: var(--primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.save-btn {
+  margin-top: 56rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  border-radius: var(--r-m);
+  background: var(--primary);
+  color: var(--bg-page);
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: background var(--t-press) var(--fade);
+}
+
+.save-btn-hover {
+  background: var(--primary-pressed);
+}
+
+/* —— 归档宠物 —— */
+.archived-empty {
+  padding: 48rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--text-tertiary);
+}
+
+.archived-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.archived-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0 24rpx;
+  font-size: 30rpx;
+  color: var(--text-primary);
+}
+
+.restore-btn {
+  flex-shrink: 0;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: var(--r-s);
+  background: var(--bg-fill);
+  color: var(--text-primary);
+  font-size: 26rpx;
+  transition: background var(--t-press) var(--fade);
+}
+
+.restore-btn-hover {
+  background: var(--bg-fill-deep);
+}
+
+/* —— 关于 —— */
+.about-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 32rpx;
+}
+
+.about-logo {
+  width: 120rpx;
+  height: 120rpx;
+  background: var(--primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.about-name {
+  margin-top: 24rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.about-version {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+
+.about-slogan {
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  text-align: center;
+}

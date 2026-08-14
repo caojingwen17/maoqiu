@@ -1,0 +1,7 @@
+<view class="es">
+  <view class="es-illo"
+    style="-webkit-mask-image: url('{{sketchUri}}'); mask-image: url('{{sketchUri}}');"></view>
+  <view wx:if="{{title}}" class="es-title">{{title}}</view>
+  <view wx:if="{{desc}}" class="es-desc">{{desc}}</view>
+  <view wx:if="{{btnText}}" class="es-btn" hover-class="es-btn-hover" bindtap="onBtnTap">{{btnText}}</view>
+</view>

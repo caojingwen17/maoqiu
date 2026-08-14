@@ -1,0 +1,108 @@
+<view class="page">
+
+  <!-- 大标题 + 右上角「+」 -->
+  <view class="nav-title">
+    <view class="large-title">提醒</view>
+    <view class="add-btn" hover-class="add-btn-hover" bindtap="onOpenCreate">+ 添加</view>
+  </view>
+
+  <segmented items="{{tabs}}" current="{{tab}}" bindchange="onTabChange" />
+
+  <!-- 订阅消息授权引导条（未授权时常驻） -->
+  <view wx:if="{{!subscribeAuth}}" class="guide-card" hover-class="guide-card-hover" bindtap="onGuideTap">
+    <view class="guide-icon" style="-webkit-mask-image: url('{{bellUri}}'); mask-image: url('{{bellUri}}');"></view>
+    <view class="guide-text">开启微信通知，不再错过疫苗提醒</view>
+    <view class="guide-cta">去开启</view>
+  </view>
+
+  <skeleton type="list" wx:if="{{loading}}" />
+
+  <!-- 进行中：按紧急度分组 -->
+  <block wx:elif="{{tab === 0}}">
+    <empty-state wx:if="{{groups.length === 0}}" image="calendar"
+      title="今天一切安好" desc="没有进行中的提醒" />
+    <view wx:for="{{groups}}" wx:key="key" class="group-card">
+      <view class="group-title group-title-{{item.kind}}">{{item.title}}</view>
+      <swipe-cell wx:for="{{item.items}}" wx:for-item="r" wx:key="_id"
+        actions="{{activeActions}}" data-id="{{r._id}}" bindaction="onActiveAction">
+        <view class="r-row" hover-class="r-row-hover" data-id="{{r._id}}" bindtap="onOpenEdit">
+          <view class="r-dot" style="background: {{r.color}};"></view>
+          <view class="r-main">
+            <view class="r-title">{{r.displayTitle}}</view>
+            <view class="r-sub">{{r.subtitle}}</view>
+          </view>
+          <view class="pill pill-{{r.pillType}}">{{r.pillText}}</view>
+        </view>
+      </swipe-cell>
+    </view>
+  </block>
+
+  <!-- 已完成：近 30 天，只读，仅可删除 -->
+  <block wx:else>
+    <empty-state wx:if="{{doneList.length === 0}}" image="calendar"
+      title="暂无已完成" desc="近 30 天完成的提醒会出现在这里" />
+    <view wx:else class="group-card">
+      <swipe-cell wx:for="{{doneList}}" wx:key="_id"
+        actions="{{doneActions}}" data-id="{{item._id}}" bindaction="onDoneAction">
+        <view class="r-row r-row-done">
+          <view class="r-dot" style="background: {{item.color}};"></view>
+          <view class="r-main">
+            <view class="r-title">{{item.displayTitle}}</view>
+            <view class="r-sub">完成于 {{item.doneAtText}}</view>
+          </view>
+        </view>
+      </swipe-cell>
+    </view>
+  </block>
+
+  <!-- 编辑 / 新建提醒 sheet -->
+  <sheet visible="{{sheetVisible}}" height="full"
+    title="{{editingId ? '编辑提醒' : '新建提醒'}}" bindclose="onSheetClose">
+    <view class="form">
+      <float-input label="提醒标题" value="{{form.title}}" bindinput="onFormTitle" />
+
+      <!-- 关联宠物（仅新建时可选，编辑保留原关联） -->
+      <block wx:if="{{!editingId}}">
+        <view class="form-label">关联宠物</view>
+        <view class="opt-list">
+          <view class="opt-row {{form.petId === '' ? 'opt-on' : ''}}" data-id="" bindtap="onFormPet" hover-class="opt-row-hover">
+            <view class="opt-name">全局（不关联宠物）</view>
+            <view wx:if="{{form.petId === ''}}" class="opt-check"
+              style="-webkit-mask-image: url('{{checkUri}}'); mask-image: url('{{checkUri}}');"></view>
+          </view>
+          <view wx:for="{{petOptions}}" wx:key="_id"
+            class="opt-row {{form.petId === item._id ? 'opt-on' : ''}}" data-id="{{item._id}}" bindtap="onFormPet" hover-class="opt-row-hover">
+            <view class="opt-name">{{item.name}}</view>
+            <view wx:if="{{form.petId === item._id}}" class="opt-check"
+              style="-webkit-mask-image: url('{{checkUri}}'); mask-image: url('{{checkUri}}');"></view>
+          </view>
+        </view>
+      </block>
+
+      <view class="form-label">到期时间</view>
+      <picker mode="date" value="{{form.dateStr}}" bindchange="onFormDate">
+        <view class="picker-row" hover-class="opt-row-hover">
+          <view class="picker-value">{{form.dateStr}}</view>
+        </view>
+      </picker>
+
+      <view class="form-label">重复周期</view>
+      <view class="opt-list">
+        <view wx:for="{{repeatOptions}}" wx:key="key"
+          class="opt-row {{form.repeatType === item.key ? 'opt-on' : ''}}" data-key="{{item.key}}" bindtap="onFormRepeat" hover-class="opt-row-hover">
+          <view class="opt-name">{{item.name}}</view>
+          <view wx:if="{{form.repeatType === item.key}}" class="opt-check"
+            style="-webkit-mask-image: url('{{checkUri}}'); mask-image: url('{{checkUri}}');"></view>
+        </view>
+      </view>
+
+      <float-input wx:if="{{form.repeatType === 'custom_days'}}" label="每隔几天"
+        type="digit" value="{{form.repeatDays}}" bindinput="onFormRepeatDays" />
+      <float-input label="提前几天提醒" type="digit" value="{{form.advanceDays}}" bindinput="onFormAdvance" />
+
+      <view class="save-btn" hover-class="save-btn-hover" bindtap="onSave">{{editingId ? '保存' : '创建'}}</view>
+    </view>
+  </sheet>
+
+  <toast id="toast" />
+</view>

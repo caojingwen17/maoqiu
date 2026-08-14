@@ -1,0 +1,117 @@
+/* num-keyboard —— §7.3 数字输入键盘 */
+.nk-root { position: fixed; inset: 0; z-index: 920; }
+
+.nk-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 200ms var(--fade);
+}
+
+.nk-mask.show { opacity: 1; }
+
+.nk-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-card);
+  border-radius: var(--r-l) var(--r-l) 0 0;
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(110%);
+  transition: transform 500ms var(--spring);
+}
+
+.nk-panel.show { transform: translateY(0); }
+
+/* 顶部大数显示 */
+.nk-display {
+  display: flex;
+  align-items: flex-end;
+  padding: 36rpx 32rpx 24rpx;
+  position: relative;
+}
+
+.nk-display::after {
+  content: '';
+  position: absolute;
+  left: 32rpx;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: bottom;
+}
+
+.nk-value {
+  font-size: 56rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.nk-unit {
+  margin-left: 12rpx;
+  margin-bottom: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+}
+
+.nk-done {
+  margin-left: auto;
+  margin-bottom: 4rpx;
+  padding: 12rpx 32rpx;
+  border-radius: var(--r-s);
+  background: var(--primary);
+  color: var(--bg-page);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.nk-done-hover { opacity: 0.85; }
+
+/* 键盘区 */
+.nk-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 16rpx 12rpx 8rpx;
+}
+
+.nk-key {
+  width: 33.3333%;
+  height: 108rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--r-s);
+}
+
+/* 按下底色加深，无缩放（§7.3） */
+.nk-key-hover { background: var(--bg-fill-deep); }
+
+.nk-del-icon {
+  width: 52rpx;
+  height: 52rpx;
+  background: var(--text-primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.nk-safe {
+  height: constant(safe-area-inset-bottom);
+  height: env(safe-area-inset-bottom);
+}

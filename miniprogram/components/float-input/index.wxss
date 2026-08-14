@@ -1,0 +1,99 @@
+/* float-input —— §7.3 iOS 填充式输入框 */
+.fi { display: block; }
+
+.fi-box {
+  position: relative;
+  height: 104rpx;
+  background: var(--bg-fill);
+  border-radius: var(--r-l);
+  padding: 0 28rpx;
+  box-sizing: border-box;
+  transition: background 200ms var(--fade);
+}
+
+.fi.fi-textarea .fi-box { height: auto; min-height: 160rpx; }
+
+.fi.focus .fi-box { background: var(--bg-fill-deep); }
+
+/* 浮动标签：未输入 = 占位提示；输入/聚焦 = 上浮缩小 */
+.fi-label {
+  position: absolute;
+  left: 28rpx;
+  top: 34rpx;
+  font-size: 32rpx;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform 200ms var(--fade), color 200ms var(--fade);
+}
+
+.fi.floated .fi-label {
+  transform: translateY(-20rpx) scale(0.8125); /* 32rpx → 26rpx Footnote */
+  color: var(--text-secondary);
+}
+
+.fi-control {
+  width: 100%;
+  height: 100%;
+  padding-top: 48rpx;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  line-height: 1.35;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.fi-area { min-height: 108rpx; padding-bottom: 20rpx; }
+
+/* 清除按钮：32rpx 灰色圆形 ⊗ */
+.fi-clear {
+  position: absolute;
+  right: 24rpx;
+  top: 36rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 999rpx;
+  background: var(--text-tertiary);
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* 底部 2rpx 横条：从中心展开 250ms（Snap 曲线，§7.3） */
+.fi-bar {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 0;
+  height: 2rpx;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 250ms var(--snap), background 200ms var(--fade);
+}
+
+.fi.focus .fi-bar { transform: scaleX(1); }
+
+/* 错误态：横条 Danger + 透明度脉冲一次（不用左右抖动） */
+.fi.error .fi-bar {
+  background: var(--danger);
+  transform: scaleX(1);
+  animation: fi-pulse 400ms var(--fade) 1;
+}
+
+@keyframes fi-pulse {
+  0% { opacity: 1; }
+  40% { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+
+.fi-error-text {
+  margin: 10rpx 8rpx 0;
+  font-size: 26rpx;
+  line-height: 1.35;
+  color: var(--danger);
+}

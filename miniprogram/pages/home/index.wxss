@@ -1,0 +1,504 @@
+/* pages/home/index.wxss
+ * 首页「宠物卡片墙」：布局与样式对照 doc/index.html 效果图
+ * （.crd 待办卡 / .stat-strip 统计条 / .pet-grid + .pet-card 宠物卡 / .pill 胶囊 / .grid9 九宫格）
+ * 颜色/圆角/动效全部走 app.wxss 的 CSS 变量
+ */
+
+.page {
+  /* ♀ 性别粉：设计文档 §2.4 发情色 #B87B8E，无全局 token，页面内定义为变量 */
+  --gender-female: #B87B8E;
+  min-height: 100vh;
+  padding: 0 32rpx calc(env(safe-area-inset-bottom) + 220rpx);
+  box-sizing: border-box;
+}
+
+/* ---------- 大标题 + 右上角 Plain 按钮 ---------- */
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0 24rpx;
+}
+
+.large-title {
+  font-size: 68rpx;
+  font-weight: 700;
+  letter-spacing: -1rpx;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.header-action {
+  flex: none;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--pop-deep);
+  padding: 12rpx 0 12rpx 24rpx;
+}
+
+.header-action-press { opacity: 0.6; }
+
+/* ---------- 全局待办区（.crd + 左侧 4rpx Primary 竖条，设计文档 §8.1） ---------- */
+.todo-wrap {
+  overflow: hidden;
+  max-height: 640rpx;
+  opacity: 1;
+  margin-bottom: 24rpx;
+  transition: max-height 350ms var(--snap), opacity 200ms var(--fade), margin 350ms var(--snap);
+}
+
+.todo-wrap.collapsing {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+.todo-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  padding: 24rpx 32rpx;
+}
+
+.todo-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 28rpx;
+  bottom: 28rpx;
+  width: 4rpx;
+  border-radius: 999rpx;
+  background: var(--primary);
+}
+
+.todo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8rpx;
+}
+
+.todo-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.todo-more {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+  min-height: 60rpx;
+}
+
+.todo-row pet-avatar { margin-right: 20rpx; }
+
+.todo-row.with-line { border-bottom: 1rpx solid var(--hairline); }
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 状态胶囊（.pill） */
+.pill {
+  flex: none;
+  margin-left: 16rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+
+.pill-warn { color: var(--pop-deep); background: var(--pop-tint); }
+.pill-danger { color: var(--danger); background: var(--pop-tint); }
+
+.peace {
+  text-align: center;
+  padding: 32rpx 0;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+/* ---------- 统计速览条（.stat-strip） ---------- */
+.stat-strip {
+  display: flex;
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  padding: 26rpx 8rpx;
+  margin-bottom: 24rpx;
+}
+
+.stat-strip .st {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  position: relative;
+  border-radius: var(--r-s);
+  padding: 4rpx 0;
+}
+
+/* 列间 hairline 竖分隔（0.5px） */
+.stat-strip .st + .st::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14%;
+  bottom: 14%;
+  width: 1px;
+  background: var(--hairline);
+  transform: scaleX(0.5);
+}
+
+.stat-strip .v {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.stat-strip .v.over { color: var(--pop-deep); }
+.stat-strip .v.pop { color: var(--pop-deep); }
+.stat-strip .v.muted { color: var(--text-secondary); font-weight: 400; }
+
+.stat-strip .unit {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--pop-deep);
+}
+
+.over-badge {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: var(--pop-deep);
+  margin-left: 8rpx;
+}
+
+.stat-strip .k {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-top: 6rpx;
+}
+
+.st-press { background: var(--bg-fill-deep); }
+
+/* ---------- 宠物卡片网格（.pet-grid / .pet-card） ---------- */
+.pet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.pet-grid.single { grid-template-columns: 1fr; }
+
+.pet-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--r-m);
+  padding: 24rpx 26rpx;
+}
+
+.pet-card-press { background: var(--bg-fill-deep); }
+
+/* 右上角圆形小「+」（炭棕圆底白加号） */
+.mp {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-icon {
+  width: 20rpx;
+  height: 20rpx;
+  background: var(--bg-page);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.pet-head {
+  display: flex;
+  align-items: center;
+}
+
+.pet-head pet-avatar { margin-right: 20rpx; flex: none; }
+
+.pet-info {
+  flex: 1;
+  min-width: 0;
+  padding-right: 40rpx; /* 给右上角「+」留位 */
+}
+
+.pet-name-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.pet-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pet-gender {
+  flex: none;
+  font-size: 26rpx;
+  margin-left: 10rpx;
+}
+
+.pet-gender.male { color: var(--info); }
+.pet-gender.female { color: var(--gender-female); }
+
+.pet-sub {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 4rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pet-adopt {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  margin-top: 2rpx;
+}
+
+/* 卡内 hairline（通栏） */
+.pet-hl {
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  margin: 18rpx -26rpx 14rpx;
+}
+
+/* 数据行：最新体重 + 最近临期提醒（baseline 对齐，对照效果图） */
+.pet-data {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.pet-weight {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pet-weight.muted {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.new-badge {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: var(--pop-deep);
+  margin-left: 6rpx;
+}
+
+.pet-reminder {
+  font-size: 22rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pet-reminder.pop { color: var(--pop-deep); }
+.pet-reminder.danger { color: var(--danger); }
+
+/* 编辑模式：卡片轻微抖动 */
+@keyframes card-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+.pet-card.shaking { animation: card-shake 320ms var(--snap) infinite; }
+
+/* 虚线「+ 添加宠物」卡片（.pet-add） */
+.pet-add {
+  border: 2rpx dashed var(--hairline);
+  border-radius: var(--r-m);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 24rpx;
+  min-height: 208rpx;
+}
+
+.pet-add-press { background: var(--bg-fill); }
+
+.pet-add-icon {
+  width: 28rpx;
+  height: 28rpx;
+  background: var(--text-tertiary);
+  margin-right: 10rpx;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* ---------- 快捷记录弹层（slot 内容，对照 .grid9 / .sheet 效果图） ---------- */
+.qs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8rpx 0 24rpx;
+}
+
+.qs-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.qs-pet {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  padding: 8rpx 0 8rpx 16rpx;
+  border-radius: var(--r-s);
+}
+
+.qs-pet pet-avatar { margin-right: 10rpx; }
+
+.qs-pet-name { margin-right: 6rpx; }
+
+.qs-chev {
+  width: 20rpx;
+  height: 20rpx;
+  background: var(--text-tertiary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.qs-back {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--pop-deep);
+  padding: 8rpx 0 8rpx 16rpx;
+}
+
+.qs-swiper { height: 520rpx; }
+
+/* 九宫格（.grid9）：类型色浅底圆角方块 + 线性图标 */
+.grid9 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx 8rpx;
+  padding-top: 4rpx;
+}
+
+.g9 {
+  text-align: center;
+  padding: 20rpx 0 16rpx;
+  border-radius: var(--r-s);
+}
+
+.g9-press { background: var(--bg-fill-deep); }
+
+.gi {
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 24rpx;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gk {
+  font-size: 22rpx;
+  color: var(--text-primary);
+  margin-top: 12rpx;
+}
+
+/* 底部小圆点指示 */
+.qs-dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
+}
+
+.qs-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: var(--text-tertiary);
+  margin-right: 10rpx;
+  transition: width 350ms var(--snap), background 200ms var(--fade);
+}
+
+.qs-dot:last-child { margin-right: 0; }
+
+.qs-dot.on {
+  width: 32rpx;
+  background: var(--primary);
+}
+
+/* 宠物选择列表（sheet 内切换视图） */
+.qs-pet-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 8rpx;
+  border-radius: var(--r-s);
+}
+
+.qs-pet-row pet-avatar { margin-right: 20rpx; }
+
+.qs-pet-row.with-line { border-bottom: 1rpx solid var(--hairline); }
+
+.qs-pet-row-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 30rpx;
+  color: var(--text-primary);
+}
+
+.qs-check {
+  width: 32rpx;
+  height: 32rpx;
+  background: var(--primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.row-press { background: var(--bg-fill-deep); }
