@@ -1,471 +1,232 @@
-// schema.js
-// 写入数据校验：数据准确性的闸门，所有集合的写操作先过这里
-// 字段定义逐条对齐 PRD §4，不合法直接抛 {code, msg} 明确错误
+/**
+ * pawlog 写入校验闸门（PRD §4.1 ~ §4.6 字段白名单 + 类型校验）
+ *
+ * 设计目标：
+ *  - 客户端零直连数据库，所有写操作经云函数中转；
+ *  - 每个集合维护「可写字段白名单」，不认识的字段一律拒绝（防止越权/越界写入）；
+ *  - 仅在写入时校验「必填字段存在 + 类型正确」，不做业务语义校验（业务在 modules 内）。
+ *
+ * 类型常量：
+ *  - 'string' | 'number' | 'boolean' | 'object' | 'array'
+ *  - 'nullable' 字段允许 null/undefined（未提供则跳过）
+ */
 
-// 枚举定义（与 miniprogram/utils/constants.js 保持一致，云函数独立部署故本地维护一份）
-var SPECIES = ['cat', 'dog', 'rabbit', 'hamster', 'bird', 'reptile', 'other'];
-var GENDERS = ['male', 'female'];
-var RECORD_TYPES = [
-  'weight', 'vaccine', 'deworm', 'medical', 'medication', 'surgery',
-  'feed', 'water', 'groom', 'poop', 'vomit', 'heat',
-  'expense', 'walk', 'milestone', 'custom',
-];
-var REMINDER_CATEGORIES = ['vaccine', 'deworm', 'groom', 'medication', 'checkup', 'stock', 'custom'];
-var REPEAT_TYPES = ['none', 'daily', 'weekly', 'monthly', 'custom_days'];
-var THEMES = ['light', 'dark', 'auto'];
-var EXPENSE_CATEGORIES = ['food', 'snack', 'medical', 'supply', 'toy', 'groom', 'boarding', 'insurance', 'other'];
-var MEALS = ['breakfast', 'lunch', 'dinner', 'extra'];
-var GROOM_ITEMS = ['bath', 'nail', 'ear', 'anal', 'beauty'];
-var POOP_STATUS = ['normal', 'soft', 'diarrhea', 'constipation'];
-var VOMIT_CONTENTS = ['food', 'hairball', 'liquid', 'other'];
-var DEWORM_KINDS = ['internal', 'external'];
-
-// 抛出业务错误（index.js 统一捕获）
-function fail(msg, code) {
-  var e = new Error(msg);
-  e.code = code || 400;
-  e.msg = msg;
-  throw e;
+function isType(v, t) {
+  if (v === undefined) return false;
+  if (t === 'array') return Array.isArray(v);
+  if (t === 'object') return v !== null && typeof v === 'object' && !Array.isArray(v);
+  return typeof v === t;
 }
 
-function isObj(v) {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
+const CONFIG = require('./config.js');
+
+const S = { string: 'string', number: 'number', boolean: 'boolean', object: 'object', array: 'array' };
+
+/** 集合字段白名单：key -> { type, required } */
+const SCHEMAS = {
+  pets: {
+    name: { type: S.string, required: true },
+    avatar: { type: S.string, required: false },
+    species: { type: S.string, required: true },
+    breed: { type: S.string, required: false },
+    gender: { type: S.string, required: true },
+    birthDate: { type: S.number, required: false },
+    adoptDate: { type: S.number, required: false },
+    color: { type: S.string, required: false },
+    neutered: { type: S.boolean, required: false },
+    chipNo: { type: S.string, required: false },
+    certNo: { type: S.string, required: false },
+    insurance: { type: S.object, required: false },
+    vetInfo: { type: S.object, required: false },
+    traits: { type: S.array, required: false },
+    allergies: { type: S.array, required: false },
+    forbiddenFood: { type: S.array, required: false },
+    weightGoal: { type: S.number, required: false },
+    order: { type: S.number, required: false },
+    archived: { type: S.boolean, required: false }
+  },
+
+  records: {
+    requestId: { type: S.string, required: false },
+    // petId 可选：家庭级记录（如囤货入库产生的花销）不归属单一宠物
+    petId: { type: S.string, required: false },
+    type: { type: S.string, required: true },
+    date: { type: S.number, required: false },
+    data: { type: S.object, required: false },
+    photos: { type: S.array, required: false },
+    // 日常记录的视频（cloud:// fileID 数组）；微信无同步视频内容检测接口，客户端限制大小后上传
+    videos: { type: S.array, required: false },
+    note: { type: S.string, required: false },
+    // 显式选择的囤货库存 id：仅 create 生效（配合库存扣减），update 忽略
+    inventoryId: { type: S.string, required: false }
+  },
+
+  reminders: {
+    petId: { type: S.string, required: false },
+    title: { type: S.string, required: true },
+    category: { type: S.string, required: false },
+    remindAt: { type: S.number, required: true },
+    repeatType: { type: S.string, required: false },
+    repeatDays: { type: S.number, required: false },
+    advanceDays: { type: S.number, required: false },
+    sourceRecordId: { type: S.string, required: false },
+    sourceInventoryId: { type: S.string, required: false },
+    status: { type: S.string, required: false },
+    subscribeAuth: { type: S.boolean, required: false },
+    notifyScope: { type: S.string, required: false },
+    notifyOpenid: { type: S.string, required: false },
+    note: { type: S.string, required: false },
+    scheduleMode: { type: S.string, required: false },
+    startAt: { type: S.number, required: false },
+    endAt: { type: S.number, required: false },
+    timeOfDay: { type: S.string, required: false },
+    slotKey: { type: S.string, required: false },
+    anniversaryType: { type: S.string, required: false },
+    anniversaryDate: { type: S.number, required: false },
+    offsetDays: { type: S.number, required: false },
+    reminderSubtype: { type: S.string, required: false },
+    expiryOffsetDays: { type: S.number, required: false },
+    disabledReason: { type: S.string, required: false }
+  },
+
+  diaries: {
+    familyId: { type: S.string, required: true },
+    petId: { type: S.string, required: true },
+    diaryDate: { type: S.string, required: true },
+    diaryKey: { type: S.string, required: true },
+    status: { type: S.string, required: true },
+    decision: { type: S.string, required: true },
+    title: { type: S.string, required: false },
+    content: { type: S.string, required: false },
+    generatedAt: { type: S.number, required: false },
+    promptVersion: { type: S.string, required: false },
+    model: { type: S.string, required: false },
+    sourceRecordIds: { type: S.array, required: false },
+    readBy: { type: S.array, required: false },
+    retryCount: { type: S.number, required: false },
+    createAt: { type: S.number, required: false },
+    updateAt: { type: S.number, required: false }
+  },
+
+  inventories: {
+    requestId: { type: S.string, required: false },
+    petId: { type: S.string, required: false },
+    itemName: { type: S.string, required: true },
+    category: { type: S.string, required: false },
+    totalAmount: { type: S.number, required: false },
+    remainAmount: { type: S.number, required: false },
+    unit: { type: S.string, required: false },
+    dailyConsume: { type: S.number, required: false },
+    threshold: { type: S.number, required: false },
+    expireDate: { type: S.string, required: false },
+    consumeMode: { type: S.string, required: false },
+    linkType: { type: S.string, required: false },
+    consumeLogs: { type: S.array, required: false }
+  },
+
+  settings: {
+    budget: { type: S.number, required: false },
+    // kickedFrom 不在白名单：只能由 family.removeMember/dissolve 服务端直连 db 写入；
+    // 客户端仅允许经 settings.update 清空（settings.js 单独放行 '' / null）
+    nickName: { type: S.string, required: false },
+    avatarUrl: { type: S.string, required: false },
+    familyNick: { type: S.string, required: false }
+  },
+
+  families: {
+    name: { type: S.string, required: true },
+    members: { type: S.array, required: false } // 成员增删走 family 模块专用流程，不走通用写入
+  }
+};
+
+/**
+ * records.data 字段袋的已知字段规则：类型/范围错误拒绝；未知字段宽松保留。
+ * nextDate 必须是正数时间戳（record.js 派生提醒直接当时间戳用，传字符串会产生 NaN）。
+ */
+const RECORD_DATA_RULES = {
+  weight: (v) => typeof v === 'number' && v > 0 && v <= 500, // kg，合理上限
+  amount: (v) => typeof v === 'number' && v >= 0,
+  price: (v) => typeof v === 'number' && v >= 0,
+  nextDate: (v) => typeof v === 'number' && v > 0
+};
+
+/** 集合级语义校验（白名单/类型通过后再跑）。返回错误文案或 null。 */
+function extraChecks(collection, clean) {
+  if (collection === 'pets' && clean.name !== undefined && String(clean.name).length > CONFIG.PET_NAME_MAX) {
+    return '宠物名过长（≤' + CONFIG.PET_NAME_MAX + ' 字）';
+  }
+  if ((collection === 'records' || collection === 'reminders') && clean.note !== undefined && String(clean.note).length > CONFIG.NOTE_MAX) {
+    return '备注过长（≤' + CONFIG.NOTE_MAX + ' 字）';
+  }
+  if (collection === 'records' && clean.data) {
+    const bad = Object.keys(RECORD_DATA_RULES).filter((k) => clean.data[k] !== undefined && clean.data[k] !== null && !RECORD_DATA_RULES[k](clean.data[k]));
+    if (bad.length) return 'data 字段校验失败: ' + bad.join(', ');
+  }
+  if (collection === 'reminders' && clean.remindAt !== undefined) {
+    // 必须为正数时间戳；允许回写最近 1 小时内的过去时间（立即触发），更早的视为误写拒绝。
+    // after_complete/周年模式的 startAt/endAt/anniversaryDate 不在此校验，避免误伤合法路径。
+    if (!(clean.remindAt > 0)) return 'remindAt 必须为正数时间戳';
+    if (clean.remindAt < Date.now() - 60 * 60 * 1000) return 'remindAt 不能早于当前时间 1 小时';
+  }
+  return null;
 }
 
-function isStr(v) {
-  return typeof v === 'string';
-}
+/**
+ * 校验写入 payload（白名单 + 必填 + 类型）
+ * @param {string} collection 集合名
+ * @param {object} payload   待写入字段（不含 _openid/familyId/createdBy 等系统字段）
+ * @param {object} options   { partial: 是否允许部分字段（update 场景） }
+ * @returns {{ ok: boolean, error?: string, clean?: object }}
+ */
+function validateWrite(collection, payload, options) {
+  const schema = SCHEMAS[collection];
+  if (!schema) return { ok: false, error: '未知集合: ' + collection };
 
-function isNum(v) {
-  return typeof v === 'number' && !isNaN(v) && isFinite(v);
-}
+  const opt = options || {};
+  const data = payload || {};
+  const clean = {};
+  const unknown = [];
 
-// 字符串字段：去首尾空格 + 限长，可空
-function optStr(data, key, maxLen) {
-  var v = data[key];
-  if (v === undefined || v === null || v === '') {
-    return undefined;
-  }
-  if (!isStr(v)) {
-    fail(key + ' 必须是字符串');
-  }
-  v = v.trim();
-  if (v.length > maxLen) {
-    fail(key + ' 不能超过 ' + maxLen + ' 字');
-  }
-  return v;
-}
-
-// 数字字段：范围校验，可空
-function optNum(data, key, min, max) {
-  var v = data[key];
-  if (v === undefined || v === null || v === '') {
-    return undefined;
-  }
-  if (!isNum(v)) {
-    fail(key + ' 必须是数字');
-  }
-  if (v < min || v > max) {
-    fail(key + ' 超出允许范围（' + min + '~' + max + '）');
-  }
-  return v;
-}
-
-// 字符串数组字段：限条数 + 单条限长，可空
-function optStrArr(data, key, maxCount, maxLen) {
-  var v = data[key];
-  if (v === undefined || v === null) {
-    return undefined;
-  }
-  if (!Array.isArray(v)) {
-    fail(key + ' 必须是数组');
-  }
-  if (v.length > maxCount) {
-    fail(key + ' 最多 ' + maxCount + ' 条');
-  }
-  return v.map(function (item) {
-    if (!isStr(item)) {
-      fail(key + ' 的元素必须是字符串');
+  Object.keys(data).forEach((key) => {
+    if (!schema[key]) {
+      unknown.push(key);
+      return;
     }
-    item = item.trim();
-    if (item.length > maxLen) {
-      fail(key + ' 单条不能超过 ' + maxLen + ' 字');
+    const spec = schema[key];
+    const v = data[key];
+    if (v === undefined || v === null) return;
+    if (!isType(v, spec.type)) {
+      unknown.push(key + '(' + spec.type + ' required, got ' + typeof v + ')');
+      return;
     }
-    return item;
+    clean[key] = v;
   });
-}
 
-// 枚举字段
-function enumVal(v, list, key) {
-  if (list.indexOf(v) === -1) {
-    fail(key + ' 取值非法: ' + v);
-  }
-  return v;
-}
-
-/**
- * 校验宠物写入数据（PRD §4.1）
- * @param {Object} data 客户端提交的宠物表单
- * @param {boolean} isUpdate 更新模式：必填字段缺省时跳过（允许局部更新）
- * @returns {Object} 清洗后的宠物文档（不含 _openid/order/createAt，由调用方补）
- */
-function validatePet(data, isUpdate) {
-  if (!isObj(data)) {
-    fail('宠物数据格式不对');
-  }
-  var doc = {};
-
-  var name = optStr(data, 'name', 12);
-  if (name !== undefined) {
-    if (!name) {
-      fail('给毛孩子起个名字吧');
-    }
-    doc.name = name;
-  } else if (!isUpdate) {
-    fail('给毛孩子起个名字吧');
+  if (unknown.length) {
+    return { ok: false, error: '字段校验失败: ' + unknown.join(', ') };
   }
 
-  if (data.species !== undefined) {
-    doc.species = enumVal(data.species, SPECIES, 'species');
-  } else if (!isUpdate) {
-    fail('请选择物种');
-  }
+  const extraError = extraChecks(collection, clean);
+  if (extraError) return { ok: false, error: extraError };
 
-  if (data.gender !== undefined) {
-    doc.gender = enumVal(data.gender, GENDERS, 'gender');
-  } else if (!isUpdate) {
-    fail('请选择性别');
-  }
-
-  if (data.neutered !== undefined) {
-    if (typeof data.neutered !== 'boolean') {
-      fail('neutered 必须是布尔值');
-    }
-    doc.neutered = data.neutered;
-  }
-
-  var birthDate = optNum(data, 'birthDate', 0, Date.now() + 60000);
-  if (birthDate !== undefined) {
-    doc.birthDate = birthDate;
-  }
-  var adoptDate = optNum(data, 'adoptDate', 0, Date.now() + 60000);
-  if (adoptDate !== undefined) {
-    // 到家日期不得早于出生日期（更新模式下与已有出生日期比对由调用方负责）
-    var ref = doc.birthDate !== undefined ? doc.birthDate : data.birthDate;
-    if (ref !== undefined && adoptDate < ref) {
-      fail('到家日期应该晚于出生日期');
-    }
-    doc.adoptDate = adoptDate;
-  }
-
-  if (data.weightGoal === 0 || data.weightGoal === null) {
-    // 前端约定 0/null = 清除目标体重（optNum 的 0.1~100 区间不接受 0，须先短路）
-    doc.weightGoal = 0;
-  } else {
-    var weightGoal = optNum(data, 'weightGoal', 0.1, 100);
-    if (weightGoal !== undefined) {
-      // 体重 kg 保留 1 位小数
-      doc.weightGoal = Math.round(weightGoal * 10) / 10;
-    }
-  }
-
-  ['avatar', 'breed', 'color', 'chipNo', 'certNo'].forEach(function (key) {
-    var v = optStr(data, key, key === 'avatar' ? 256 : 64);
-    if (v !== undefined) {
-      doc[key] = v;
-    }
-  });
-
-  if (data.insurance !== undefined) {
-    if (!isObj(data.insurance)) {
-      fail('insurance 格式不对');
-    }
-    doc.insurance = {
-      company: optStr(data.insurance, 'company', 64) || '',
-      policyNo: optStr(data.insurance, 'policyNo', 64) || '',
-      expireAt: optNum(data.insurance, 'expireAt', 0, 4102416000000) || 0,
-    };
-  }
-
-  if (data.vetInfo !== undefined) {
-    if (!isObj(data.vetInfo)) {
-      fail('vetInfo 格式不对');
-    }
-    doc.vetInfo = {
-      hospital: optStr(data.vetInfo, 'hospital', 64) || '',
-      doctor: optStr(data.vetInfo, 'doctor', 32) || '',
-      phone: optStr(data.vetInfo, 'phone', 32) || '',
-    };
-  }
-
-  var traits = optStrArr(data, 'traits', 5, 12);
-  if (traits !== undefined) {
-    doc.traits = traits;
-  }
-  var allergies = optStrArr(data, 'allergies', 20, 24);
-  if (allergies !== undefined) {
-    doc.allergies = allergies;
-  }
-  var forbiddenFood = optStrArr(data, 'forbiddenFood', 20, 24);
-  if (forbiddenFood !== undefined) {
-    doc.forbiddenFood = forbiddenFood;
-  }
-
-  if (data.archived !== undefined) {
-    if (typeof data.archived !== 'boolean') {
-      fail('archived 必须是布尔值');
-    }
-    doc.archived = data.archived;
-  }
-
-  return doc;
-}
-
-/**
- * 校验记录 data 扩展字段（PRD §4.2 按 type 定义）
- * @param {string} type
- * @param {Object} data
- * @returns {Object} 清洗后的 data
- */
-function validateRecordData(type, data) {
-  if (!isObj(data)) {
-    fail('记录的 data 必须是对象');
-  }
-  var d = {};
-  switch (type) {
-    case 'weight': {
-      var w = optNum(data, 'value', 0.1, 100);
-      if (w === undefined) {
-        fail('体重数值不太对');
-      }
-      d.value = Math.round(w * 10) / 10; // kg 保留 1 位小数
-      break;
-    }
-    case 'vaccine':
-      d.vaccineName = optStr(data, 'vaccineName', 32) || fail('请填写疫苗名称');
-      d.batchNo = optStr(data, 'batchNo', 64) || '';
-      d.hospital = optStr(data, 'hospital', 64) || '';
-      d.nextDate = optNum(data, 'nextDate', 0, 4102416000000) || 0;
-      break;
-    case 'deworm':
-      d.kind = enumVal(data.kind, DEWORM_KINDS, 'deworm.kind');
-      d.product = optStr(data, 'product', 64) || '';
-      d.nextDate = optNum(data, 'nextDate', 0, 4102416000000) || 0;
-      break;
-    case 'medical':
-      d.symptom = optStr(data, 'symptom', 200) || fail('请填写症状');
-      d.diagnosis = optStr(data, 'diagnosis', 200) || '';
-      d.prescription = optStr(data, 'prescription', 500) || '';
-      d.hospital = optStr(data, 'hospital', 64) || '';
-      d.doctor = optStr(data, 'doctor', 32) || '';
-      d.cost = optNum(data, 'cost', 0, 99999900) || 0; // 金额存分
-      break;
-    case 'medication':
-      d.medicine = optStr(data, 'medicine', 64) || fail('请填写药品名');
-      d.dose = optStr(data, 'dose', 32) || '';
-      d.startDate = optNum(data, 'startDate', 0, 4102416000000) || 0;
-      d.endDate = optNum(data, 'endDate', 0, 4102416000000) || 0;
-      d.dailyTimes = optNum(data, 'dailyTimes', 1, 4) || 1;
-      d.checkins = Array.isArray(data.checkins) ? data.checkins.filter(isNum).slice(0, 365) : [];
-      break;
-    case 'surgery':
-      d.surgeryName = optStr(data, 'surgeryName', 64) || fail('请填写手术名称');
-      d.hospital = optStr(data, 'hospital', 64) || '';
-      d.cost = optNum(data, 'cost', 0, 99999900) || 0;
-      break;
-    case 'feed':
-      d.meal = enumVal(data.meal, MEALS, 'feed.meal');
-      d.brand = optStr(data, 'brand', 64) || '';
-      d.grams = optNum(data, 'grams', 0, 100000) || 0;
-      break;
-    case 'water':
-      d.amount = optNum(data, 'amount', 0, 100000) || 0;
-      break;
-    case 'groom': {
-      var items = data.items;
-      if (!Array.isArray(items) || items.length === 0) {
-        fail('请选择洗护项目');
-      }
-      d.items = items.map(function (k) { return enumVal(k, GROOM_ITEMS, 'groom.items'); });
-      break;
-    }
-    case 'poop':
-      d.status = enumVal(data.status, POOP_STATUS, 'poop.status');
-      break;
-    case 'vomit':
-      d.content = enumVal(data.content, VOMIT_CONTENTS, 'vomit.content');
-      break;
-    case 'heat':
-      d.startDate = optNum(data, 'startDate', 0, 4102416000000) || fail('请选择开始日期');
-      d.endDate = optNum(data, 'endDate', 0, 4102416000000) || 0;
-      break;
-    case 'expense':
-      d.amount = optNum(data, 'amount', 1, 99999900);
-      if (d.amount === undefined) {
-        fail('请填写金额');
-      }
-      d.amount = Math.round(d.amount); // 金额必须是整数（分）
-      d.category = enumVal(data.category, EXPENSE_CATEGORIES, 'expense.category');
-      d.itemName = optStr(data, 'itemName', 64) || '';
-      break;
-    case 'walk':
-      d.duration = optNum(data, 'duration', 1, 1440);
-      if (d.duration === undefined) {
-        fail('请填写遛狗时长');
-      }
-      d.distance = optNum(data, 'distance', 0, 500) || 0;
-      break;
-    case 'milestone':
-      d.title = optStr(data, 'title', 32) || fail('请填写里程碑标题');
-      d.icon = optStr(data, 'icon', 32) || '';
-      break;
-    case 'custom':
-      d.title = optStr(data, 'title', 32) || fail('请填写标题');
-      break;
-    default:
-      fail('未知记录类型: ' + type);
-  }
-  return d;
-}
-
-/**
- * 校验记录写入数据（PRD §4.2）
- * @param {Object} record {petId, type, date, data, photos, note}
- * @returns {Object} 清洗后的记录文档（不含 _openid/createAt）
- */
-function validateRecord(record) {
-  if (!isObj(record)) {
-    fail('记录数据格式不对');
-  }
-  if (!record.petId || !isStr(record.petId)) {
-    fail('缺少 petId');
-  }
-  enumVal(record.type, RECORD_TYPES, 'type');
-
-  var date = record.date;
-  if (!isNum(date)) {
-    fail('记录时间不对');
-  }
-  if (date > Date.now() + 60000) {
-    fail('记录日期不能是未来哦');
-  }
-
-  var doc = {
-    petId: record.petId,
-    type: record.type,
-    date: date,
-    data: validateRecordData(record.type, record.data || {}),
-  };
-
-  var note = optStr(record, 'note', 500);
-  if (note !== undefined) {
-    doc.note = note;
-  }
-  var photos = optStrArr(record, 'photos', 9, 256);
-  if (photos !== undefined) {
-    doc.photos = photos;
-  }
-  return doc;
-}
-
-/**
- * 校验提醒写入数据（PRD §4.3）
- * @param {Object} reminder {petId?, title, category, remindAt, repeatType, repeatDays?, advanceDays?, subscribeAuth?}
- * @returns {Object} 清洗后的提醒文档
- */
-function validateReminder(reminder) {
-  if (!isObj(reminder)) {
-    fail('提醒数据格式不对');
-  }
-  var doc = {};
-  var title = optStr(reminder, 'title', 30);
-  if (!title) {
-    fail('请填写提醒标题');
-  }
-  doc.title = title;
-  doc.category = enumVal(reminder.category, REMINDER_CATEGORIES, 'category');
-
-  if (!isNum(reminder.remindAt) || reminder.remindAt <= 0) {
-    fail('提醒时间不对');
-  }
-  doc.remindAt = reminder.remindAt;
-
-  doc.repeatType = enumVal(reminder.repeatType || 'none', REPEAT_TYPES, 'repeatType');
-  if (doc.repeatType === 'custom_days') {
-    doc.repeatDays = optNum(reminder, 'repeatDays', 1, 3650);
-    if (doc.repeatDays === undefined) {
-      fail('自定义周期请填写天数');
-    }
-    doc.repeatDays = Math.round(doc.repeatDays);
-  } else {
-    doc.repeatDays = 0;
-  }
-
-  var advanceDays = optNum(reminder, 'advanceDays', 0, 30);
-  doc.advanceDays = advanceDays === undefined ? 7 : Math.round(advanceDays);
-
-  var petId = optStr(reminder, 'petId', 64);
-  if (petId !== undefined) {
-    doc.petId = petId;
-  }
-  if (reminder.subscribeAuth !== undefined) {
-    doc.subscribeAuth = !!reminder.subscribeAuth;
-  }
-  return doc;
-}
-
-/**
- * 校验用户设置写入数据（PRD §4.5）
- * @param {Object} settings
- * @returns {Object} 清洗后的设置文档
- */
-function validateSettings(settings) {
-  if (!isObj(settings)) {
-    fail('设置数据格式不对');
-  }
-  var doc = {};
-  if (settings.theme !== undefined) {
-    doc.theme = enumVal(settings.theme, THEMES, 'theme');
-  }
-  if (settings.defaultCycles !== undefined) {
-    if (!isObj(settings.defaultCycles)) {
-      fail('defaultCycles 格式不对');
-    }
-    var cycles = {};
-    ['dewormInternal', 'dewormExternal', 'vaccine', 'bath'].forEach(function (key) {
-      var v = settings.defaultCycles[key];
-      if (v !== undefined) {
-        if (!isNum(v) || v < 1 || v > 3650) {
-          fail('周期天数需在 1~3650 之间');
-        }
-        cycles[key] = Math.round(v);
+  // 必填校验（仅完整写入时校验，update 允许部分字段）
+  if (!opt.partial) {
+    const missing = [];
+    Object.keys(schema).forEach((key) => {
+      if (schema[key].required && (clean[key] === undefined || clean[key] === null)) {
+        missing.push(key);
       }
     });
-    doc.defaultCycles = cycles;
-  }
-  var advanceDays = optNum(settings, 'advanceDays', 0, 30);
-  if (advanceDays !== undefined) {
-    doc.advanceDays = Math.round(advanceDays);
-  }
-  var budget = optNum(settings, 'budget', 0, 99999900);
-  if (budget !== undefined) {
-    doc.budget = Math.round(budget); // 金额存分
-  }
-  if (settings.homeLayout !== undefined) {
-    if (!isObj(settings.homeLayout)) {
-      fail('homeLayout 格式不对');
+    if (missing.length) {
+      return { ok: false, error: '缺少必填字段: ' + missing.join(', ') };
     }
-    doc.homeLayout = settings.homeLayout;
   }
-  return doc;
+
+  return { ok: true, clean };
 }
 
 module.exports = {
-  fail: fail,
-  validatePet: validatePet,
-  validateRecord: validateRecord,
-  validateReminder: validateReminder,
-  validateSettings: validateSettings,
-  RECORD_TYPES: RECORD_TYPES,
-  REMINDER_CATEGORIES: REMINDER_CATEGORIES,
+  SCHEMAS,
+  validateWrite,
+  isType
 };

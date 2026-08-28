@@ -1,7 +1,0 @@
-<view class="paw-loading" style="width: {{variant === 'spinner' ? '16rpx' : size}}; height: {{variant === 'spinner' ? '16rpx' : size}};">
-  <canvas wx:if="{{variant !== 'spinner'}}" type="2d" id="pawCanvas" class="paw-canvas"></canvas>
-  <view wx:else class="paw-spinner">
-    <view wx:for="{{spokes}}" wx:key="index" class="spoke"
-      style="transform: rotate({{item * 30}}deg); opacity: {{1 - item * 0.08}};"></view>
-  </view>
-</view>

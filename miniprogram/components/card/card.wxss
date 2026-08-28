@@ -1,0 +1,8 @@
+.crd-h-b {
+  font-size: 31rpx;
+  font-weight: 600;
+}
+.crd-h-s {
+  font-size: 24rpx;
+  color: var(--t2);
+}

@@ -1,0 +1,2 @@
+/* 库存列表页（样式复用全局 .bar / .row） */
+.highlight { background: rgba(192,138,78,.12); border-radius: 18rpx; }

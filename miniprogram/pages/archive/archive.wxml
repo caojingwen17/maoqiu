@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">归档宠物</view>
+  </view>
+
+  <view class="body">
+    <block wx:if="{{archived.length}}">
+      <view class="crd" style="padding:9rpx 35rpx">
+        <view class="row press" wx:for="{{archived}}" wx:key="id" data-index="{{index}}" bindtap="onRestore">
+          <view class="avatar a4"><image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" /><p-icon wx:else name="paw" color="#4A7FC7" size="{{40}}" /></view>
+          <view class="grow"><view class="t">{{item.name}}</view><view class="s">{{item.sub}}</view></view>
+          <text class="pill grey">已归档</text>
+        </view>
+      </view>
+      <view class="s" style="text-align:center;padding:0 13rpx">归档宠物不再出现在首页与提醒，可随时恢复</view>
+    </block>
+    <block wx:else>
+      <view class="crd" style="padding:63rpx 35rpx 53rpx">
+        <p-empty sketch="boxCat" title="还没有归档宠物" sub="在宠物详情页底部可将宠物归档"></p-empty>
+      </view>
+    </block>
+  </view>
+
+  <p-dialog show="{{dlg.show}}" title="{{dlg.title}}" content="{{dlg.content}}" confirm-text="{{dlg.confirmText}}" bind:confirm="onDlgConfirm" bind:cancel="closeDlg" />
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

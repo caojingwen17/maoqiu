@@ -1,53 +1,69 @@
 {
   "pages": [
-    "pages/home/index",
-    "pages/calendar/index",
-    "pages/stats/index",
-    "pages/mine/index",
-    "pages/pet/detail/index",
-    "pages/pet/edit/index",
-    "pages/record/edit/index",
-    "pages/reminder/index",
-    "pages/expense/index"
+    "pages/home/home",
+    "pages/reminder/reminder",
+    "pages/reminder/new/new",
+    "pages/stats/stats",
+    "pages/mine/mine",
+    "pages/pet/detail/detail",
+    "pages/pet/edit/edit",
+    "pages/record/edit/edit",
+    "pages/record/detail/detail",
+    "pages/expense/expense",
+    "pages/weight/weight",
+    "pages/stock/stock",
+    "pages/stock/inbound/inbound",
+    "pages/stock/item/item",
+    "pages/toolbox/age/age",
+    "pages/toolbox/feed/feed",
+    "pages/toolbox/food/food",
+    "pages/members/members",
+    "pages/invite/invite",
+    "pages/archive/archive"
   ],
   "window": {
+    "navigationStyle": "custom",
+    "backgroundTextStyle": "dark",
     "backgroundColor": "#FAF6EF",
-    "navigationBarBackgroundColor": "#FAF6EF",
-    "navigationBarTitleText": "毛球档案袋",
-    "navigationBarTextStyle": "black"
+    "backgroundColorTop": "#FAF6EF",
+    "backgroundColorBottom": "#FAF6EF"
   },
   "tabBar": {
     "color": "#B9AE9E",
     "selectedColor": "#C08A4E",
     "backgroundColor": "#FAF6EF",
+    "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/home/index",
+        "pagePath": "pages/home/home",
         "text": "宠物",
-        "iconPath": "images/icons/tab-paw.png",
-        "selectedIconPath": "images/icons/tab-paw-active.png"
+        "iconPath": "assets/tab/pet.png",
+        "selectedIconPath": "assets/tab/pet-active.png"
       },
       {
-        "pagePath": "pages/calendar/index",
-        "text": "日历",
-        "iconPath": "images/icons/tab-calendar.png",
-        "selectedIconPath": "images/icons/tab-calendar-active.png"
+        "pagePath": "pages/reminder/reminder",
+        "text": "提醒",
+        "iconPath": "assets/tab/bell.png",
+        "selectedIconPath": "assets/tab/bell-active.png"
       },
       {
-        "pagePath": "pages/stats/index",
+        "pagePath": "pages/stats/stats",
         "text": "统计",
-        "iconPath": "images/icons/tab-chart.png",
-        "selectedIconPath": "images/icons/tab-chart-active.png"
+        "iconPath": "assets/tab/chart.png",
+        "selectedIconPath": "assets/tab/chart-active.png"
       },
       {
-        "pagePath": "pages/mine/index",
+        "pagePath": "pages/mine/mine",
         "text": "我的",
-        "iconPath": "images/icons/tab-gear.png",
-        "selectedIconPath": "images/icons/tab-gear-active.png"
+        "iconPath": "assets/tab/gear.png",
+        "selectedIconPath": "assets/tab/gear-active.png"
       }
     ]
   },
-  "sitemapLocation": "sitemap.json",
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents",
   "style": "v2",
-  "lazyCodeLoading": "requiredComponents"
+  "sitemapLocation": "sitemap.json"
 }

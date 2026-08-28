@@ -1,131 +1,118 @@
-// modules/home.js
-// 首页聚合：一次调用返回首屏全部数据（PRD §6.3/§6.4 与 §15 首屏合并要求）
-var cloud = require('wx-server-sdk');
-var pet = require('./pet');
-var reminder = require('./reminder');
-
-function getDb() {
-  return cloud.database();
-}
-
-function getOpenid() {
-  return cloud.getWXContext().OPENID;
-}
-
-// 当月 1 号 0 点
-function startOfMonth() {
-  var d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-// 本周周一 0 点
-function startOfWeek() {
-  var d = new Date();
-  d.setHours(0, 0, 0, 0);
-  var day = d.getDay() || 7; // 周日按 7 处理
-  d.setDate(d.getDate() - day + 1);
-  return d.getTime();
-}
-
-// 本月花销合计（分）：expense 记录求和
-async function sumMonthExpense(openid) {
-  var db = getDb();
-  var _ = db.command;
-  var total = 0;
-  var skip = 0;
-  while (true) {
-    var res = await db.collection('records')
-      .where({ _openid: openid, type: 'expense', date: _.gte(startOfMonth()) })
-      .field({ data: true })
-      .orderBy('date', 'desc')
-      .skip(skip)
-      .limit(100)
-      .get();
-    res.data.forEach(function (r) {
-      total += (r.data && r.data.amount) || 0;
-    });
-    if (res.data.length < 100) {
-      break;
-    }
-    skip += 100;
-  }
-  return total;
-}
-
-// 本周打卡次数：喂食 + 遛狗记录数
-async function countWeekCheckins(openid) {
-  var db = getDb();
-  var _ = db.command;
-  var res = await db.collection('records')
-    .where({
-      _openid: openid,
-      type: _.in(['feed', 'walk']),
-      date: _.gte(startOfWeek()),
-    })
-    .count();
-  return res.total || 0;
-}
-
-// 每只宠物最近一次体重 vs 上一次（±0.1kg 内视为持平，change 记 0）
-async function weightChanges(openid, pets) {
-  var db = getDb();
-  var changes = [];
-  await Promise.all(pets.map(async function (p) {
-    var res = await db.collection('records')
-      .where({ _openid: openid, petId: p._id, type: 'weight' })
-      .orderBy('date', 'desc')
-      .limit(2)
-      .get();
-    if (res.data.length === 0) {
-      return;
-    }
-    var latest = res.data[0].data.value;
-    var previous = res.data.length > 1 ? res.data[1].data.value : null;
-    var change = previous === null ? 0 : Math.round((latest - previous) * 10) / 10;
-    if (Math.abs(change) < 0.1) {
-      change = 0;
-    }
-    changes.push({
-      petId: p._id,
-      name: p.name,
-      latest: latest,
-      previous: previous,
-      change: change,
-    });
-  }));
-  return changes;
-}
-
 /**
- * 首页数据一次性拉取
- * @returns {{pets: Array, todos: {list: Array, total: number}, banner: {monthExpense: number, weekCheckins: number, weightChanges: Array}}}
- *   pets 带最新体重与临期提醒；todos.list 最多 3 条（PRD §6.3）；monthExpense 单位分
+ * home.aggregate —— 首页聚合（一次云函数调用返回首页全部数据，PRD §5.3 / §7）
+ * 返回：宠物卡片墙 + 待办提醒 + 统计速览条（本月花销 / 本周打卡 / 最新体重变化）
  */
-async function getHomeData() {
-  var openid = getOpenid();
-  var pets = await pet.listPets({});
-  // 首页不展示归档宠物（PRD §6.2 边界）
-  var activePets = pets.filter(function (p) { return !p.archived; });
-  var results = await Promise.all([
-    reminder.getTodos({}),
-    sumMonthExpense(openid),
-    countWeekCheckins(openid),
-    weightChanges(openid, activePets),
+
+const { db, _, COLLECTIONS, col, ensureCollections } = require('./db.js');
+const core = require('./reminderCore.js');
+const timeUtil = require('./timeUtil.js');
+
+module.exports = async function aggregate(ctx) {
+  await ensureCollections();
+  const { familyId, family } = ctx;
+  // includeArchived=true 时 pets 列表附带已归档宠物（pet 对象自带 archived 字段，前端自行分组/置底）；默认 false 保持原契约
+  const includeArchived = !!(ctx.payload && ctx.payload.includeArchived === true);
+  const now = Date.now();
+  // 本月起点按上海时区自然月（core.startOfDay 已统一为上海时区）
+  const monthStart = timeUtil.startOfMonth(now);
+
+  // 1. 宠物卡片墙（默认归档隐藏；includeArchived 时全量返回）
+  const petCond = includeArchived ? { familyId } : { familyId, archived: false };
+  const weekStart = now - 7 * core.DAY;
+  // 全部查询互不依赖，并行发出：总耗时 ≈ 最慢的一条（串行时 9 次查询叠加是首屏 1s+ 的主因）
+  const [petsRes, diaryRes, reminderRes, invRes, archRes, archivedPetsRes, expenseRes, weekRes, weightRes] = await Promise.all([
+    col(COLLECTIONS.pets).where(petCond).orderBy('order', 'asc').get(),
+    // 当前成员未读的最新日记（只返回 ready，避免把生成失败暴露到首页）
+    col(COLLECTIONS.diaries).where({ familyId, status: 'ready' }).orderBy('diaryDate', 'desc').limit(200).get(),
+    // 2. 今日待办（active 且到期日 ≤ 今天）
+    col(COLLECTIONS.reminders).where({ familyId, status: 'active' }).orderBy('remindAt', 'asc').limit(50).get(),
+    // 2d. 囤货列表（囤货页 / 我的页「囤货」摘要共用）
+    col(COLLECTIONS.inventories).where({ familyId }).limit(100).get(),
+    // 2e. 归档宠物数（我的页「归档宠物」摘要）
+    col(COLLECTIONS.pets).where({ familyId, archived: true }).count(),
+    col(COLLECTIONS.pets).where({ familyId, archived: true }).orderBy('updateAt', 'desc').limit(100).get(),
+    // 3. 本月花销
+    col(COLLECTIONS.records).where({ familyId, type: 'expense', date: _.gte(monthStart) }).limit(1000).get(),
+    // 4. 本周打卡：近 7 天记录条数（与统计页打卡热力同口径——每记一笔算 1 次）
+    col(COLLECTIONS.records).where({ familyId, date: _.gte(weekStart) }).limit(1000).get(),
+    // 5. 体重（按日期倒序）：per-pet 最新体重 + 家庭级最近体重变化
+    col(COLLECTIONS.records).where({ familyId, type: 'weight' }).orderBy('date', 'desc').limit(200).get()
   ]);
-  var todos = results[0];
+  const pets = petsRes.data || [];
+
+  const petDiaryMap = {};
+  (diaryRes.data || []).forEach((d) => {
+    if (!d.petId || (d.readBy || []).indexOf(ctx.openid) > -1) return;
+    if (!(d.petId in petDiaryMap)) {
+      petDiaryMap[d.petId] = { diaryId: d._id, diaryDate: d.diaryDate, title: d.title || '' };
+    }
+  });
+
+  const todayEnd = core.startOfDay(now) + core.DAY;
+  const todos = (reminderRes.data || []).filter((r) => r.status === 'active' && r.remindAt < todayEnd);
+
+  // 2b. 每只宠物最近一条到期提醒（宠物卡片右下角展示，todos 已按 remindAt 升序）
+  const petTodoMap = {};
+  todos.forEach((t) => {
+    if (t.petId && !(t.petId in petTodoMap)) petTodoMap[t.petId] = t.title || t.category || '';
+  });
+
+  // 2c. 家庭成员头像组（首页大标题左侧，PRD §模块1）
+  const members = ((family && family.members) || []).map((m) => ({
+    nickname: m.nickname || '',
+    avatar: m.avatar || ''
+  }));
+
+  const monthExpense = (expenseRes.data || []).reduce((sum, r) => {
+    const v = (r.data && r.data.amount);
+    return sum + (typeof v === 'number' ? v : 0);
+  }, 0);
+
+  const weekChecks = (weekRes.data || []).length;
+
+  const wlist = weightRes.data || [];
+  const weightMap = {};
+  for (const r of wlist) {
+    const w = readWeight(r);
+    if (w == null) continue;
+    if (!(r.petId in weightMap)) weightMap[r.petId] = w;
+  }
+  const weightTrend = buildWeightTrend(wlist, pets);
+
   return {
-    pets: activePets,
-    todos: { list: todos.list.slice(0, 3), total: todos.total },
-    banner: {
-      monthExpense: results[1],
-      weekCheckins: results[2],
-      weightChanges: results[3],
-    },
+    pets,
+    weightMap,
+    todos,
+    petTodoMap,
+    petDiaryMap,
+    members,
+    inventories: invRes.data || [],
+    archivedCount: archRes.total || 0,
+    archivedPets: archivedPetsRes.data || [],
+    strip: { monthExpense, weekChecks, weightTrend }
   };
+};
+
+/** 体重数值读取：data.weight / data.value / data.kg */
+function readWeight(r) {
+  const d = (r && r.data) || {};
+  if (typeof d.weight === 'number') return d.weight;
+  if (typeof d.value === 'number') return d.value;
+  if (typeof d.kg === 'number') return d.kg;
+  return null;
 }
 
-module.exports = {
-  getHomeData: getHomeData,
-};
+/** 家庭级最近体重变化（最新一条 vs 同一只宠物的上一条） */
+function buildWeightTrend(wlist, pets) {
+  if (!wlist.length) return null;
+  const latest = wlist[0];
+  const w = readWeight(latest);
+  if (w == null) return null;
+  const pet = pets.find((p) => p._id === latest.petId);
+  // 必须与最新一条同宠物，否则多宠家庭会跨宠物相减得出错误 delta
+  const prev = wlist.slice(1).find((r) => r.petId === latest.petId);
+  const prevW = prev ? readWeight(prev) : null;
+  let delta = null;
+  if (prevW != null) delta = Math.round((w - prevW) * 10) / 10;
+  return { petId: latest.petId, petName: pet ? pet.name : '', weight: w, delta, date: latest.date };
+}

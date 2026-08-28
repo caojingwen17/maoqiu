@@ -1,0 +1,68 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">记录详情</view>
+  </view>
+
+  <view class="body">
+    <!-- 头卡 -->
+    <view class="crd">
+      <view class="row">
+        <view class="ticon" style="background:{{rec.color}}1A"><p-icon name="{{rec.icon}}" color="{{rec.color}}" size="{{48}}" /></view>
+        <view class="grow">
+          <view class="s">{{rec.cat}}{{rec.petName ? ' · ' + rec.petName : ''}}</view>
+          <view class="rec-value">{{rec.value}}</view>
+        </view>
+        <text class="pill warn">{{rec.cat}}</text>
+      </view>
+      <view class="hl-full" style="margin:17rpx -35rpx"></view>
+      <view class="frow"><text class="k">日期</text><text class="val b">{{rec.date}}</text></view>
+      <view class="frow"><text class="k">类型</text><text class="val">{{rec.title}}</text></view>
+      <view class="frow"><text class="k">记录人</text><text class="val b">{{rec.by}}</text></view>
+    </view>
+
+    <!-- 填写内容 -->
+    <view class="crd" wx:if="{{rec.items.length}}">
+      <block wx:for="{{rec.items}}" wx:key="label">
+        <view wx:if="{{index > 0}}" class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+        <view class="frow" style="min-height:79rpx"><text class="k">{{item.label}}</text><text class="val b">{{item.value}}</text></view>
+      </block>
+    </view>
+
+    <!-- 备注 -->
+    <view class="crd" wx:if="{{rec.note}}">
+      <view class="rem-label">备注</view>
+      <view class="rem-note">{{rec.note}}</view>
+    </view>
+
+    <!-- 相册 -->
+    <view class="album" wx:if="{{rec.photos.length}}">
+      <view class="al" wx:for="{{rec.photos}}" wx:key="*this">
+        <image class="al-img" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="onPhoto" />
+      </view>
+    </view>
+
+    <!-- 视频（日常） -->
+    <video class="dt-video" wx:for="{{rec.videos}}" wx:key="*this" src="{{item}}" object-fit="contain"></video>
+
+    <!-- 编辑 / 删除 -->
+    <view class="del-btn edit-entry" bindtap="goEdit">编辑这条记录</view>
+    <view class="del-btn" bindtap="onDel">删除这条记录</view>
+  </view>
+
+  <!-- 删除确认弹窗 -->
+  <view class="modal-mask {{showDel ? 'show' : ''}}" catchtouchmove="noop">
+    <view class="modal">
+      <view class="mb">
+        <view style="font-size:33rpx;font-weight:700">删除这条记录？</view>
+        <view style="font-size:26rpx;color:var(--t2);margin-top:18rpx;line-height:1.6">删除后无法恢复，家庭成员的时间线中也会同步消失。</view>
+      </view>
+      <view class="mrow">
+        <view bindtap="cancelDel">取消</view>
+        <view class="mdel" bindtap="confirmDel">删除</view>
+      </view>
+    </view>
+  </view>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

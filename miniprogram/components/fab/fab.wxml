@@ -1,0 +1,1 @@
+<view class="fab" bindtap="onTap"><p-icon name="{{icon}}" color="#FAF6EF" size="{{48}}" /></view>

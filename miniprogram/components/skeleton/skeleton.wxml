@@ -1,0 +1,4 @@
+<view class="sk-wrap">
+  <view class="shimmer" wx:for="{{list}}" wx:key="index"
+    style="width:{{item.w}}rpx;height:{{item.h}}rpx;border-radius:{{item.r || 20}}rpx;margin-top:{{item.mt || 0}}rpx"></view>
+</view>

@@ -1,5 +1,0 @@
-<view wx:if="{{show || leaving}}" class="toast {{show ? 'in' : 'out'}}">
-  <view class="toast-icon type-{{type}}"
-    style="-webkit-mask-image: url('{{iconUri}}'); mask-image: url('{{iconUri}}');"></view>
-  <text class="toast-text">{{text}}</text>
-</view>

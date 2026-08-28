@@ -1,0 +1,62 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">囤货</view>
+  </view>
+
+  <view class="body">
+    <!-- 临期提醒 banner（最近一条 30 天内到期的物品） -->
+    <view wx:if="{{banner}}" class="crd" style="display:flex;gap:22rpx;align-items:center;padding:26rpx 31rpx;background:rgba(192,138,78,.08)">
+      <view class="ticon" style="background:#C08A4E1A"><p-icon name="bell" color="#C08A4E" size="{{35}}" /></view>
+      <view class="grow">
+        <view class="t" style="font-size:27rpx">{{banner}}</view>
+      <view class="s">到期前会在小程序内进入待办</view>
+      </view>
+    </view>
+
+    <block wx:if="{{items.length}}">
+      <view class="crd" style="padding:9rpx 35rpx">
+        <p-swipe wx:for="{{items}}" wx:key="id" actions="{{[{label:'补货',color:'#fff',bg:'#C08A4E'},{label:'删除',color:'#fff',bg:'#C24E3A'}]}}" data-id="{{item.id}}" bind:action="onAction">
+          <view class="row press {{item.highlight ? 'highlight' : ''}}" data-id="{{item.id}}" bindtap="onItem">
+            <view class="ticon" style="background:{{item.color}}1A"><p-icon name="{{item.icon}}" color="{{item.color}}" size="{{40}}" /></view>
+            <view class="grow">
+              <view class="t">{{item.name}}</view>
+              <view class="s">{{item.days}}</view>
+              <view class="bar" style="margin:13rpx 0 4rpx"><view style="height:100%;width:{{item.pct}};background:{{item.state === 'danger' ? '#C24E3A' : item.state === 'warn' ? '#C08A4E' : '#34A05C'}}"></view></view>
+            </view>
+          </view>
+        </p-swipe>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="crd" style="padding:63rpx 35rpx 53rpx">
+        <p-empty sketch="openBox" title="还没有库存物品" sub="记下猫粮余量，快吃完时我提醒你" btn="+ 录入第一件物品" bind:action="onAdd"></p-empty>
+      </view>
+    </block>
+
+    <!-- 提醒规则说明（静态文案，开关统一位于提醒页） -->
+    <view class="crd" style="padding:9rpx 35rpx">
+      <view class="frow" style="min-height:110rpx">
+        <view class="grow"><view class="t">临期提醒</view></view>
+        <text class="v">前 1 月 / 15 天 / 3 天 / 当天</text>
+      </view>
+      <view class="hl" style="margin:0 -35rpx"></view>
+      <view class="frow" style="min-height:110rpx">
+        <view class="grow"><view class="t">低库存补货提醒</view></view>
+        <text class="v">低于阈值时提醒</text>
+      </view>
+      <view class="hl" style="margin:0 -35rpx"></view>
+      <view class="frow" style="min-height:110rpx">
+        <view class="grow"><view class="t">记录联动扣减</view></view>
+        <text class="v">驱虫 / 喂食 / 用药</text>
+      </view>
+    </view>
+  </view>
+
+  <p-fab bind:tap="onAdd"></p-fab>
+
+  <!-- 删除囤货确认弹窗 -->
+  <p-dialog show="{{dlg.show}}" title="{{dlg.title}}" content="{{dlg.content}}" confirm-text="删除" danger bind:confirm="onDlgConfirm" bind:cancel="closeDlg" />
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

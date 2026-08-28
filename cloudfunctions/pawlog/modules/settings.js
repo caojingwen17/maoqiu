@@ -1,76 +1,88 @@
-// modules/settings.js
-// 用户设置模块：每用户一条，无记录返回默认值不落库
-var cloud = require('wx-server-sdk');
-var schema = require('../schema');
-var config = require('../config');
-
-function getDb() {
-  return cloud.database();
-}
-
-function getOpenid() {
-  return cloud.getWXContext().OPENID;
-}
-
-// 默认值（PRD §4.5）
-function defaultSettings() {
-  return {
-    theme: 'auto',
-    defaultCycles: Object.assign({}, config.DEFAULT_CYCLES),
-    advanceDays: config.DEFAULT_ADVANCE_DAYS,
-    budget: 0,
-    homeLayout: {},
-    backupAt: 0,
-  };
-}
-
 /**
- * 读取用户设置（无则返回默认值）
- * @returns {Object} 设置文档
+ * settings.* —— 用户资料与预算，每用户一条
  */
-async function getSettings() {
-  var db = getDb();
-  var openid = getOpenid();
-  var res = await db.collection('settings')
-    .where({ _openid: openid })
-    .limit(1)
-    .get();
-  if (res.data.length === 0) {
-    return defaultSettings();
+
+const { db, _, COLLECTIONS, col } = require('./db.js');
+const { validateWrite } = require('../schema.js');
+const sec = require('./sec.js');
+
+async function get(ctx) {
+  const { openid } = ctx;
+  const got = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(1).get();
+  const s = (got.data && got.data[0]) || {};
+  const { _openid, ...rest } = s;
+  return rest;
+}
+
+async function update(ctx) {
+  const { openid, familyId, family } = ctx;
+  const payload = Object.assign({}, ctx.payload || {});
+  // kickedFrom 不在 schema 白名单（防客户端伪造被踢标记）；仅放行清空（'' / null），
+  // 前端 app.js backToMine 走 settings.update({ kickedFrom: '' }) 清除拦截标记。
+  let clearKicked = false;
+  if ('kickedFrom' in payload) {
+    if (payload.kickedFrom !== '' && payload.kickedFrom !== null) {
+      throw { code: 'INVALID', message: 'kickedFrom 仅允许清空' };
+    }
+    clearKicked = true;
+    delete payload.kickedFrom;
   }
-  // 用默认值补齐缺字段，防止旧版本数据缺项
-  var doc = Object.assign(defaultSettings(), res.data[0]);
-  doc.defaultCycles = Object.assign({}, config.DEFAULT_CYCLES, res.data[0].defaultCycles || {});
-  return doc;
-}
+  const chk = validateWrite('settings', payload, { partial: true });
+  if (!chk.ok) throw { code: 'INVALID', message: chk.error };
+  const clean = Object.assign({}, chk.clean);
+  if (clearKicked) clean.kickedFrom = '';
 
-/**
- * 保存用户设置（全量覆盖单条文档）
- * @param {Object} payload {settings}
- */
-async function saveSettings(payload) {
-  var db = getDb();
-  var openid = getOpenid();
-  var now = Date.now();
-  var patch = schema.validateSettings(payload.settings || {});
-  patch.updateAt = now;
+  // 内容安全：昵称/家庭称呼走资料场景（scene=1），头像走图片检测
+  await sec.assertTextsSafe(openid, [clean.nickName, clean.familyNick], sec.SCENE.profile);
+  if (clean.avatarUrl) await sec.assertCloudImageSafe(clean.avatarUrl);
 
-  var res = await db.collection('settings')
-    .where({ _openid: openid })
-    .limit(1)
-    .get();
-  if (res.data.length > 0) {
-    await db.collection('settings').doc(res.data[0]._id).update({ data: patch });
+  const got = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(1).get();
+  if (got.data && got.data.length) {
+    await col(COLLECTIONS.settings).doc(got.data[0]._id).update({
+      data: Object.assign({}, clean, { updateAt: Date.now() })
+    });
   } else {
-    var doc = Object.assign(defaultSettings(), patch);
-    doc._openid = openid;
-    doc.createAt = now;
-    await db.collection('settings').add({ data: doc });
+    await col(COLLECTIONS.settings).add({
+      data: Object.assign({ _openid: openid }, clean)
+    });
   }
-  return null;
+
+  // 同步家庭成员快照：首页头像组 / 家庭成员页 / 记录人称呼都读 families.members[]
+  const { nickName, avatarUrl, familyNick } = chk.clean;
+  if (nickName !== undefined || avatarUrl !== undefined || familyNick !== undefined) {
+    await syncMemberSnapshot(ctx, { nickName, avatarUrl, familyNick });
+  }
+  return { ok: true };
 }
 
-module.exports = {
-  getSettings: getSettings,
-  saveSettings: saveSettings,
-};
+/**
+ * 把个人资料写回 families.members[] 中自己的条目，并回填历史记录的家庭内称呼。
+ * 显示名优先级：家庭内称呼 > 微信昵称 > 原快照昵称。
+ */
+async function syncMemberSnapshot(ctx, profile) {
+  const { openid, familyId, family } = ctx;
+  if (!family || !family._id || !Array.isArray(family.members)) return;
+
+  const displayName = ((profile.familyNick || '') + '').trim() || ((profile.nickName || '') + '').trim();
+  let changed = false;
+  const members = family.members.map((m) => {
+    if (m.openid !== openid) return m;
+    const next = Object.assign({}, m);
+    if (displayName) next.nickname = displayName;
+    if (profile.avatarUrl !== undefined) next.avatar = profile.avatarUrl;
+    if (next.nickname !== m.nickname || next.avatar !== m.avatar) changed = true;
+    return next;
+  });
+  if (!changed) return;
+
+  await col(COLLECTIONS.families).doc(family._id).update({ data: { members } });
+
+  // 历史记录上的 createdByName 是建记录时的快照，资料更新后一并回填
+  if (displayName && familyId) {
+    await col(COLLECTIONS.records).where({ familyId, createdBy: openid }).update({
+      data: { createdByName: displayName }
+    });
+  }
+}
+
+module.exports = { get, update };

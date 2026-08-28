@@ -1,0 +1,3 @@
+.head { display: flex; align-items: center; gap: 22rpx; }
+.grow { flex: 1; min-width: 0; }
+.foot { flex: none; padding: 13rpx 35rpx 57rpx; }

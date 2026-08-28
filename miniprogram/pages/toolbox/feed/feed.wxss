@@ -1,0 +1,4 @@
+.field-label { font-size: 26rpx; color: var(--t2); margin-bottom: 18rpx; }
+.result-card { text-align: center; }
+.result { font-size: 66rpx; font-weight: 700; color: var(--pop-deep); padding: 13rpx 13rpx 4rpx; }
+.result-kcal { font-size: 26rpx; color: var(--t2); padding-bottom: 13rpx; }

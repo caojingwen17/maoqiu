@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">安全食物查询</view>
+  </view>
+
+  <!-- 搜索条 -->
+  <view class="search-bar">
+    <p-icon name="search" color="#B9AE9E" size="{{35}}" />
+    <input placeholder="搜一搜：这个能不能吃？" value="{{query}}" bindinput="onSearch" />
+  </view>
+
+  <view class="chips" style="padding-top:0">
+    <view class="chip {{filter === 'all' ? 'on' : ''}}" data-level="all" bindtap="onLevel">全部</view>
+    <view class="chip {{filter === item.key ? 'on' : ''}}" wx:for="{{levels}}" wx:key="key" data-level="{{item.key}}" bindtap="onLevel">{{item.name}}</view>
+  </view>
+
+  <view class="body" style="padding-top:0">
+    <!-- 四档色标图例 -->
+    <view class="crd legend">
+      <view class="legend-item" wx:for="{{levels}}" wx:key="key">
+        <view class="dot" style="background:{{item.color}};width:15rpx;height:15rpx"></view>
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+
+    <!-- 食物列表 -->
+    <view class="crd" style="padding:9rpx 35rpx" wx:if="{{items.length}}">
+      <view class="row food-row" wx:for="{{items}}" wx:key="name">
+        <view class="dot" style="background:{{item.color}}"></view>
+        <view class="grow"><view class="t">{{item.name}}</view></view>
+        <text class="pill food-pill" style="color:{{item.color}}">{{item.levelName}}</text>
+      </view>
+    </view>
+    <view class="crd" wx:else style="padding:63rpx 35rpx 53rpx"><p-empty sketch="search" title="没有匹配的食物" sub="换个关键词试试"></p-empty></view>
+  </view>
+
+  <view class="disclaimer">仅供参考，不能替代兽医诊疗</view>
+</view>

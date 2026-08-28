@@ -1,0 +1,87 @@
+/* p-dialog 居中确认弹窗：层级高于 sheet（8/9）与 cropper（45），低于 toast（50） */
+.dlg-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30, 25, 18, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 46;
+}
+.dlg-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.dlg {
+  position: fixed;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%) scale(0.94);
+  width: 620rpx;
+  background: var(--card);
+  border-radius: 35rpx;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.25s var(--snap, ease);
+  z-index: 47;
+}
+.dlg.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+.dlg-title {
+  font-size: 33rpx;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  padding: 44rpx 44rpx 0;
+}
+.dlg-content {
+  font-size: 28rpx;
+  color: var(--t2);
+  line-height: 1.6;
+  text-align: center;
+  padding: 18rpx 44rpx 0;
+}
+.dlg-input-wrap {
+  margin: 26rpx 44rpx 0;
+  background: var(--fill);
+  border-radius: 22rpx;
+  padding: 0 26rpx;
+}
+.dlg-input {
+  height: 88rpx;
+  font-size: 31rpx;
+  color: var(--text);
+}
+.dlg-btns {
+  display: flex;
+  margin-top: 40rpx;
+  border-top: 2rpx solid var(--line);
+}
+.dlg-btn {
+  flex: 1;
+  text-align: center;
+  padding: 28rpx 0;
+  font-size: 31rpx;
+  transition: background 0.15s;
+}
+.dlg-btn:active {
+  background: var(--fill);
+}
+.dlg-btn-cancel {
+  color: var(--t2);
+  border-right: 2rpx solid var(--line);
+}
+.dlg-btn-confirm {
+  color: var(--pop-deep);
+  font-weight: 600;
+}
+.dlg-btn-confirm.danger {
+  color: var(--danger);
+}
+.dlg-btn-confirm.off {
+  opacity: 0.4;
+}

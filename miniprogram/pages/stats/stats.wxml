@@ -1,0 +1,85 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="large-title">统计</view>
+
+  <p-seg items="{{segItems}}" value="{{seg}}" bind:change="onSeg"></p-seg>
+
+  <view class="body">
+    <!-- 体重曲线：头部右侧为本卡的宠物选择器（必选具体宠物） -->
+    <view class="crd">
+      <view class="crd-h">
+        <text class="b">体重曲线</text>
+        <view class="hsel" data-type="wt" bindtap="openSheet">{{wtName}}</view>
+      </view>
+      <view wx:if="{{wtEmpty}}" class="chart-empty">{{wtEmpty}}</view>
+      <block wx:else>
+        <view class="chart-svg">
+          <view class="chart-grid"></view>
+          <!-- clip-path 为空时裁剪不生效会整卡铺色，数据就绪前不渲染 -->
+          <view class="chart-fill" wx:if="{{wtFill}}" style="clip-path:polygon({{wtFill}})"></view>
+          <view class="chart-line" wx:if="{{wtLine}}" style="clip-path:polygon({{wtLine}})"></view>
+          <view class="chart-dot" wx:for="{{wtDots}}" wx:key="index" data-index="{{index}}" bindtap="onWtDotTap" style="left:{{item.x}}%;top:{{item.y}}%">
+            <text wx:if="{{index === wtDots.length - 1}}" class="chart-dot-val">{{item.value}}kg</text>
+          </view>
+        </view>
+        <view class="heat-tip {{wtTip ? 'show' : ''}}">{{wtTip}}</view>
+        <view class="chart-x"><text wx:for="{{xLabels}}" wx:key="index">{{item}}</text></view>
+      </block>
+    </view>
+
+    <!-- 花销趋势：头部右侧为本卡的范围选择（全部宠物 / 各宠物） -->
+    <view class="crd">
+      <view class="crd-h">
+        <text class="b">花销趋势</text>
+        <view class="hsel" data-type="exp" bindtap="openSheet">{{expScope}}</view>
+      </view>
+      <view class="crd-sub" wx:if="{{!expEmpty}}">{{expHeader}}</view>
+      <view wx:if="{{expEmpty}}" class="chart-empty">{{expEmpty}}</view>
+      <block wx:else>
+        <view class="bars">
+          <view class="bars-col" wx:for="{{bars}}" wx:key="index">
+            <text class="bars-val" wx:if="{{item.vText}}">{{item.vText}}</text>
+            <view class="bars-bar">
+              <view class="bars-item {{item.cur ? 'cur' : ''}}" style="height:{{item.h}}%"></view>
+            </view>
+            <text class="bars-lab">{{item.label}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 打卡热力：头部右侧为本卡的范围选择；点击格子显示当天打卡次数 -->
+    <view class="crd">
+      <view class="crd-h">
+        <text class="b">打卡热力</text>
+        <view class="hsel" data-type="heat" bindtap="openSheet">{{heatScope}}</view>
+      </view>
+      <view class="crd-sub">近 14 周</view>
+      <view class="heat">
+        <view class="h {{item.lv}}" wx:for="{{heat}}" wx:key="index" data-index="{{index}}" bindtap="onHeatTap"></view>
+      </view>
+      <view class="heat-tip {{heatTip ? 'show' : ''}}">{{heatTip}}</view>
+    </view>
+
+  </view>
+
+  <!-- 卡片选择器弹层：体重选宠物 / 花销与热力选范围 -->
+  <p-sheet show="{{sheetType !== ''}}" bind:close="closeSheet">
+    <view class="sheet-title">{{sheetTitle}}</view>
+    <view class="pick-list">
+      <view class="pick-row" wx:for="{{sheetOptions}}" wx:key="id" data-id="{{item.id}}" bindtap="onSheetPick">
+        <view class="avatar {{item.av || 'a1'}}">
+          <image wx:if="{{item.avatar}}" class="pick-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <p-icon wx:else name="paw" color="{{item.paw || '#B0803B'}}" size="{{24}}" />
+        </view>
+        <text class="pick-name {{item.on ? 'on' : ''}}">{{item.name}}</text>
+        <p-icon wx:if="{{item.on}}" name="check" color="#3E362C" size="{{28}}" />
+      </view>
+    </view>
+    <view wx:if="{{!sheetOptions.length}}" class="pick-empty">还没有毛孩子，去首页添加一只吧</view>
+    <view class="sheet-cancel" bindtap="closeSheet">取消</view>
+  </p-sheet>
+
+  <p-toast id="toast"></p-toast>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

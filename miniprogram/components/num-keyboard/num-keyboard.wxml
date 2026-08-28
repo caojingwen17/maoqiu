@@ -1,0 +1,17 @@
+<view class="numpad {{show ? 'show' : ''}}" catchtap="noop">
+  <view class="np-grid">
+    <view
+      wx:for="{{keys}}"
+      wx:key="k"
+      class="np-key {{item.kind}}"
+      data-k="{{item.k}}"
+      hover-class="np-hover"
+      hover-stay-time="40"
+      bindtap="onKey"
+    >
+      <p-icon wx:if="{{item.kind === 'del'}}" name="backspace" color="#2C2620" size="{{48}}" />
+      <text wx:else>{{item.k}}</text>
+    </view>
+  </view>
+  <view class="np-done" hover-class="np-hover" hover-stay-time="40" bindtap="onDone">完成</view>
+</view>

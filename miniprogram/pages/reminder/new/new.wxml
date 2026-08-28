@@ -1,0 +1,77 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">{{editingId ? '编辑提醒' : '新建提醒'}}</view>
+  </view>
+
+  <view class="body">
+    <!-- 给哪只 -->
+    <view class="crd sec">
+      <view class="sec-label">给哪只</view>
+      <view class="chips-wrap" wx:if="{{pets.length}}">
+        <view class="chip {{petIdx === pi ? 'on' : ''}}" wx:for="{{pets}}" wx:for-item="p" wx:for-index="pi" wx:key="_id" data-pi="{{pi}}" bindtap="onPet">{{p.name}}</view>
+      </view>
+      <view class="s" wx:else>还没有毛孩子，请先到首页添加</view>
+    </view>
+
+    <!-- 事项 -->
+    <view class="crd sec">
+      <view class="sec-label">事项</view>
+      <view class="chips-wrap">
+        <view class="chip {{taskIdx === ti ? 'on' : ''}}" wx:for="{{taskOpts}}" wx:for-item="t" wx:for-index="ti" wx:key="*this" data-ti="{{ti}}" bindtap="onTask">{{t}}</view>
+      </view>
+      <view class="custom-wrap" wx:if="{{isCustom}}">
+        <input class="custom-in" value="{{customTitle}}" placeholder="输入事项名称，如：滴耳液" maxlength="12" bindinput="onCustomTitle" />
+      </view>
+    </view>
+
+    <!-- 类型：周期提醒 / 一次性提醒（一次性只选日期时间，完成即结束） -->
+    <view class="crd sec">
+      <view class="sec-label">类型</view>
+      <view class="chips-wrap">
+        <view class="chip {{!once ? 'on' : ''}}" data-once="0" bindtap="onMode">周期提醒</view>
+        <view class="chip {{once ? 'on' : ''}}" data-once="1" bindtap="onMode">一次性提醒</view>
+      </view>
+      <view class="cycle-row" wx:if="{{!once}}" style="margin-top:18rpx">
+        <text class="cycle-every">每</text>
+        <input class="cycle-num" type="number" value="{{every}}" bindinput="onEvery" />
+        <view class="chips-wrap cycle-units">
+          <view class="chip {{unitIdx === ui ? 'on' : ''}}" wx:for="{{unitOpts}}" wx:for-item="u" wx:for-index="ui" wx:key="*this" data-ui="{{ui}}" bindtap="onUnit">{{u}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提醒日期 + 提醒时间（通知统一在提醒页开启，此处不再重复开关） -->
+    <view class="crd" style="padding-top:9rpx;padding-bottom:9rpx">
+      <picker mode="date" value="{{dateStr}}" bindchange="onDate">
+        <view class="frow press" style="min-height:97rpx">
+          <text class="k">{{once ? '提醒日期' : '首次提醒'}}</text>
+          <text class="val b">{{dateLabel}}</text>
+          <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+        </view>
+      </picker>
+      <view class="hl-full" style="margin:0 -35rpx 0 0"></view>
+      <picker mode="time" value="{{time}}" bindchange="onTime">
+        <view class="frow press" style="min-height:97rpx">
+          <text class="k">提醒时间</text>
+          <text class="val b">{{time}}</text>
+          <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+        </view>
+      </picker>
+    </view>
+
+    <view class="crd sec">
+      <view class="sec-label">微信提醒范围</view>
+      <view class="chips-wrap">
+        <view class="chip {{notifyScope === 'family' ? 'on' : ''}}" data-scope="family" bindtap="onNotifyScope">全体家庭成员</view>
+        <view class="chip {{notifyScope === 'self' ? 'on' : ''}}" data-scope="self" bindtap="onNotifyScope">仅提醒我</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部固定保存按钮 -->
+  <view class="foot">
+    <view class="btn btn-p {{saving ? 'btn-loading' : ''}}" bindtap="onCreate">{{editingId ? '保存提醒' : '创建提醒'}}</view>
+  </view>
+</view>

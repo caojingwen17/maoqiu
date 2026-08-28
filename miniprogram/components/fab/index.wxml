@@ -1,4 +1,0 @@
-<view class="fab {{shrink ? 'shrink' : ''}}" hover-class="fab-press" bindtap="onTap">
-  <view class="fab-icon"
-    style="-webkit-mask-image: url('{{plusUri}}'); mask-image: url('{{plusUri}}');"></view>
-</view>

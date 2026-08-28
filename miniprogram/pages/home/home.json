@@ -1,0 +1,12 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "p-sheet": "/components/sheet/sheet",
+    "p-fab": "/components/fab/fab",
+    "p-empty": "/components/empty-state/empty-state",
+    "paw-loading": "/components/paw-loading/paw-loading",
+    "p-switch": "/components/switch/switch",
+    "p-dialog": "/components/dialog/dialog",
+    "p-swipe": "/components/swipe-actions/swipe-actions"
+  }
+}

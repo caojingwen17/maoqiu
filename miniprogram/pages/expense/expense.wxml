@@ -1,0 +1,52 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">账单</view>
+  </view>
+
+  <!-- 月份切换 -->
+  <view class="month-row">
+    <view class="month-arrow" bindtap="onPrevMonth"><p-icon name="chevL" color="#B9AE9E" size="{{35}}" /></view>
+    <text class="month">{{month}}</text>
+    <view class="month-arrow" bindtap="onNextMonth"><p-icon name="chevR" color="#B9AE9E" size="{{35}}" /></view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <view class="chips">
+    <view class="chip {{active === index ? 'on' : ''}}" wx:for="{{cats}}" wx:key="*this" data-index="{{index}}" bindtap="onCat">{{item}}</view>
+  </view>
+
+  <view class="body">
+    <!-- 总支出 + 预算 -->
+    <view class="crd">
+      <view class="expense-label">{{monthNum}}月总支出</view>
+      <view class="expense-big">¥{{spentInt}}<text class="expense-frac">.{{spentFrac}}</text></view>
+      <view class="press" bindtap="openBudget">
+        <view class="bar" style="margin:31rpx 0 9rpx"><view class="bar-fill" style="width:{{pct}}%"></view></view>
+        <view class="expense-budget" wx:if="{{budget !== null}}"><text>预算 ¥{{budget}}</text><text class="expense-used">已用 {{pct}}%</text></view>
+        <view class="expense-budget" wx:else><text>暂未设置月度预算 · 点击设置</text></view>
+      </view>
+    </view>
+
+    <!-- 账单列表 -->
+    <view class="crd" style="padding:9rpx 35rpx" wx:if="{{list.length}}">
+      <view class="row press" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="onItem">
+        <view class="ticon" style="background:{{item.color}}1A"><p-icon name="{{item.icon}}" color="{{item.color}}" size="{{40}}" /></view>
+        <view class="grow"><view class="t">{{item.name}}</view><view class="s">{{item.date}} · {{item.cat}}</view></view>
+        <view class="v"><text class="b">{{item.amt}}</text></view>
+      </view>
+    </view>
+    <view class="crd" wx:else style="padding:63rpx 35rpx 53rpx">
+      <p-empty sketch="fileText" title="本月还没有花销" sub="记录一笔真实支出，月底更清楚"></p-empty>
+    </view>
+  </view>
+
+  <p-fab bind:tap="onAdd"></p-fab>
+
+  <!-- 月度预算设置弹窗（统一 p-dialog 输入模式） -->
+  <p-dialog show="{{showBudget}}" title="月度预算" content="设置后，这里会显示本月预算的使用进度。" input input-type="digit" input-value="{{budgetInput}}" input-placeholder="预算金额，如 2000" confirm-text="保存" bind:input="onBudgetInput" bind:confirm="saveBudget" bind:cancel="closeBudget" />
+
+  <p-toast id="toast"></p-toast>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

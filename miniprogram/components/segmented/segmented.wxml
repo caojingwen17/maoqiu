@@ -1,0 +1,3 @@
+<view class="seg">
+  <view wx:for="{{items}}" wx:key="*this" class="seg-item {{index === value ? 'on' : ''}}" data-index="{{index}}" bindtap="onTap">{{item}}</view>
+</view>

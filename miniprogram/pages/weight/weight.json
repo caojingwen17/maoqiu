@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "p-numpad": "/components/num-keyboard/num-keyboard",
+    "p-toast": "/components/toast/toast"
+  }
+}

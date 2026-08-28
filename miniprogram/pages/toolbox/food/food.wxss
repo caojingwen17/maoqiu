@@ -1,0 +1,40 @@
+.search-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin: 4rpx 35rpx 22rpx;
+  padding: 22rpx 31rpx;
+  background: var(--fill);
+  border-radius: 26rpx;
+  color: var(--t3);
+  font-size: 29rpx;
+}
+.legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22rpx 31rpx;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 11rpx;
+  font-size: 24rpx;
+  color: var(--t2);
+}
+.food-row {
+  gap: 18rpx;
+}
+.food-pill {
+  background: var(--fill);
+  font-size: 24rpx;
+  flex: none;
+}
+.disclaimer {
+  text-align: center;
+  font-size: 23rpx;
+  color: var(--t3);
+  padding: 22rpx 53rpx 44rpx;
+  line-height: 1.8;
+}

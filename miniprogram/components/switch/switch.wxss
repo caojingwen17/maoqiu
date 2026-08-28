@@ -1,0 +1,18 @@
+.sw-knob {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 49rpx;
+  height: 49rpx;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4rpx 13rpx rgba(0, 0, 0, 0.15);
+  transition: left 0.3s var(--snap);
+}
+.sw.on .sw-knob {
+  left: 44rpx;
+}
+.sw.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

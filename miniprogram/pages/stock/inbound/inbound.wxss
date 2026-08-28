@@ -1,0 +1,5 @@
+.field-block { padding: 24rpx 0 11rpx; }
+.field-label { font-size: 26rpx; color: var(--t2); margin-bottom: 18rpx; }
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 18rpx; }
+.foot { flex: none; padding: 13rpx 35rpx 57rpx; }
+.grow { flex: 1; min-width: 0; }

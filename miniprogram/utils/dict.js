@@ -1,113 +1,111 @@
-// dict.js
-// 离线字典数据：品种、疫苗预置、禁忌食物
-// 禁忌食物供 v1.4 工具箱「安全食物查询」用，纯离线不写库
-// level 分档：danger 剧毒 / harmful 有害 / caution 少量可 / safe 安全 / note 注意
+/**
+ * 离线字典：物种 / 猫狗品种 / 疫苗 / 禁忌食物（安全食物查询）
+ * 纯本地数据，无需请求云函数
+ */
 
-// 猫常见品种（20+，供品种选择器搜索）
-var CAT_BREEDS = [
-  '中华田园猫', '英国短毛猫', '美国短毛猫', '布偶猫', '暹罗猫',
-  '波斯猫', '加菲猫', '缅因猫', '俄罗斯蓝猫', '苏格兰折耳猫',
-  '金吉拉', '孟加拉豹猫', '斯芬克斯猫', '挪威森林猫', '阿比西尼亚猫',
-  '德文卷毛猫', '英国长毛猫', '曼基康猫', '土耳其安哥拉猫', '东方短毛猫',
-  '伯曼猫', '索马里猫', '柯尼斯卷毛猫', '新加坡猫', '巴厘猫',
+/** 物种（PRD §4.1 species 枚举，8 种 + 中文名 + 身份字段语义） */
+const SPECIES = [
+  { key: 'cat', name: '猫' },
+  { key: 'dog', name: '狗' },
+  { key: 'rabbit', name: '兔' },
+  { key: 'hamster', name: '仓鼠' },
+  { key: 'bird', name: '鸟' },
+  { key: 'reptile', name: '爬宠' },
+  { key: 'fish', name: '鱼' },
+  { key: 'other', name: '其他' }
 ];
 
-// 狗常见品种（20+）
-var DOG_BREEDS = [
-  '中华田园犬', '金毛寻回犬', '拉布拉多', '柯基', '泰迪',
-  '比熊', '博美', '柴犬', '哈士奇', '萨摩耶',
-  '边境牧羊犬', '德国牧羊犬', '法国斗牛犬', '巴哥犬', '雪纳瑞',
-  '约克夏', '吉娃娃', '阿拉斯加', '杜宾犬', '松狮',
-  '秋田犬', '西高地白梗', '马尔济斯', '蝴蝶犬', '比格犬',
-];
-
-// 疫苗预置字典（PRD §8.2：猫 猫三联/狂犬；狗 犬四联/犬六联/狂犬）
-var VACCINE_PRESETS = {
-  cat: ['猫三联', '狂犬疫苗'],
-  dog: ['犬四联', '犬六联', '狂犬疫苗'],
+/**
+ * 物种差异化字段（对齐原型 SPECIES_FORM 与 PRD §7.1）
+ * identity: 该物种的「身份字段」语义；breedLabel: 品种/种类标签；needNeutered: 是否需要绝育字段
+ */
+const SPECIES_FORM = {
+  猫: { breed: '美国短毛猫', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  狗: { breed: '柯基', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  兔: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  仓鼠: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
+  鸟: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
+  鱼: { breed: '品种（如：斗鱼/孔雀鱼）', breedLabel: '鱼缸/名称', identity: '数量', identityOpts: ['1 条', '2–10 条', '10 条以上'], needNeutered: false, hint: '群养鱼可填写鱼缸名称，数量与入缸日期更有用' },
+  爬宠: { breed: '种类（如：豹纹守宫）', breedLabel: '种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '可在保存后补充饲养箱、适温和湿度信息' },
+  其他: { breed: '品种或种类（选填）', breedLabel: '品种/种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '先建立档案，后续记录可使用日常和自定义类型' }
 };
 
-// 禁忌食物离线数据（60+ 条）
-// name 食物名；level 分档；note 一句话说明（面向普通养宠人的白话）
-var FORBIDDEN_FOODS = [
-  // danger 剧毒（少量即可能致命，立即就医）
-  { name: '巧克力', level: 'danger', note: '可可碱中毒，黑巧克力尤其危险' },
-  { name: '洋葱', level: 'danger', note: '破坏红细胞，引发溶血性贫血' },
-  { name: '大蒜', level: 'danger', note: '与洋葱同类，熟蒜蒜粉也不行' },
-  { name: '葡萄', level: 'danger', note: '可导致急性肾衰竭，一颗也不能试' },
-  { name: '葡萄干', level: 'danger', note: '浓缩的葡萄，毒性更强' },
-  { name: '木糖醇', level: 'danger', note: '常见于无糖口香糖，致血糖骤降肝衰竭' },
-  { name: '酒精', level: 'danger', note: '极小量也会中毒，含酒精食物同样禁止' },
-  { name: '咖啡', level: 'danger', note: '咖啡因中毒，心跳过速可致命' },
-  { name: '浓茶', level: 'danger', note: '茶碱与咖啡因同源，对猫狗都有毒' },
-  { name: '夏威夷果', level: 'danger', note: '对狗剧毒，呕吐抽搐后肢无力' },
-  { name: '牛油果', level: 'danger', note: '含 Persin，猫狗食用可致心肌损伤' },
-  { name: '生面团', level: 'danger', note: '酵母在胃内发酵产酒精并撑胀胃' },
-  { name: '樱桃', level: 'danger', note: '果核含氰化物，果肉也可能引起肠胃不适' },
-  { name: '桃核杏核', level: 'danger', note: '果核含氰化物，还有卡喉风险' },
-  { name: '百合花', level: 'danger', note: '对猫剧毒，花粉都可能致肾衰，家中勿养' },
+/** 猫狗品种字典（后续可扩展） */
+const BREEDS = {
+  cat: ['英国短毛猫', '美国短毛猫', '布偶猫', '缅因猫', '狸花猫', '橘猫', '暹罗猫', '波斯猫', '苏格兰折耳猫', '无毛猫', '奶牛猫', '三花猫'],
+  dog: ['柯基', '金毛寻回犬', '拉布拉多', '边牧', '泰迪', '比熊', '柴犬', '柯利牧羊犬', '哈士奇', '萨摩耶', '博美', '雪纳瑞']
+};
 
-  // harmful 有害（明确伤身，不要喂）
-  { name: '牛奶', level: 'harmful', note: '多数猫狗乳糖不耐，喝了腹泻' },
-  { name: '熟禽骨', level: 'harmful', note: '煮熟后变脆，碎骨易划伤消化道' },
-  { name: '生鸡蛋', level: 'harmful', note: '沙门氏菌风险，还影响生物素吸收' },
-  { name: '生鱼', level: 'harmful', note: '含硫胺素酶，长期喂致维生素B1缺乏' },
-  { name: '动物肝脏', level: 'harmful', note: '维生素A过量中毒，每周一小口为限' },
-  { name: '肥肉', level: 'harmful', note: '高脂诱发胰腺炎，尤其小型犬' },
-  { name: '高盐食物', level: 'harmful', note: '火腿肠咸菜等，伤肾还可能钠中毒' },
-  { name: '高糖零食', level: 'harmful', note: '蛋糕饼干，肥胖与糖尿病的来源' },
-  { name: '冰淇淋', level: 'harmful', note: '糖加乳糖双重打击，没有好处' },
-  { name: '油炸食品', level: 'harmful', note: '高油高盐，胰腺炎高危' },
-  { name: '蘑菇', level: 'harmful', note: '食用菇也可能肠胃不适，野生菇致命' },
-  { name: '生土豆', level: 'harmful', note: '含龙葵素，发芽变绿毒性更强' },
-  { name: '青番茄', level: 'harmful', note: '未熟番茄含龙葵碱' },
-  { name: '辣椒', level: 'harmful', note: '刺激肠胃，猫狗不会觉得香只觉得痛' },
-  { name: '坚果', level: 'harmful', note: '高脂且易卡喉，部分种类有毒' },
-  { name: '人类药物', level: 'harmful', note: '布洛芬、对乙酰氨基酚等对宠物剧毒' },
-  { name: '烟草', level: 'harmful', note: '尼古丁中毒，烟蒂也要收好' },
+/** 疫苗字典（按物种） */
+const VACCINES = {
+  cat: ['猫三联', '狂犬', '猫白血病', '其他'],
+  dog: ['犬四联', '犬六联', '狂犬', '其他'],
+  default: ['其他']
+};
 
-  // caution 少量可（能喂但要控制量或做法）
-  { name: '苹果', level: 'caution', note: '去核去籽少量喂，果核含氰化物' },
-  { name: '香蕉', level: 'caution', note: '高糖，一小块解馋即可' },
-  { name: '西瓜', level: 'caution', note: '去籽少量，糖分不低' },
-  { name: '草莓', level: 'caution', note: '少量可，含糖较高' },
-  { name: '橙子', level: 'caution', note: '多数猫讨厌柑橘味，少量果肉无碍' },
-  { name: '奶酪', level: 'caution', note: '乳糖较低，指甲盖大小试起' },
-  { name: '蛋黄', level: 'caution', note: '必须全熟，每周一两个足够' },
-  { name: '三文鱼', level: 'caution', note: '必须煮熟去刺，生鱼有寄生虫风险' },
-  { name: '虾', level: 'caution', note: '煮熟去壳去虾线，个别宠物过敏' },
-  { name: '米饭', level: 'caution', note: '可少量拌粮，不能当主食' },
-  { name: '面包', level: 'caution', note: '无馅白面包偶尔一小块，无营养' },
-  { name: '花生酱', level: 'caution', note: '必须不含木糖醇，少量涂抹可' },
-  { name: '玉米', level: 'caution', note: '少量玉米粒可，玉米棒会卡肠道' },
-  { name: '菠菜', level: 'caution', note: '草酸偏高，偶尔少量煮熟喂' },
-  { name: '芒果', level: 'caution', note: '去皮去核少量，糖分高' },
-  { name: '荔枝龙眼', level: 'caution', note: '去核少量，糖分过高不宜常吃' },
+/** 护理提醒预设模板（PRD §9.1） */
+const CARE_TEMPLATES = ['梳毛', '刷牙', '洗澡', '剪指甲', '洁耳', '擦眼睛', '铲屎', '洗猫砂盆', '洗碗', '称体重', '驱虫', '复查', '自定义'];
 
-  // safe 安全（正常喂食无碍）
-  { name: '鸡胸肉', level: 'safe', note: '煮熟无调味，优质蛋白来源' },
-  { name: '牛肉', level: 'safe', note: '煮熟瘦肉，补铁补蛋白' },
-  { name: '胡萝卜', level: 'safe', note: '煮熟切小块，补充维生素' },
-  { name: '南瓜', level: 'safe', note: '蒸熟喂食，软便克星' },
-  { name: '红薯', level: 'safe', note: '蒸熟少量，纤维助消化' },
-  { name: '西兰花', level: 'safe', note: '煮熟少量，补充维生素' },
-  { name: '黄瓜', level: 'safe', note: '水分足热量低，夏季好零食' },
-  { name: '蓝莓', level: 'safe', note: '抗氧化，几颗即可' },
-  { name: '燕麦', level: 'safe', note: '煮熟原味，少量拌粮' },
-  { name: '白菜', level: 'safe', note: '煮熟切碎，少量无碍' },
-  { name: '木瓜', level: 'safe', note: '去籽少量，助消化' },
-  { name: '梨', level: 'safe', note: '去核少量，水分足' },
+/**
+ * 禁忌食物字典（安全食物查询 · 离线）
+ * level: toxic(剧毒) / harmful(有害) / limited(少量可) / safe(安全)
+ * 起步数据，后续可扩展到 100+（PRD §13）
+ */
+const FOODS = [
+  ['巧克力', 'toxic'], ['洋葱', 'toxic'], ['大蒜', 'toxic'], ['葡萄', 'toxic'], ['葡萄干', 'toxic'],
+  ['木糖醇', 'toxic'], ['酒', 'toxic'], ['酒精', 'toxic'], ['咖啡', 'toxic'], ['咖啡因', 'toxic'],
+  ['百合花', 'toxic'], ['牛油果', 'toxic'], ['夏威夷果', 'toxic'], ['生面团', 'toxic'],
+  ['韭菜', 'harmful'], ['大葱', 'harmful'], ['小葱', 'harmful'], ['辣椒', 'harmful'],
+  ['巧克力饼干', 'harmful'], ['腌制食品', 'harmful'], ['咸鱼', 'harmful'], ['腊肉', 'harmful'],
+  ['油炸食品', 'harmful'], ['生鸡蛋', 'harmful'], ['生鱼', 'harmful'], ['生肉', 'harmful'],
+  ['牛奶', 'limited'], ['奶酪', 'limited'], ['奶油', 'limited'], ['肥肉', 'limited'],
+  ['培根', 'limited'], ['香肠', 'limited'], ['菠萝', 'limited'], ['芒果', 'limited'],
+  ['草莓', 'limited'], ['西瓜', 'limited'],
+  ['苹果', 'safe'], ['香蕉', 'safe'], ['蓝莓', 'safe'], ['胡萝卜', 'safe'], ['南瓜', 'safe'],
+  ['西兰花', 'safe'], ['黄瓜', 'safe'], ['米饭', 'safe'], ['鸡胸肉', 'safe'], ['三文鱼', 'safe'],
+  ['红薯', 'safe'], ['燕麦', 'safe']
+];
 
-  // note 注意（不算食物但必须提醒）
-  { name: '绿萝', level: 'note', note: '常见家养绿植，啃食会口腔灼伤' },
-  { name: '康乃馨', level: 'note', note: '对猫有毒，花束要放到猫够不到处' },
-  { name: '驱蚊液', level: 'note', note: '含菊酯类成分，对猫毒性大' },
-  { name: '樟脑丸', level: 'note', note: '误食中毒，衣柜收纳要防翻' },
+const FOOD_LEVELS = {
+  toxic: { name: '剧毒', color: '#D24B42' },
+  harmful: { name: '有害', color: '#B26E4B' },
+  limited: { name: '少量可', color: '#9C6B33' },
+  safe: { name: '安全', color: '#34A05C' }
+};
+
+/** 宠物冷知识库（paw-loading 加载动效随机展示一条） */
+const PET_TRIVIA = [
+  '猫咪每天睡 12~16 小时',
+  '狗狗能记住 200 多个词',
+  '猫的呼噜声有助于放松',
+  '猫咪尝不出甜味',
+  '狗狗的鼻纹独一无二',
+  '猫的肉垫会出汗',
+  '狗狗摇尾巴不一定代表开心',
+  '猫咪蹭你是在标记领地',
+  '兔子的牙齿会一直在长',
+  '仓鼠喜欢把食物藏进颊囊',
+  '金鱼的记忆远不止 7 秒',
+  '兔子开心时会跳起来甩头',
+  '仓鼠是夜行动物，白天补觉',
+  '猫的胡须能感知气流变化',
+  '狗狗的听觉是人的好几倍',
+  '猫咪清醒时约三分之一时间在舔毛',
+  '兔子不会呕吐',
+  '虎皮鹦鹉能学会说不少词语',
+  '鱼也能认出经常喂食的人',
+  '爬宠靠晒太阳调节体温',
+  '狗喝水时舌头会向后卷成勺子',
+  '猫从高处落下能自动翻转身体'
 ];
 
 module.exports = {
-  CAT_BREEDS: CAT_BREEDS,
-  DOG_BREEDS: DOG_BREEDS,
-  VACCINE_PRESETS: VACCINE_PRESETS,
-  FORBIDDEN_FOODS: FORBIDDEN_FOODS,
+  SPECIES,
+  SPECIES_FORM,
+  BREEDS,
+  VACCINES,
+  CARE_TEMPLATES,
+  FOODS,
+  FOOD_LEVELS,
+  PET_TRIVIA
 };

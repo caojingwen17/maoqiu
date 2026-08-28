@@ -1,0 +1,25 @@
+<view class="sa">
+  <view
+    class="sa-body"
+    bindtouchstart="onStart"
+    bindtouchmove="onMove"
+    bindtouchend="onEnd"
+    bindtouchcancel="onEnd"
+  >
+    <slot></slot>
+  </view>
+  <view
+    class="sa-actions {{moving ? 'moving' : ''}}"
+    wx:if="{{actions.length}}"
+    style="transform:translateX({{reveal}}rpx);opacity:{{revealOpacity}}"
+  >
+    <view
+      wx:for="{{actions}}"
+      wx:key="label"
+      class="sa-act"
+      style="background:{{item.bg || '#C24E3A'}};color:{{item.color || '#fff'}}"
+      data-index="{{index}}"
+      bindtap="onAction"
+    >{{item.label}}</view>
+  </view>
+</view>

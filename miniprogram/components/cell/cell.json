@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "p-icon": "../icon/icon"
+  }
+}

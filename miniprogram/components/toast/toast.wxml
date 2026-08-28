@@ -1,0 +1,4 @@
+<view class="toast {{visible ? 'show' : ''}}">
+  <view class="tk-ic"><p-icon name="{{icon}}" color="#34A05C" size="{{33}}" /></view>
+  <text>{{message}}</text>
+</view>

@@ -1,2 +1,0 @@
-<view class="record-icon" style="width: {{size}}; height: {{size}}; background: {{iconColor}};
-  -webkit-mask-image: url('{{iconUri}}'); mask-image: url('{{iconUri}}');"></view>

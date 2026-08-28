@@ -1,0 +1,37 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">年龄换算</view>
+  </view>
+
+  <view class="body">
+    <!-- 用档案里的毛孩子 -->
+    <view class="chips" style="padding:0">
+      <view class="chip {{active === index ? 'on' : ''}}" wx:for="{{pets}}" wx:key="name" data-index="{{index}}" bindtap="onPet">
+        {{item.name}}
+      </view>
+    </view>
+
+    <view class="crd">
+      <view class="frow" style="min-height:88rpx">
+        <text class="k">出生日期</text>
+        <text class="val b">{{birthLabel}}</text>
+        <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+      </view>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="frow" style="min-height:88rpx">
+        <text class="k">物种</text>
+        <text class="val b">{{speciesLabel}}</text>
+        <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+      </view>
+    </view>
+
+    <view class="crd result-card">
+      <view class="crd-h"><text class="b">换算结果</text><text class="hs">{{result.src}}</text></view>
+      <view class="result-row"><text class="k">实际年龄</text><text class="v-b">{{result.real}}</text></view>
+      <view class="result-row"><text class="k">相当于人类</text><text class="v-b big">{{result.human}}</text></view>
+      <view class="s" style="text-align:center">{{result.note}}</view>
+    </view>
+  </view>
+</view>

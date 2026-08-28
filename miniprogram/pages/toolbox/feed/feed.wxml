@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">喂食量计算</view>
+  </view>
+
+  <view class="body">
+    <view class="crd">
+      <p-input label="体重" value="{{weight}}" unit="kg" bold="{{true}}" bind:change="onWeight"></p-input>
+    </view>
+
+    <view class="crd">
+      <view class="field-label">物种</view>
+      <view class="chips" style="padding:0 0 22rpx">
+        <view class="chip {{speciesIdx === index ? 'on' : ''}}" wx:for="{{speciesOpts}}" wx:key="*this" data-index="{{index}}" bindtap="onSpecies">{{item}}</view>
+      </view>
+      <view class="field-label">年龄阶段</view>
+      <view class="chips" style="padding:0 0 22rpx">
+        <view class="chip {{ageIdx === index ? 'on' : ''}}" wx:for="{{ageOpts}}" wx:key="*this" data-index="{{index}}" bindtap="onAge">{{item}}</view>
+      </view>
+      <view class="field-label">绝育状态</view>
+      <view class="chips" style="padding:0">
+        <view class="chip {{neuterIdx === index ? 'on' : ''}}" wx:for="{{neuterOpts}}" wx:key="*this" data-index="{{index}}" bindtap="onNeuter">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="crd result-card">
+      <view class="crd-h"><text class="b">每日建议喂食量</text></view>
+      <view class="result">{{result}}</view>
+      <view class="result-kcal" wx:if="{{kcalText}}">{{kcalText}}</view>
+      <view class="s" style="text-align:center">{{note}}</view>
+    </view>
+  </view>
+</view>

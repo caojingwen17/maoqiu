@@ -1,7 +1,0 @@
-<view class="pa {{shape === 'circle' ? 'circle' : 'square'}}" style="width: {{size}}; height: {{size}};">
-  <image wx:if="{{src}}" class="pa-img" src="{{src}}" mode="aspectFill" />
-  <view wx:else class="pa-fallback">
-    <view class="pa-species"
-      style="-webkit-mask-image: url('{{speciesUri}}'); mask-image: url('{{speciesUri}}');"></view>
-  </view>
-</view>

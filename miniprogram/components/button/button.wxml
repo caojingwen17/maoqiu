@@ -1,0 +1,5 @@
+<view class="btn {{typeClass}} {{size=='small' ? 'btn-sm' : ''}} {{block ? 'btn-block' : ''}} {{disabled ? 'disabled' : ''}}"
+  hover-class="{{type=='primary' ? 'btn-p-hover' : (type=='secondary' ? 'btn-s-hover' : '')}}" hover-stay-time="50" bindtap="onTap">
+  <view wx:if="{{loading}}" class="spinner"></view>
+  <slot wx:else></slot>
+</view>

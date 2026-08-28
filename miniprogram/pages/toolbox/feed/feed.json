@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "p-input": "/components/input/input"
+  }
+}

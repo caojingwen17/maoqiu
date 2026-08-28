@@ -1,0 +1,4 @@
+node_modules/
+.zcode/
+doc/*.msi
+.DS_Store

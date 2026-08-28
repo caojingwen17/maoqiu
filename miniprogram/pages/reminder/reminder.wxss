@@ -1,0 +1,85 @@
+/* 提醒中心页 */
+.reminder-head {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-right: 35rpx;
+}
+.reminder-head .large-title {
+  flex: 1;
+}
+
+/* 顶部授权入口只占自身高度，避免继承 .body 的 flex:1 把分段选择器推到页面下方 */
+.reminder-guide-body {
+  flex: none;
+  gap: 0;
+  overflow: visible;
+}
+
+.guide {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  padding: 26rpx 31rpx;
+  background: rgba(74, 127, 199, 0.07);
+  border-radius: 31rpx;
+}
+.guide-ic {
+  width: 66rpx;
+  height: 66rpx;
+  border-radius: 20rpx;
+  background: rgba(74, 127, 199, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.guide .t {
+  font-size: 27rpx;
+  font-weight: 500;
+}
+.guide-go {
+  flex: none;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--info);
+}
+
+.group-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  margin: 9rpx 0;
+}
+.group-label.danger { color: var(--danger); }
+.group-label.pop { color: var(--pop-deep); }
+.group-label.t2 { color: var(--t2); }
+.group-label:first-child { margin-top: 0; }
+
+.done-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  padding: 0 35rpx;
+}
+/* 新建提醒表单样式已随页面迁移至 pages/reminder/new/new.wxss */
+.done-sub {
+  padding: 0 35rpx;
+  margin-top: 13rpx;
+  line-height: 1.6;
+}
+.done-opt {
+  margin-top: 31rpx;
+}
+.done-cancel {
+  text-align: center;
+  padding: 31rpx 0 4rpx;
+  color: var(--pop-deep);
+  font-weight: 600;
+  font-size: 31rpx;
+}
+/* tab 页可视区域底部即 tabBar 顶边，无需额外抬高；与右边距一致（35rpx） */
+.fab {
+  bottom: 35rpx;
+}

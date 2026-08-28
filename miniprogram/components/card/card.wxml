@@ -1,0 +1,7 @@
+<view class="crd {{pressable ? 'press' : ''}}" style="{{padding ? 'padding:' + padding : ''}}" bindtap="onTap">
+  <view class="crd-h" wx:if="{{title || extra}}">
+    <text class="crd-h-b">{{title}}</text>
+    <text class="crd-h-s">{{extra}}</text>
+  </view>
+  <slot></slot>
+</view>

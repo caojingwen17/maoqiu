@@ -1,0 +1,4 @@
+<view class="ua {{round ? 'ua-round' : 'ua-sq'}}" style="width:{{size}}rpx;height:{{size}}rpx">
+  <image wx:if="{{url}}" class="ua-img" src="{{url}}" mode="aspectFill" />
+  <image wx:else class="ua-sketch" src="{{src}}" mode="aspectFit" />
+</view>

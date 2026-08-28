@@ -1,0 +1,1 @@
+<view class="sw {{on ? 'on' : ''}} {{disabled ? 'disabled' : ''}}" bindtap="onTap"><view class="sw-knob"></view></view>

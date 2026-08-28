@@ -1,14 +1,18 @@
 {
   "permissions": {
-    "openapi": [
-      "subscribeMessage.send"
-    ]
+    "openapi": ["subscribeMessage.send", "security.msgSecCheck", "security.imgSecCheck"]
   },
+  "timeout": 60,
   "triggers": [
     {
-      "name": "remindPush",
+      "name": "diaryCron",
       "type": "timer",
-      "config": "0 0 * * * * *"
+      "config": "0 30,40,50 0,1,2 * * * *"
+    },
+    {
+      "name": "reminderCron",
+      "type": "timer",
+      "config": "0 * * * * * *"
     }
   ]
 }

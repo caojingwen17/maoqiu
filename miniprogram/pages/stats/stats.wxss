@@ -1,0 +1,211 @@
+/* 统计页 */
+.chart-svg {
+  position: relative;
+  height: 211rpx;
+  overflow: visible;
+}
+.chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 66rpx;
+  height: 2rpx;
+  background: #B9AE9E;
+  opacity: 0.4;
+  border-bottom: 2rpx dashed #B9AE9E;
+}
+.chart-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(62, 54, 44, 0.14), rgba(62, 54, 44, 0));
+  /* clip-path 由 JS 按真实数据内联生成 */
+}
+.chart-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--primary);
+  /* clip-path 由 JS 按真实数据内联生成 */
+}
+.chart-dot {
+  position: absolute;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3rpx solid #fff;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+/* 最新一点的常驻体重标签（跟随最后一个 dot） */
+.chart-dot-val {
+  position: absolute;
+  bottom: 20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--primary);
+}
+.chart-empty {
+  height: 211rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: var(--t3);
+}
+.crd-sub {
+  font-size: 22rpx;
+  color: var(--t3);
+  margin-top: 4rpx;
+}
+
+/* 卡片头部右侧的范围/宠物选择器（胶囊 + 下箭头） */
+.hsel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  max-width: 320rpx;
+  font-size: 24rpx;
+  color: var(--t2);
+  background: var(--fill);
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hsel::after {
+  content: '';
+  flex: none;
+  width: 12rpx;
+  height: 12rpx;
+  border-right: 3rpx solid var(--t3);
+  border-bottom: 3rpx solid var(--t3);
+  transform: rotate(45deg) translateY(-3rpx);
+}
+
+/* 热力格子点击后的日期提示条 */
+.heat-tip {
+  margin-top: 18rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--t2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.heat-tip.show {
+  opacity: 1;
+}
+
+/* 卡片选择器弹层 */
+.sheet-title {
+  font-size: 37rpx;
+  font-weight: 700;
+  padding: 0 35rpx;
+}
+.sheet-cancel {
+  text-align: center;
+  padding: 31rpx 0 4rpx;
+  color: var(--pop-deep);
+  font-weight: 600;
+}
+.pick-list {
+  margin-top: 22rpx;
+}
+.pick-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 18rpx 35rpx;
+}
+.pick-row .avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+}
+.pick-avatar {
+  width: 100%;
+  height: 100%;
+}
+.pick-name {
+  flex: 1;
+  font-size: 31rpx;
+  color: var(--text);
+}
+.pick-name.on {
+  font-weight: 600;
+}
+.pick-empty {
+  padding: 35rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--t3);
+}
+.chart-x {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22rpx;
+  color: var(--t3);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 22rpx;
+  height: 194rpx;
+  padding: 0 9rpx;
+}
+.bars-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+.bars-val {
+  font-size: 20rpx;
+  color: var(--t2);
+  margin-bottom: 6rpx;
+  max-width: 100%;
+  overflow: hidden;
+}
+.bars-bar {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.bars-lab {
+  font-size: 22rpx;
+  color: var(--t3);
+  margin-top: 9rpx;
+  text-align: center;
+}
+.bars-item {
+  width: 100%;
+  border-radius: 999rpx 999rpx 9rpx 9rpx;
+  background: var(--primary-tint);
+}
+.bars-item.cur {
+  background: var(--primary);
+}
+
+.report-ic {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 26rpx;
+  background: rgba(168, 144, 46, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}

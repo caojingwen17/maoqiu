@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">记体重</view>
+  </view>
+
+  <view class="body">
+    <picker mode="selector" range="{{pets}}" range-key="name" value="{{petIdx}}" bindchange="onPetChange">
+      <view class="crd pet-head">
+        <view class="avatar a1">
+          <image wx:if="{{petAvatar}}" class="avatar-img" src="{{petAvatar}}" mode="aspectFill" />
+          <p-icon wx:else name="paw" color="#B0803B" size="{{44}}" />
+        </view>
+        <view class="grow"><view class="t" style="font-weight:600">{{petName}}</view><view class="s">{{petSpecies}}</view></view>
+        <text class="pill grey">换一只</text>
+      </view>
+    </picker>
+
+    <view class="crd big-input" bindtap="openPad">
+      <view class="big-num">{{value}}<text class="big-unit"> kg</text></view>
+      <view class="big-hint">点击数字唤起大键盘</view>
+    </view>
+
+    <view class="crd">
+      <view class="frow" style="min-height:88rpx">
+        <text class="k">日期</text>
+        <text class="val b">{{dateLabel}}</text>
+        <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+      </view>
+      <view class="hl-full" style="margin:9rpx -35rpx 9rpx 194rpx"></view>
+      <view class="frow" style="min-height:88rpx">
+        <text class="k">备注</text>
+        <text class="val">选填</text>
+      </view>
+    </view>
+
+    <view class="crd prev-card" wx:if="{{prev}}">
+      <view class="ticon" style="background:#C08A4E1A"><p-icon name="scale" color="#C08A4E" size="{{40}}" /></view>
+      <view class="grow"><view class="t" style="font-size:29rpx">上次记录 · {{prev.date}} <text style="font-weight:600">{{prev.val}}</text></view></view>
+      <text class="pill warn">{{prev.diff}}</text>
+    </view>
+  </view>
+
+  <view class="foot">
+    <view class="btn btn-p" bindtap="onSave">保存</view>
+    <view class="save-more" bindtap="onSaveMore">保存并再记一条</view>
+  </view>
+
+  <view class="pad-mask" wx:if="{{showPad}}" bindtap="closePad"></view>
+  <p-numpad show="{{showPad}}" decimal="{{true}}" bind:key="onKey" bind:done="closePad"></p-numpad>
+  <p-toast id="toast"></p-toast>
+</view>

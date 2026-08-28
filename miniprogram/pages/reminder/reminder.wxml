@@ -1,0 +1,94 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+
+  <!-- 大标题（新建入口走右下角 FAB，避让右上角微信胶囊） -->
+  <view class="reminder-head">
+    <view class="large-title">提醒</view>
+  </view>
+
+  <view class="body reminder-guide-body" style="padding-top:18rpx;padding-bottom:26rpx">
+    <view class="guide" bindtap="onSubscriptionGuide">
+      <view class="guide-ic"><p-icon name="bell" color="#4A7FC7" size="36" /></view>
+      <view class="grow">
+        <view class="t" wx:if="{{subscriptionEnabled}}">微信提醒已开启</view>
+        <view class="t" wx:elif="{{subscriptionRejected}}">微信提醒已关闭</view>
+        <view class="t" wx:else>开启微信提醒</view>
+        <view class="s" wx:if="{{subscriptionRejected}}">点此进入微信设置重新开启</view>
+        <view class="s" wx:else>到点提醒待办，不影响小程序内使用</view>
+      </view>
+      <text class="guide-go">{{subscriptionRejected ? '去设置' : (subscriptionEnabled ? '查看' : '开启')}}</text>
+    </view>
+  </view>
+
+  <!-- 进行中 / 已完成 分段 -->
+  <p-seg items="{{segItems}}" value="{{seg}}" bind:change="onSeg"></p-seg>
+
+  <view class="body" wx:if="{{seg === 0}}">
+    <!-- 进行中分组列表 -->
+    <view class="crd" wx:if="{{groups.length}}">
+      <block wx:for="{{groups}}" wx:for-item="g" wx:for-index="gi" wx:key="label">
+        <text class="group-label {{g.labelColor}}">{{g.label}}</text>
+        <block wx:for="{{g.items}}" wx:for-item="it" wx:for-index="ti" wx:key="name">
+          <view class="row press" data-gi="{{gi}}" data-ti="{{ti}}" bindtap="onTodo">
+            <view class="dot" style="background:{{it.dot}}"></view>
+            <view class="grow"><view class="t">{{it.name}}</view><view class="s">{{it.sub}}</view></view>
+            <text class="pill {{it.pillType}}">{{it.pill}}</text>
+          </view>
+          <view class="hl" wx:if="{{ti < g.items.length - 1}}" style="margin-left:-35rpx"></view>
+        </block>
+        <view class="hl" wx:if="{{gi < groups.length - 1}}" style="margin-left:-35rpx"></view>
+      </block>
+    </view>
+    <view class="crd" wx:else style="padding:63rpx 35rpx 53rpx">
+      <p-empty wx:if="{{loadError}}" sketch="dogSun" title="加载失败" sub="请稍后重新进入本页重试"></p-empty>
+      <p-empty wx:else sketch="dogSun" title="今天一切安好" sub="没有临期事项"></p-empty>
+    </view>
+
+  </view>
+
+  <view class="body" wx:else>
+    <view class="crd" wx:if="{{doneGroups.length}}" style="padding:9rpx 35rpx">
+      <view class="row" wx:for="{{doneGroups}}" wx:for-item="it" wx:for-index="ti" wx:key="id">
+        <view class="dot" style="background:{{it.dot}}"></view>
+        <view class="grow"><view class="t">{{it.name}}</view><view class="s">{{it.completedText || '已完成'}}</view></view>
+        <text class="pill grey">已完成</text>
+      </view>
+    </view>
+    <view class="crd" wx:else style="padding:63rpx 35rpx 53rpx">
+      <p-empty sketch="pawPen" title="近 30 天无已完成提醒" sub="完成一次提醒后，会保留在这里 30 天"></p-empty>
+    </view>
+  </view>
+
+  <!-- 完成面板弹层（新建提醒已迁到独立页 pages/reminder/new） -->
+  <p-sheet show="{{showSheet}}" bind:close="closeSheet">
+    <block wx:if="{{pending}}">
+      <view class="done-title">完成「{{pending.name}}」</view>
+      <view class="s done-sub">{{pending.medical ? '完成后可同时留下健康记录，家庭成员会看到由谁完成。' : '确认后会同步给家庭成员，并按周期安排下一次。'}}</view>
+      <view class="crd press done-opt" wx:if="{{pending.medical}}" data-choice="record" bindtap="onDoneChoice">
+        <view class="t" style="font-weight:700">同时记一笔</view>
+        <view class="s">预填本次{{pending.name}}，保存后再完成任务</view>
+      </view>
+      <view class="crd press done-opt" data-choice="only" bindtap="onDoneChoice">
+        <view class="t" style="font-weight:700">{{pending.medical ? '仅完成' : '确认完成'}}</view>
+        <view class="s">{{pending.medical ? '不新增记录，仍会推进下一次提醒' : '同步给家庭成员，并按周期安排下一次'}}</view>
+      </view>
+      <view class="crd press done-opt" data-choice="delay" bindtap="onDoneChoice">
+        <view class="t" style="font-weight:700">延后 3 天</view>
+        <view class="s">{{delayDateLabel}}</view>
+      </view>
+      <view class="crd press done-opt" data-choice="edit" bindtap="onDoneChoice">
+        <view class="t" style="font-weight:700">编辑提醒</view>
+        <view class="s">调整时间、周期或提前天数</view>
+      </view>
+      <view class="crd press done-opt" data-choice="disable" bindtap="onDoneChoice">
+        <view class="t" style="font-weight:700;color:var(--danger)">停用提醒</view>
+        <view class="s">保留历史记录，不再出现在待办</view>
+      </view>
+      <view class="done-cancel" bindtap="closeSheet">取消</view>
+    </block>
+  </p-sheet>
+
+  <p-fab bind:tap="goNew"></p-fab>
+  <p-toast id="toast"></p-toast>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

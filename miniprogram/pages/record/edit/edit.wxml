@@ -1,0 +1,155 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">记{{name}}</view>
+  </view>
+
+  <view class="body">
+    <!-- 宠物选择（占位：单宠自动隐藏时展示当前宠物） -->
+    <picker mode="selector" range="{{pets}}" range-key="name" value="{{petIdx}}" bindchange="onPetChange">
+      <view class="crd pet-head">
+        <view class="avatar a1">
+          <image wx:if="{{petAvatar}}" class="avatar-img" src="{{petAvatar}}" mode="aspectFill" />
+          <p-icon wx:else name="paw" color="#B0803B" size="{{44}}" />
+        </view>
+        <view class="grow"><view class="t" style="font-weight:600">{{petName}}</view><view class="s">{{petSpecies}}</view></view>
+        <text class="pill grey">换一只</text>
+      </view>
+    </picker>
+
+    <!-- 体重大数字输入 -->
+    <view class="crd press big-input" wx:if="{{type === 'weight'}}" bindtap="onBigInput">
+      <view class="big-num">—<text class="big-unit"> kg</text></view>
+      <view class="big-hint">点击进入体重记录 · 支持输入「斤」自动换算</view>
+    </view>
+
+    <!-- 日常：文字 + 照片 -->
+    <block wx:elif="{{type === 'daily'}}">
+      <view class="crd daily-ph">
+        <input class="daily-in" placeholder="此刻的可爱，写下来…（也可以只发照片）" placeholder-class="daily-ph-t" value="{{note}}" bindinput="onNoteInput" />
+      </view>
+      <view class="crd">
+        <view class="field-label">照片/视频 · 最多 9 个（单个视频 ≤ 10MB）</view>
+        <view class="album">
+          <view class="photo-thumb" wx:for="{{photos}}" wx:key="*this">
+            <image class="photo-thumb-img" src="{{item}}" mode="aspectFill" />
+            <view class="photo-del" data-idx="{{index}}" catchtap="onDelPhoto"><p-icon name="close" color="#FAF6EF" size="{{22}}" /></view>
+          </view>
+          <view class="photo-thumb" wx:for="{{videos}}" wx:key="path">
+            <image class="photo-thumb-img" src="{{item.thumb}}" mode="aspectFill" wx:if="{{item.thumb}}" />
+            <view class="photo-thumb-img video-ph" wx:else></view>
+            <view class="video-badge"><p-icon name="play" color="#FAF6EF" size="{{26}}" /></view>
+            <view class="photo-del" data-idx="{{index}}" catchtap="onDelVideo"><p-icon name="close" color="#FAF6EF" size="{{22}}" /></view>
+          </view>
+          <view class="photo-add" wx:if="{{photos.length + videos.length < 9}}" bindtap="onAddMedia"><p-icon name="plus" color="#B9AE9E" size="{{44}}" /></view>
+        </view>
+      </view>
+      <view class="crd">
+        <picker mode="date" value="{{dateStr}}" bindchange="onDateChange">
+          <view class="frow" style="min-height:88rpx">
+            <text class="k">日期</text>
+            <text class="val b">{{dateLabel}}</text>
+            <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+          </view>
+        </picker>
+      </view>
+    </block>
+
+    <!-- 其余类型：字段卡（单卡 + 发丝线分隔）+ 日期/照片/备注卡 -->
+    <block wx:else>
+      <view class="crd">
+        <block wx:for="{{fields}}" wx:for-item="f" wx:for-index="fi" wx:key="label">
+          <view wx:if="{{fi > 0}}" class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+          <!-- 单选 chips -->
+          <view class="field-block" wx:if="{{f.kind === 'chips'}}">
+            <view class="field-label">{{f.label}}</view>
+            <view class="chips-wrap">
+              <view class="chip {{f.sel === oi ? 'on' : ''}}" wx:for="{{f.opts}}" wx:for-item="o" wx:for-index="oi" wx:key="*this" data-fi="{{fi}}" data-oi="{{oi}}" bindtap="onChip">{{o}}</view>
+            </view>
+          </view>
+          <!-- 多选 chips -->
+          <view class="field-block" wx:elif="{{f.kind === 'mchips'}}">
+            <view class="field-label">{{f.label}}</view>
+            <view class="chips-wrap">
+              <view class="chip {{f.selBools[oi] ? 'on' : ''}}" wx:for="{{f.opts}}" wx:for-item="o" wx:for-index="oi" wx:key="*this" data-fi="{{fi}}" data-oi="{{oi}}" bindtap="onMChip">{{o}}</view>
+            </view>
+          </view>
+          <!-- 输入行 -->
+          <p-input wx:elif="{{f.kind === 'input'}}" label="{{f.label}}" value="{{f.val}}" placeholder="{{f.ph || '选填'}}" unit="{{f.unit}}" bold="{{!!f.val}}" data-fi="{{fi}}" bind:change="onFieldInput"></p-input>
+          <!-- 日期选择行 -->
+          <picker wx:elif="{{f.kind === 'row'}}" mode="date" value="{{f.val}}" data-fi="{{fi}}" bindchange="onFieldDate">
+            <view class="frow" style="min-height:88rpx">
+              <text class="k">{{f.label}}</text>
+              <text class="val {{f.val ? 'b' : ''}}">{{f.val || '选择日期'}}</text>
+              <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+            </view>
+          </picker>
+          <!-- 开关行 -->
+          <view class="frow" wx:elif="{{f.kind === 'switch'}}" style="min-height:88rpx">
+            <view class="grow"><view class="t" style="font-size:31rpx;color:var(--text)">{{f.label}}</view><view class="s" wx:if="{{f.hint}}">{{f.hint}}</view></view>
+            <p-switch checked="{{f.on === 1}}" data-fi="{{fi}}" bind:change="onFieldSwitch"></p-switch>
+          </view>
+        </block>
+      </view>
+
+      <!-- 从囤货扣减（喂食/驱虫/用药且有匹配囤货时展示；默认不扣减，选了才扣） -->
+      <view class="crd" wx:if="{{!editing && invOptions.length}}">
+        <view class="field-block">
+          <view class="field-label">从囤货扣减 · 选填</view>
+          <view class="chips-wrap">
+            <view class="chip {{invSel === -1 ? 'on' : ''}}" data-oi="-1" bindtap="onInvChip">不扣减</view>
+            <view class="chip {{invSel === ii ? 'on' : ''}}" wx:for="{{invOptions}}" wx:for-index="ii" wx:key="_id" data-oi="{{ii}}" bindtap="onInvChip">{{item.itemName}} · 剩 {{item.remainAmount}} {{item.unit}}</view>
+          </view>
+          <view class="s" wx:if="{{invSel >= 0}}" style="margin-top:12rpx">保存后从所选囤货扣减{{type === 'feed' ? '对应克数' : ' 1 ' + invOptions[invSel].unit}}</view>
+        </view>
+      </view>
+      <view class="crd">
+        <picker mode="date" value="{{dateStr}}" bindchange="onDateChange">
+          <view class="frow" style="min-height:88rpx">
+            <text class="k">日期</text>
+            <text class="val b">{{dateLabel}}</text>
+            <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+          </view>
+        </picker>
+        <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+        <view class="frow press" style="min-height:88rpx" bindtap="onAddPhoto">
+          <text class="k">照片</text>
+          <text class="val">{{photos.length ? '已选 ' + photos.length + ' 张' : '选填'}}</text>
+          <view class="chev" style="color:var(--pop-deep)"><p-icon name="camera" color="#9C6B33" size="{{35}}" /></view>
+        </view>
+        <view class="album photo-strip" wx:if="{{photos.length}}">
+          <view class="photo-thumb" wx:for="{{photos}}" wx:key="*this">
+            <image class="photo-thumb-img" src="{{item}}" mode="aspectFill" />
+            <view class="photo-del" data-idx="{{index}}" catchtap="onDelPhoto"><p-icon name="close" color="#FAF6EF" size="{{22}}" /></view>
+          </view>
+          <view class="photo-add" wx:if="{{photos.length < 9}}" bindtap="onAddPhoto"><p-icon name="plus" color="#B9AE9E" size="{{44}}" /></view>
+        </view>
+        <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+        <p-input label="备注" value="{{note}}" placeholder="选填" bind:change="onNoteInput"></p-input>
+      </view>
+    </block>
+  </view>
+
+  <view class="foot">
+    <view class="btn btn-p" bindtap="onSave">保存</view>
+    <view class="save-more" wx:if="{{again}}" bindtap="onSaveMore">保存并再记一条</view>
+  </view>
+
+  <!-- 结果卡（低频高价值类型） -->
+  <p-sheet show="{{showResult}}" bind:close="closeResult">
+    <view class="result-body">
+      <view class="result-check"><p-icon name="check" color="#34A05C" size="{{48}}" /></view>
+      <view class="result-title">已记下啦</view>
+      <view class="s result-sub">{{resultNext || '未设置下次日期，可在提醒页手动添加'}}</view>
+      <view class="crd press result-opt" wx:if="{{type === 'medical' || type === 'surgery'}}" bindtap="goExpense">
+        <view class="ticon" style="background:#4E8A681A"><p-icon name="coin" color="#4E8A68" size="{{40}}" /></view>
+        <view class="grow"><view class="t" style="font-weight:600">同步记一笔花销</view><view class="s">进入记花销，分类预填为医疗</view></view>
+        <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+      </view>
+      <view class="btn btn-p" style="margin-top:13rpx" bindtap="closeResult">完成</view>
+    </view>
+  </p-sheet>
+
+  <p-toast id="toast"></p-toast>
+</view>

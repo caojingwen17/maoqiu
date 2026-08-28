@@ -1,0 +1,54 @@
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 101rpx;
+  border-radius: 31rpx;
+  font-size: 33rpx;
+  font-weight: 600;
+  transition: background 0.12s, opacity 0.12s;
+}
+.btn-sm {
+  height: 80rpx;
+  font-size: 28rpx;
+}
+.btn-block {
+  width: 100%;
+}
+.btn-p {
+  background: var(--primary);
+  color: #FAF6EF;
+}
+.btn-p-hover {
+  background: var(--primary-pressed);
+}
+.btn-s {
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.btn-s-hover {
+  opacity: 0.75;
+}
+.btn-destructive {
+  background: none;
+  color: var(--danger);
+}
+.btn-plain {
+  background: none;
+  color: var(--primary);
+}
+.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

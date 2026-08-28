@@ -1,76 +1,87 @@
-// validate.js
-// 表单校验：宠物档案规则与错误文案逐字对齐 PRD §7.1
-
-// 通用：必填校验，通过返回 null，失败返回错误文案
-function required(value, msg) {
-  if (value === undefined || value === null || value === '') {
-    return msg;
-  }
-  if (typeof value === 'string' && value.trim() === '') {
-    return msg;
-  }
-  return null;
-}
-
-// 通用：数值范围校验（value 可空，空则跳过）
-function numberRange(value, min, max, msg) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-  var n = Number(value);
-  if (isNaN(n) || n < min || n > max) {
-    return msg;
-  }
-  return null;
-}
-
 /**
- * 宠物档案表单校验（PRD §7.1）
- * @param {Object} form {name, species, birthDate, adoptDate, weightGoal}
- * @returns {{ok: boolean, errors: Object, firstError: string|null}}
+ * 表单校验（对齐 PRD §7.1 校验规则）
+ * 返回 { ok, msg }
  */
-function validatePetForm(form) {
-  var errors = {};
 
-  // 名字：必填，1~12 字，去首尾空格
-  var name = (form.name || '').trim();
-  if (!name) {
-    errors.name = '给毛孩子起个名字吧';
-  } else if (name.length > 12) {
-    errors.name = '给毛孩子起个名字吧';
-  }
+function trimSpace(s) {
+  return (s || '').trim();
+}
 
-  // 物种：必选
-  if (!form.species) {
-    errors.species = '请选择物种';
-  }
+/** 宠物名：1~12 字 */
+function petName(v) {
+  const name = trimSpace(v);
+  if (!name) return { ok: false, msg: '给毛孩子起个名字吧' };
+  if (name.length > 12) return { ok: false, msg: '名字最长 12 个字' };
+  return { ok: true, value: name };
+}
 
-  // 出生日期：不得晚于今天
-  if (form.birthDate && form.birthDate > Date.now()) {
-    errors.birthDate = '出生日期不能是未来哦';
-  }
+/** 出生日期：不得晚于今天 */
+function birthDate(ts) {
+  if (!ts) return { ok: true };
+  if (ts > Date.now()) return { ok: false, msg: '出生日期不能是未来哦' };
+  return { ok: true };
+}
 
-  // 到家日期：不得早于出生日期
-  if (form.adoptDate && form.birthDate && form.adoptDate < form.birthDate) {
-    errors.adoptDate = '到家日期应该晚于出生日期';
-  }
+/** 到家日期：不得早于出生日期 */
+function adoptDate(birthTs, adoptTs) {
+  if (!birthTs || !adoptTs) return { ok: true };
+  if (adoptTs < birthTs) return { ok: false, msg: '到家日期应该晚于出生日期' };
+  return { ok: true };
+}
 
-  // 目标体重：0.1~100 kg
-  var weightErr = numberRange(form.weightGoal, 0.1, 100, '体重数值不太对');
-  if (weightErr) {
-    errors.weightGoal = weightErr;
-  }
+/** 目标体重：0.1~100 kg */
+function weight(v) {
+  const n = Number(v);
+  if (isNaN(n) || n < 0.1 || n > 100) return { ok: false, msg: '体重数值不太对' };
+  return { ok: true, value: Math.round(n * 10) / 10 };
+}
 
-  var firstError = null;
-  var keys = Object.keys(errors);
-  if (keys.length > 0) {
-    firstError = errors[keys[0]];
+/** 斤/两 → kg 解析：支持 `8斤4两`、`8.4斤`、`4.2`、`4.2kg`。解析失败返回 null */
+function parseWeightToKg(str) {
+  if (str == null) return null;
+  const s = String(str).trim().replace(/\s+/g, '');
+  if (!s) return null;
+  // 直接 kg
+  const kgMatch = s.match(/^([0-9]+(?:\.[0-9]+)?)\s*(?:kg|公斤|千克)?$/);
+  if (kgMatch && !/斤|两/.test(s)) {
+    const n = Number(kgMatch[1]);
+    if (!isNaN(n) && n >= 0.1 && n <= 100) return Math.round(n * 10) / 10;
   }
-  return { ok: keys.length === 0, errors: errors, firstError: firstError };
+  // 斤/两
+  let jin = 0;
+  let liang = 0;
+  const jinMatch = s.match(/([0-9]+(?:\.[0-9]+)?)\s*斤/);
+  const liangMatch = s.match(/([0-9]+(?:\.[0-9]+)?)\s*两/);
+  if (jinMatch) jin = Number(jinMatch[1]);
+  if (liangMatch) liang = Number(liangMatch[1]);
+  if (jinMatch || liangMatch) {
+    const kg = jin * 0.5 + liang * 0.05;
+    if (kg >= 0.1 && kg <= 100) return Math.round(kg * 10) / 10;
+  }
+  return null;
+}
+
+/** 金额：0 ~ 999999 */
+function amount(v) {
+  const n = Number(v);
+  if (isNaN(n) || n < 0 || n > 999999) return { ok: false, msg: '金额不对哦' };
+  return { ok: true, value: Math.round(n * 100) / 100 };
+}
+
+/** 周期天数：1~99 */
+function cycleDays(v) {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 1 || n > 99) return { ok: false, msg: '周期填 1~99 的整数' };
+  return { ok: true, value: n };
 }
 
 module.exports = {
-  required: required,
-  numberRange: numberRange,
-  validatePetForm: validatePetForm,
+  trimSpace,
+  petName,
+  birthDate,
+  adoptDate,
+  weight,
+  parseWeightToKg,
+  amount,
+  cycleDays
 };

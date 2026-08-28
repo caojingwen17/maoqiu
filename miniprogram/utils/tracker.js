@@ -1,32 +1,39 @@
-// tracker.js
-// 埋点封装：统一走 wx.reportAnalytics，事件名对照 PRD §16
-// 事件需在 mp 后台「统计-自定义分析」配置同名事件后才可查到数据
+/**
+ * 埋点（PRD §17）
+ * 关键埋点：首页曝光、添加宠物成功、各类型记录提交、提醒完成率、工具箱使用
+ * 当前为本地 console + 待接入正式统计的桩；不阻塞业务
+ */
 
-var EVENTS = {
-  HOME_EXPOSURE: 'home_exposure',       // 首页曝光
-  ADD_PET_SUCCESS: 'add_pet_success',   // 添加宠物成功
-  RECORD_SUBMIT: 'record_submit',       // 各类型记录提交（data 带 type）
-  REMINDER_CREATE: 'reminder_create',   // 提醒创建
-  REMINDER_COMPLETE: 'reminder_complete', // 提醒完成（算完成率）
-  BACKUP_USE: 'backup_use',             // 备份使用
-  TOOLBOX_USE: 'toolbox_use',           // 工具箱使用（data 带 tool）
+const EVENTS = {
+  HOME_SHOW: 'home_show',
+  PET_CREATED: 'pet_created',
+  RECORD_SUBMIT: 'record_submit',
+  REMINDER_DONE: 'reminder_done',
+  REMINDER_POSTPONE: 'reminder_postpone',
+  TOOL_USED: 'tool_used',
+  DIARY_ATTEMPT: 'diary_attempt',
+  DIARY_GENERATED: 'diary_generated',
+  DIARY_SKIPPED: 'diary_skipped',
+  DIARY_FAILED: 'diary_failed',
+  DIARY_OPEN: 'diary_open',
+  DIARY_READ: 'diary_read',
+  SUBSCRIPTION_GUIDE_SHOW: 'subscription_guide_show',
+  SUBSCRIPTION_REQUEST: 'subscription_request',
+  SUBSCRIPTION_ACCEPT: 'subscription_accept',
+  SUBSCRIPTION_REJECT: 'subscription_reject',
+  SUBSCRIPTION_GRANT_RECORDED: 'subscription_grant_recorded',
+  NOTIFICATION_SEND_SUCCESS: 'notification_send_success',
+  NOTIFICATION_SEND_FAILED: 'notification_send_failed'
 };
 
-/**
- * 上报埋点
- * @param {string} event 事件名，建议取 EVENTS 常量
- * @param {Object} [data] 自定义属性（key/value 均需在后台先配置）
- */
-function track(event, data) {
-  try {
-    wx.reportAnalytics(event, data || {});
-  } catch (e) {
-    // 埋点失败不影响业务，静默吞掉
-    console.warn('埋点上报失败', event, e);
-  }
+function track(event, props) {
+  const payload = Object.assign({ event, at: Date.now() }, props || {});
+  // 仅本地调试输出；正式接入统计 SDK 时在此替换
+  console.log('[track]', payload);
+  return payload;
 }
 
 module.exports = {
-  EVENTS: EVENTS,
-  track: track,
+  EVENTS,
+  track
 };

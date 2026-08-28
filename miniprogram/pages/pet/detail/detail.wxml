@@ -1,0 +1,110 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+  </view>
+
+  <!-- 头卡（头像 + 名字 + 到家 N 天 + 目标 pill + 编辑入口，避让右上角胶囊） -->
+  <view class="head-card crd">
+    <view class="avatar {{pet.av}}">
+      <image wx:if="{{pet.avatar}}" class="al-img head-avatar-img" style="border-radius:50%" src="{{pet.avatar}}" mode="aspectFit" />
+      <p-icon wx:else name="paw" color="{{pet.paw}}" size="{{62}}" />
+    </view>
+    <view class="grow">
+      <view class="pet-title">{{pet.name}}<text class="gender {{pet.gender}}" wx:if="{{pet.gender}}">{{pet.gender === 'male' ? '♂' : '♀'}}</text><text class="pill grey" wx:if="{{isArchived}}">已归档</text></view>
+      <view class="s">{{pet.sub}}</view>
+      <view class="pet-home">{{pet.homeDays}}</view>
+    </view>
+    <view class="head-side">
+      <text class="pill grey">{{pet.goal}}</text>
+      <view class="edit-btn" wx:if="{{!isArchived}}" bindtap="goEdit"><p-icon name="pencil" color="#9C6B33" size="{{35}}" /></view>
+    </view>
+  </view>
+
+  <!-- Tab 切换 -->
+  <p-seg items="{{segItems}}" value="{{seg}}" bind:change="onSeg"></p-seg>
+
+  <!-- 时间线 Tab -->
+  <block wx:if="{{seg === 0}}">
+    <view class="chips" style="padding-top:0">
+      <view class="chip {{activeGroup === index ? 'on' : ''}}" wx:for="{{groupKeys}}" wx:key="*this" data-index="{{index}}" bindtap="onGroup">{{item}}</view>
+    </view>
+    <view class="body">
+      <view class="crd" wx:if="{{hasRecords && timeline.length}}">
+        <view class="tl" wx:for="{{timeline}}" wx:for-item="day" wx:key="date">
+          <view class="tl-date">{{day.date}}</view>
+          <view class="tl-item" wx:for="{{day.items}}" wx:for-item="rec" wx:key="id">
+            <view class="press" data-id="{{rec.id}}" bindtap="onRecord">
+              <view class="row">
+                <view class="ticon" style="background:{{rec.color}}1A"><p-icon name="{{rec.icon}}" color="{{rec.color}}" size="{{40}}" /></view>
+                <view class="grow"><view class="t">{{rec.title}}</view><view class="s">{{rec.sub}}</view></view>
+                <text class="v">{{rec.val}}</text>
+                <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{29}}" /></view>
+              </view>
+              <!-- 日常：正文文字 + 照片条（对齐原型时间线） -->
+              <view class="tl-note" wx:if="{{rec.note}}">{{rec.note}}</view>
+              <view class="album tl-album" wx:if="{{rec.photos.length}}">
+                <view class="al" wx:for="{{rec.photos}}" wx:for-item="ph" wx:key="*this">
+                  <image class="al-img" src="{{ph}}" mode="aspectFill" />
+                </view>
+              </view>
+              <video class="tl-video" wx:for="{{rec.videos}}" wx:for-item="vd" wx:key="*this" src="{{vd}}" object-fit="contain"></video>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="crd" wx:elif="{{recordsLoading && !hasRecords}}" style="padding:63rpx 35rpx 53rpx">
+        <view class="s" style="text-align:center">正在加载记录…</view>
+      </view>
+      <view class="crd" wx:elif="{{groupEmpty}}" style="padding:63rpx 35rpx 53rpx">
+        <view class="s" style="text-align:center">该分类下暂无记录</view>
+      </view>
+      <view class="crd" wx:else style="padding:63rpx 35rpx 53rpx">
+        <p-empty sketch="pawPen" title="还没有记录" sub="{{isArchived ? '已归档宠物为只读，历史记录仍可查看' : '记下第一笔吧'}}" btn="{{isArchived ? '' : '+ 记一笔'}}" bind:action="openQuick"></p-empty>
+      </view>
+      <view class="page-more" wx:if="{{recordsLoading}}">正在加载更多记录…</view>
+      <view class="page-more" wx:elif="{{recordsHasMore}}" bindtap="onLoadMore">加载更多记录</view>
+    </view>
+  </block>
+
+  <!-- 相册 Tab -->
+  <view class="body" wx:elif="{{seg === 1}}">
+    <view class="album" style="padding:4rpx 0" wx:if="{{albumPhotos.length}}">
+      <view class="al" wx:for="{{albumPhotos}}" wx:key="*this">
+        <image class="al-img" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="onPhoto" />
+      </view>
+    </view>
+    <view class="crd" wx:elif="{{albumLoading && !albumPhotos.length}}">
+      <view class="s" style="text-align:center;padding:53rpx 0 40rpx">正在加载照片…</view>
+    </view>
+    <view class="crd" wx:elif="{{albumError}}">
+      <p-empty sketch="dogCable" title="相册暂时打不开" sub="网络开了个小差，稍后再试试" btn="重新打开" bind:action="onAlbumRetry"></p-empty>
+    </view>
+    <view class="crd" wx:else>
+      <view class="s" style="text-align:center;padding:53rpx 0 40rpx">还没有照片，记日常时随手拍一张</view>
+    </view>
+    <view class="page-more" wx:if="{{albumLoading}}">正在加载更多照片…</view>
+    <view class="page-more" wx:elif="{{albumHasMore}}" bindtap="onLoadMore">加载更多照片</view>
+  </view>
+
+  <!-- 日记本 Tab：宠物只读来信 -->
+  <view class="body diary-body" wx:elif="{{seg === 2}}">
+    <view class="crd diary-loading" wx:if="{{diaryLoading}}">正在翻开 {{pet.name}} 的日记本…</view>
+    <view class="crd diary-error" wx:elif="{{diaryError}}">
+      <p-empty sketch="dogCable" title="日记暂时打不开" sub="网络开了个小差，稍后再试试" btn="重新打开" bind:action="onDiaryRetry"></p-empty>
+    </view>
+    <block wx:elif="{{diaries.length}}">
+      <view class="crd diary-card" wx:for="{{diaries}}" wx:key="_id">
+        <view class="diary-date">{{item.dateLabel}}</view>
+        <view class="diary-title">{{item.title}}</view>
+        <view class="diary-content">{{item.content}}</view>
+        <view class="diary-sign">— {{pet.name}}</view>
+      </view>
+    </block>
+    <view class="crd diary-empty" wx:else>
+      <p-empty sketch="pawPen" title="今晚还没有收到宝宝的日记" sub="明天再来看看，也许会有一篇宝宝自己的小日记"></p-empty>
+    </view>
+    <view class="page-more" wx:if="{{diaryLoadingMore}}">正在加载更多日记…</view>
+    <view class="page-more" wx:elif="{{diaryHasMore}}" bindtap="onLoadMore">加载更多日记</view>
+  </view>
+</view>

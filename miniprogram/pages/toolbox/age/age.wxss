@@ -1,0 +1,5 @@
+.result-card { text-align: center; }
+.result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 13rpx 9rpx; }
+.result-row .k { font-size: 29rpx; color: var(--t2); }
+.result-row .v-b { font-size: 33rpx; font-weight: 700; }
+.result-row .big { font-size: 53rpx; color: var(--pop-deep); }

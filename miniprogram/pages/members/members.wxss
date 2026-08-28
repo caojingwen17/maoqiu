@@ -1,0 +1,16 @@
+.fam-head { display: flex; align-items: center; gap: 22rpx; padding: 35rpx; }
+.fam-head .avatar { width: 97rpx; height: 97rpx; border-radius: 50%; }
+.member-row .avatar { width: 75rpx; height: 75rpx; border-radius: 50%; }
+.invite-row { display: flex; align-items: center; gap: 0; }
+.fam-note { font-size: 23rpx; color: var(--t3); padding: 0 13rpx; line-height: 1.7; }
+.foot { flex: none; padding: 13rpx 35rpx 57rpx; }
+.invite-share-btn { width: 100%; border: 0; line-height: 1.4; }
+.invite-share-btn::after { border: 0; }
+.invite-share-tip { text-align: center; color: var(--t3); font-size: 22rpx; margin-top: 14rpx; }
+.sheet-title { font-size: 37rpx; font-weight: 700; padding: 0 35rpx; }
+.sheet-sub { padding: 13rpx 35rpx; line-height: 1.6; }
+.sheet-cancel { text-align: center; padding: 31rpx 0 4rpx; color: var(--pop-deep); font-weight: 600; }
+.btn-off { opacity: 0.45; }
+
+/* 真实头像图片（无头像时回退爪印图标） */
+.avatar-img { width: 100%; height: 100%; border-radius: 50%; }

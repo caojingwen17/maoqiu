@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "p-seg": "/components/segmented/segmented",
+    "p-empty": "/components/empty-state/empty-state"
+  }
+}

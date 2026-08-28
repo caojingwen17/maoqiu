@@ -1,0 +1,6 @@
+<view class="empty">
+  <view class="esk"><image src="{{src}}" mode="aspectFit" style="width:{{width}}rpx;height:{{height}}rpx" /></view>
+  <view class="et" wx:if="{{title}}">{{title}}</view>
+  <view class="es" wx:if="{{sub}}">{{sub}}</view>
+  <view wx:if="{{btn}}" class="btn btn-s empty-btn" bindtap="onTap">{{btn}}</view>
+</view>

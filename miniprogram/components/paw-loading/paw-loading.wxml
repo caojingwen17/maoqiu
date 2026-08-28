@@ -1,0 +1,6 @@
+<view class="paw-loader">
+  <view class="pw">
+    <image class="pw-s" wx:for="{{strokes}}" wx:key="*this" src="{{item}}" mode="aspectFit" />
+  </view>
+  <view class="pk">{{tip}}</view>
+</view>

@@ -1,0 +1,11 @@
+<view class="row {{hairline ? 'hairline-b' : ''}}" hover-class="press" hover-stay-time="80" bindtap="onTap">
+  <view class="ticon" wx:if="{{icon}}" style="background:{{iconColor}}1A">
+    <p-icon name="{{icon}}" color="{{iconColor}}" size="{{34}}" />
+  </view>
+  <view class="grow">
+    <view class="t">{{title}}</view>
+    <view class="s" wx:if="{{subtitle}}">{{subtitle}}</view>
+  </view>
+  <view class="v"><text wx:if="{{valueBold}}"><text class="b">{{value}}</text></text><text wx:else>{{value}}</text></view>
+  <view class="chev" wx:if="{{arrow}}"><p-icon name="chevR" color="#B9AE9E" size="{{26}}" /></view>
+</view>

@@ -1,0 +1,54 @@
+/* 记账页 */
+.month-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40rpx;
+  padding: 4rpx 35rpx 13rpx;
+}
+.month {
+  font-size: 33rpx;
+  font-weight: 700;
+}
+.month-arrow {
+  padding: 13rpx;
+}
+
+.expense-label {
+  font-size: 24rpx;
+  color: var(--t2);
+}
+.expense-big {
+  font-size: 66rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 4rpx;
+}
+.expense-frac {
+  font-size: 31rpx;
+  font-weight: 500;
+  color: var(--t3);
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999rpx;
+  background: var(--pop);
+}
+.expense-budget {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22rpx;
+  color: var(--t2);
+}
+.expense-used {
+  color: var(--pop-deep);
+  font-weight: 600;
+}
+
+/* 预算设置弹层 */
+.sheet-title { font-size: 37rpx; font-weight: 700; padding: 0 35rpx; }
+.sheet-sub { padding: 13rpx 35rpx 26rpx; line-height: 1.6; }
+.sheet-cancel { text-align: center; padding: 31rpx 0 4rpx; color: var(--pop-deep); font-weight: 600; }
+.btn-off { opacity: 0.5; }

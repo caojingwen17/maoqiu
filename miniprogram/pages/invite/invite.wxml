@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+
+  <!-- 正常邀请态（落地页无返回栏，对齐原型） -->
+  <block wx:if="{{!full}}">
+    <view class="body inv-body">
+      <view class="inv-head">
+        <view class="inv-inviter">{{inviter}} 邀请你加入家庭空间</view>
+        <view class="inv-name">{{family.name}}</view>
+      </view>
+      <view class="inv-pets">
+        <view class="crd inv-pet" wx:for="{{family.pets}}" wx:key="name">
+          <view class="avatar {{item.av}}">
+            <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+            <p-icon wx:else name="paw" color="{{item.paw}}" size="{{57}}" />
+          </view>
+          <view class="inv-pet-name">{{item.name}}</view>
+          <view class="s">{{item.sub}}</view>
+        </view>
+      </view>
+      <view class="crd inv-members">
+        <view class="inv-avatars">
+          <view class="avatar {{item.av}}" wx:for="{{family.memberAvatars}}" wx:key="index">
+            <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+            <p-icon wx:else name="paw" color="{{item.paw}}" size="{{26}}" />
+          </view>
+        </view>
+        <view class="grow">
+          <view class="t" style="font-size:29rpx;font-weight:600">{{family.memberCount}} 位成员已在记录</view>
+          <view class="s">加入后可查看全部档案并共同记录</view>
+        </view>
+      </view>
+    </view>
+    <view class="foot">
+      <view class="btn btn-p {{previewFailed ? 'inv-btn-off' : ''}}" bindtap="onJoin">加入家庭</view>
+      <view class="inv-consent">加入即表示同意家庭成员可见你的记录</view>
+    </view>
+  </block>
+
+  <!-- 满员异常态 -->
+  <block wx:else>
+    <view class="body inv-body" style="justify-content:center">
+      <view class="crd" style="padding:66rpx 35rpx 57rpx">
+        <p-empty sketch="catBox" title="这个家庭满员啦" sub="「{{family.name}}」已有 5 位成员（最多 5 人），可让创建者移出闲置成员后再加入"></p-empty>
+      </view>
+    </view>
+    <view class="foot">
+      <view class="btn btn-s" bindtap="goBack">提醒创建者腾出位置</view>
+    </view>
+  </block>
+
+  <p-toast id="toast"></p-toast>
+</view>

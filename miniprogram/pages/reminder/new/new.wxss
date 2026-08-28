@@ -1,0 +1,74 @@
+/* 新建提醒页：分卡片布局（对齐原型 V.reminderForm） */
+.sec {
+  padding-top: 24rpx;
+  padding-bottom: 26rpx;
+}
+.sec-label {
+  font-size: 26rpx;
+  color: var(--t2);
+  margin-bottom: 20rpx;
+}
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+/* 自定义事项输入 */
+.custom-wrap {
+  margin-top: 20rpx;
+}
+.custom-in {
+  height: 79rpx;
+  line-height: 79rpx;
+  padding: 0 26rpx;
+  border-radius: 22rpx;
+  background: var(--fill);
+  font-size: 31rpx;
+  color: var(--text);
+}
+
+/* 周期行：每 [数字] [天/周/月]（尺寸对齐原型，防止换行） */
+.cycle-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  flex-wrap: nowrap;
+}
+.cycle-every {
+  font-size: 31rpx;
+  color: var(--text);
+  flex: none;
+}
+.cycle-num {
+  flex: none;
+  width: 97rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  text-align: center;
+  font-size: 33rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+  border-radius: 22rpx;
+  background: var(--fill);
+  color: var(--text);
+}
+.cycle-units {
+  flex: 1;
+  flex-wrap: nowrap;
+  gap: 13rpx;
+  min-width: 0;
+}
+.cycle-units .chip {
+  padding: 13rpx 26rpx;
+}
+
+/* 底部固定按钮 */
+.foot {
+  flex: none;
+  padding: 13rpx 35rpx 57rpx;
+}
+.btn-loading {
+  opacity: 0.6;
+}

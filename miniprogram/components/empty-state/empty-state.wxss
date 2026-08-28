@@ -1,0 +1,5 @@
+.empty-btn {
+  margin: 31rpx auto 0;
+  max-width: 462rpx;
+  height: 88rpx;
+}

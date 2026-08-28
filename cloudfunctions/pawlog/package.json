@@ -1,9 +1,14 @@
 {
   "name": "pawlog",
-  "version": "1.0.0",
-  "description": "毛球档案袋 PawLog 核心业务云函数（单函数 action 路由）",
+  "version": "0.1.0",
+  "description": "毛球档案袋 PawLog 单云函数（多 action 路由）",
   "main": "index.js",
+  "scripts": {
+    "test": "node __tests__/reminder.test.js && node __tests__/diary.test.js",
+    "test:reminder": "node __tests__/reminder.test.js",
+    "test:diary": "node __tests__/diary.test.js"
+  },
   "dependencies": {
-    "wx-server-sdk": "latest"
+    "wx-server-sdk": "~2.6.3"
   }
 }

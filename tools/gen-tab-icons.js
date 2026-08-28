@@ -1,156 +1,210 @@
+#!/usr/bin/env node
 /**
- * tools/gen-tab-icons.js —— 生成 tabBar 矢量线性图标 PNG（设计文档 §9）
- *
- * 无第三方依赖：解析式光栅化（4x 超采样抗锯齿）+ 纯 JS PNG 编码。
- * 输出 81x81 PNG（微信 tabBar 推荐尺寸）：
- *   miniprogram/images/icons/tab-{paw,calendar,chart,gear}.png         未选中 #B9AE9E（Text-Tertiary）
- *   miniprogram/images/icons/tab-{paw,calendar,chart,gear}-active.png  选中   #C08A4E（Pop 焦糖）
+ * 生成 tabBar 图标（8 张 PNG）：未选中（灰 #B9AE9E）+ 选中（焦糖 #C08A4E）
+ * 两种状态均为「线性描边」，仅颜色不同 —— 对齐原型 tabbar 的 ICON(20) / currentColor。
+ * 纯 Node 无第三方依赖（PNG 用内置 zlib 手写编码）。
  *
  * 运行：node tools/gen-tab-icons.js
+ * 输出：miniprogram/assets/tab/{pet,bell,chart,gear}[.png|-active.png]
+ *
+ * 图标几何在 24×24 坐标空间定义（对齐原型 ICON），按 SCALE 放大到 96×96；
+ * 描边宽度 = 原型 stroke-width 1.5 × SCALE = 6px（96 空间）。
  */
+
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const SIZE = 81;      // 输出尺寸
-const SS = 4;         // 超采样倍数
-const VB = 24;        // viewBox
-const K = SIZE / VB;  // viewBox -> px
-const SW = 1.5 * K;   // 描边宽度 px
+const SIZE = 96;
+const SCALE = 4; // 24 → 96
+const SW = 6;    // 描边宽度（px，96 空间）= 1.5 × SCALE
 
-const NORMAL = [185, 174, 158]; // #B9AE9E
-const ACTIVE = [192, 138, 78];  // #C08A4E
+const GRAY = [185, 174, 158, 255];   // #B9AE9E（未选中）
+const POP = [192, 138, 78, 255];     // #C08A4E（选中）
 
-/* ---------- 距离场基元（坐标均为 viewBox 单位） ---------- */
-function distSeg(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
-  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)));
-  const cx = x1 + t * dx, cy = y1 + t * dy;
-  return Math.hypot(px - cx, py - cy);
-}
-function distCircleStroke(px, py, cx, cy, r) {
-  return Math.abs(Math.hypot(px - cx, py - cy) - r);
-}
-// 圆角矩形边界距离（sdRoundBox 的绝对值）
-function distRoundRectStroke(px, py, x, y, w, h, r) {
-  const cx = x + w / 2, cy = y + h / 2;
-  const bx = w / 2 - r, by = h / 2 - r;
-  const qx = Math.abs(px - cx) - bx, qy = Math.abs(py - cy) - by;
-  const sd = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
-  return Math.abs(sd);
+/* ---------------- 画布 ---------------- */
+function createCanvas() {
+  return { size: SIZE, buf: new Uint8Array(SIZE * SIZE * 4).fill(0) };
 }
 
-/* ---------- 4 个图标的几何定义：返回 viewBox 坐标下的最小距离 ---------- */
-const ICONS = {
-  paw(px, py) {
-    let d = Infinity;
-    const toes = [[6.8, 7.2, 1.7], [10.4, 5.2, 1.8], [14, 5.2, 1.8], [17.6, 7.2, 1.7]];
-    for (const [x, y, r] of toes) d = Math.min(d, distCircleStroke(px, py, x, y, r));
-    // 掌心：椭圆近似为圆
-    d = Math.min(d, distCircleStroke(px, py, 12.2, 14.6, 4.4));
-    return d;
-  },
-  calendar(px, py) {
-    let d = distRoundRectStroke(px, py, 4, 5.5, 16, 14.5, 2.5);
-    d = Math.min(d, distSeg(px, py, 4, 10, 20, 10));
-    d = Math.min(d, distSeg(px, py, 8.5, 3.5, 8.5, 7.5));
-    d = Math.min(d, distSeg(px, py, 15.5, 3.5, 15.5, 7.5));
-    return d;
-  },
-  chart(px, py) {
-    let d = distSeg(px, py, 4, 4, 4, 19.5);
-    d = Math.min(d, distSeg(px, py, 4, 19.5, 20, 19.5));
-    d = Math.min(d, distSeg(px, py, 7.5, 15.5, 11, 10));
-    d = Math.min(d, distSeg(px, py, 11, 10, 14, 13));
-    d = Math.min(d, distSeg(px, py, 14, 13, 18.5, 6.5));
-    return d;
-  },
-  gear(px, py) {
-    let d = distCircleStroke(px, py, 12, 12, 7);
-    d = Math.min(d, distCircleStroke(px, py, 12, 12, 3));
-    for (let i = 0; i < 8; i++) {
-      const a = (Math.PI / 4) * i;
-      const x1 = 12 + Math.cos(a) * 8.3, y1 = 12 + Math.sin(a) * 8.3;
-      const x2 = 12 + Math.cos(a) * 10.4, y2 = 12 + Math.sin(a) * 10.4;
-      d = Math.min(d, distSeg(px, py, x1, y1, x2, y2));
+function setPx(cv, x, y, c) {
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || y < 0 || x >= cv.size || y >= cv.size) return;
+  const i = (y * cv.size + x) * 4;
+  cv.buf[i] = c[0]; cv.buf[i + 1] = c[1]; cv.buf[i + 2] = c[2]; cv.buf[i + 3] = c[3];
+}
+
+function fillDisc(cv, cx, cy, r, c) {
+  for (let y = Math.floor(cy - r); y <= cy + r; y++) {
+    for (let x = Math.floor(cx - r); x <= cx + r; x++) {
+      const dx = x - cx, dy = y - cy;
+      if (dx * dx + dy * dy <= r * r) setPx(cv, x, y, c);
     }
-    return d;
+  }
+}
+
+function ringDisc(cv, cx, cy, r, thk, c) {
+  for (let y = Math.floor(cy - r - thk); y <= cy + r + thk; y++) {
+    for (let x = Math.floor(cx - r - thk); x <= cx + r + thk; x++) {
+      const d = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+      if (d <= r && d >= r - thk) setPx(cv, x, y, c);
+    }
+  }
+}
+
+function thickLine(cv, x0, y0, x1, y1, thk, c) {
+  const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    fillDisc(cv, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, thk / 2, c);
+  }
+}
+
+/** 圆弧（圆环一段） */
+function arc(cv, cx, cy, r, thk, a0, a1, c) {
+  const steps = Math.max(1, Math.round(Math.abs(a1 - a0) / (Math.PI / 90)));
+  for (let i = 0; i <= steps; i++) {
+    const a = a0 + (a1 - a0) * i / steps;
+    fillDisc(cv, cx + r * Math.cos(a), cy + r * Math.sin(a), thk / 2, c);
+  }
+}
+
+/** 椭圆描边（旋转 rot） */
+function ellipseOutline(cv, cx, cy, rx, ry, rot, thk, c) {
+  const steps = 240;
+  for (let i = 0; i <= steps; i++) {
+    const t = 2 * Math.PI * i / steps;
+    const dx = rx * Math.cos(t);
+    const dy = ry * Math.sin(t);
+    const x = cx + dx * Math.cos(rot) - dy * Math.sin(rot);
+    const y = cy + dx * Math.sin(rot) + dy * Math.cos(rot);
+    fillDisc(cv, x, y, thk / 2, c);
+  }
+}
+
+/* ---------------- 坐标工具 ---------------- */
+function T(p) { return p * SCALE; }
+function R(cv, p, r, thk, c) { ringDisc(cv, T(p[0]), T(p[1]), T(r), thk, c); }
+function L(cv, a, b, thk, c) { thickLine(cv, T(a[0]), T(a[1]), T(b[0]), T(b[1]), thk, c); }
+
+/* ---------------- 图标绘制（24×24 对齐原型 ICON 几何） ---------------- */
+const ICONS = {
+  /* 爪印：4 趾（旋转椭圆）+ 掌垫（椭圆近似） */
+  paw(cv, c) {
+    const toes = [
+      [5.4, 8.3, 1.65, 2.2, -24 * Math.PI / 180],
+      [9.2, 5, 1.6, 2.25, -10 * Math.PI / 180],
+      [14.8, 5, 1.6, 2.25, 10 * Math.PI / 180],
+      [18.6, 8.3, 1.65, 2.2, 24 * Math.PI / 180]
+    ];
+    toes.forEach((e) => ellipseOutline(cv, T(e[0]), T(e[1]), T(e[2]), T(e[3]), e[4], SW, c));
+    ellipseOutline(cv, T(12), T(15.4), T(5.4), T(3.9), 0, SW, c);
+  },
+
+  /* 铃铛：顶圆顶 + 两侧直线 + 喇叭口 + 底边 + 铃锤 */
+  bell(cv, c) {
+    arc(cv, T(12), T(10.7), T(6), SW, Math.PI, 2 * Math.PI, c);
+    L(cv, [6, 10.7], [6, 16.5], SW, c);
+    L(cv, [6, 16.5], [4.5, 19], SW, c);
+    L(cv, [4.5, 19], [19.5, 19], SW, c);
+    L(cv, [19.5, 19], [18, 16.5], SW, c);
+    L(cv, [18, 16.5], [18, 10.7], SW, c);
+    arc(cv, T(12), T(20.5), T(2.2), SW, Math.PI, 2 * Math.PI, c);
+  },
+
+  /* 柱状图：坐标轴 + 三根竖直柱（描边线段，圆头） */
+  chart(cv, c) {
+    L(cv, [4, 4], [4, 19.5], SW, c);
+    L(cv, [4, 19.5], [20, 19.5], SW, c);
+    L(cv, [8, 11.5], [8, 15.5], SW, c);
+    L(cv, [12.5, 8.5], [12.5, 15.5], SW, c);
+    L(cv, [17, 13], [17, 15.5], SW, c);
+  },
+
+  /* 齿轮：中心圆 + 8 根辐条（4 直 + 4 斜），无外圈 */
+  gear(cv, c) {
+    R(cv, [12, 12], 3, SW, c);
+    L(cv, [12, 3.5], [12, 5.9], SW, c);
+    L(cv, [12, 18.1], [12, 20.5], SW, c);
+    L(cv, [18.1, 12], [20.5, 12], SW, c);
+    L(cv, [3.5, 12], [5.9, 12], SW, c);
+    L(cv, [18, 6], [16.3, 7.7], SW, c);
+    L(cv, [7.7, 16.3], [6, 18], SW, c);
+    L(cv, [18, 18], [16.3, 16.3], SW, c);
+    L(cv, [7.7, 7.7], [6, 6], SW, c);
   }
 };
 
-/* ---------- 光栅化：返回 RGBA buffer（81x81） ---------- */
-function rasterize(distFn, rgb) {
-  const N = SIZE * SS;
-  const cov = new Float32Array(N * N);
-  const half = SW * SS / 2;
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      const vx = (x + 0.5) / SS / K, vy = (y + 0.5) / SS / K;
-      const d = distFn(vx, vy) * K * SS; // 距离换算到超采样像素
-      // 1px 宽平滑过渡带
-      cov[y * N + x] = Math.max(0, Math.min(1, half + 0.75 - d));
+/* ---------------- PNG 编码 ---------------- */
+function crc32(buf) {
+  let c, table = crc32.t || (crc32.t = (() => {
+    const t = [];
+    for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
     }
-  }
-  const out = Buffer.alloc(SIZE * SIZE * 4);
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      let a = 0;
-      for (let sy = 0; sy < SS; sy++)
-        for (let sx = 0; sx < SS; sx++)
-          a += cov[(y * SS + sy) * N + (x * SS + sx)];
-      a /= SS * SS;
-      const i = (y * SIZE + x) * 4;
-      out[i] = rgb[0]; out[i + 1] = rgb[1]; out[i + 2] = rgb[2];
-      out[i + 3] = Math.round(a * 255);
-    }
-  }
-  return out;
+    return t;
+  })());
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) crc = table[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-/* ---------- 纯 JS PNG 编码 ---------- */
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(buf) {
-  let c = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-}
 function chunk(type, data) {
-  const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length, 0);
+  const t = Buffer.from(type, 'ascii');
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([t, data])), 0);
+  return Buffer.concat([len, t, data, crc]);
 }
-function encodePNG(rgba, size) {
+
+function encodePNG(cv) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; ihdr[9] = 6; // 8bit RGBA
-  const raw = Buffer.alloc(size * (size * 4 + 1));
-  for (let y = 0; y < size; y++) {
-    raw[y * (size * 4 + 1)] = 0; // filter: none
-    rgba.copy(raw, y * (size * 4 + 1) + 1, y * size * 4, (y + 1) * size * 4);
+  ihdr.writeUInt32BE(cv.size, 0);
+  ihdr.writeUInt32BE(cv.size, 4);
+  ihdr[8] = 8;  // bit depth
+  ihdr[9] = 6;  // color type RGBA
+  ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+
+  const raw = Buffer.alloc((cv.size * 4 + 1) * cv.size);
+  for (let y = 0; y < cv.size; y++) {
+    raw[y * (cv.size * 4 + 1)] = 0;
+    for (let x = 0; x < cv.size * 4; x++) {
+      raw[y * (cv.size * 4 + 1) + 1 + x] = cv.buf[y * cv.size * 4 + x];
+    }
   }
+  const idat = zlib.deflateSync(raw);
   return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
     chunk('IHDR', ihdr),
-    chunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
+    chunk('IDAT', idat),
     chunk('IEND', Buffer.alloc(0))
   ]);
 }
 
-/* ---------- 生成 ---------- */
-const outDir = path.join(__dirname, '..', 'miniprogram', 'images', 'icons');
-for (const name of Object.keys(ICONS)) {
-  for (const [suffix, rgb] of [['', NORMAL], ['-active', ACTIVE]]) {
-    const file = path.join(outDir, `tab-${name}${suffix}.png`);
-    fs.writeFileSync(file, encodePNG(rasterize(ICONS[name], rgb), SIZE));
-    console.log('written', path.relative(process.cwd(), file));
-  }
+/* ---------------- 主流程 ---------------- */
+function main() {
+  const outDir = path.join(__dirname, '..', 'miniprogram', 'assets', 'tab');
+  fs.mkdirSync(outDir, { recursive: true });
+
+  const names = Object.keys(ICONS);
+  let count = 0;
+  names.forEach((name) => {
+    // app.json 引用 pet.png / pet-active.png …（paw 键名对外暴露为 pet，normal 态无后缀）
+    const fileBase = name === 'paw' ? 'pet' : name;
+    [['normal', GRAY], ['active', POP]].forEach(([suffix, color]) => {
+      const cv = createCanvas();
+      ICONS[name](cv, color);
+      const png = encodePNG(cv);
+      const file = path.join(outDir, suffix === 'normal' ? `${fileBase}.png` : `${fileBase}-${suffix}.png`);
+      fs.writeFileSync(file, png);
+      count++;
+      console.log('生成', path.relative(process.cwd(), file), png.length + ' bytes');
+    });
+  });
+  console.log('完成：共 ' + count + ' 张 tab 图标');
 }
+
+main();

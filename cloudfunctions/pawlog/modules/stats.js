@@ -1,108 +1,88 @@
-// modules/stats.js
-// 统计模块：体重折线、月度花销柱状、分类饼图（聚合在云端做，单次查询 ≤1000 条）
-var cloud = require('wx-server-sdk');
-var schema = require('../schema');
-
-function getDb() {
-  return cloud.database();
-}
-
-function getOpenid() {
-  return cloud.getWXContext().OPENID;
-}
-
-// 时间范围起点：month 本月 / halfYear 近半年 / year 今年（PRD §11.1）
-function rangeStart(range) {
-  var d = new Date();
-  d.setHours(0, 0, 0, 0);
-  if (range === 'halfYear') {
-    d.setDate(1);
-    d.setMonth(d.getMonth() - 5); // 含本月共 6 个月
-    return d.getTime();
-  }
-  if (range === 'year') {
-    d.setMonth(0, 1);
-    return d.getTime();
-  }
-  d.setDate(1);
-  return d.getTime();
-}
-
-function monthKey(ts) {
-  function p(n) { return n < 10 ? '0' + n : '' + n; }
-  var d = new Date(ts);
-  return d.getFullYear() + '-' + p(d.getMonth() + 1);
-}
-
 /**
- * 统计数据
- * @param {Object} payload {petId?: 不传为全部宠物, range?: month/halfYear/year}
- * @returns {{weights: Array, expenseByMonth: Array, expenseByCategory: Array}}
+ * stats.summary —— 统计聚合（PRD §11）
+ * 体重趋势 / 花销趋势 / 打卡热力，为三卡图表提供结构化数据。
+ *
+ * payload: { petId?: string, range?: 'month' | 'half_year' | 'year' }
+ * 返回:
+ *  - weight:   [{ date, value }]        范围内体重点（按日期升序）
+ *  - expenses: [{ date, amount, category }] 范围内花销流水
+ *  - checks:   [ts, ...]                近 98 天有记录的「日历日 0 点时间戳」（可重复，客户端计数）
  */
-async function getStats(payload) {
-  var db = getDb();
-  var _ = db.command;
-  var openid = getOpenid();
-  payload = payload || {};
-  var start = rangeStart(payload.range || 'month');
 
-  var baseWhere = { _openid: openid, date: _.gte(start) };
-  if (payload.petId) {
-    baseWhere.petId = payload.petId;
+const { db, _, COLLECTIONS, col } = require('./db.js');
+const timeUtil = require('./timeUtil.js');
+
+const DAY = timeUtil.DAY;
+const HEAT_DAYS = 98;
+
+/** 上海时区当天 00:00（统一走 timeUtil） */
+const startOfDay = timeUtil.startOfDay;
+
+/** range 窗口起点：month=本月 1 号；half_year=5 个月前的 1 号（共 6 个自然月）；year=11 个月前的 1 号（共 12 个自然月），均按上海时区自然月 */
+function rangeStart(range, now) {
+  return timeUtil.shiftMonthStart(now, range === 'month' ? 0 : (range === 'year' ? -11 : -5));
+}
+
+/** 体重数值读取：data.weight / data.value / data.kg（与 home.aggregate 一致） */
+function readWeight(r) {
+  const d = (r && r.data) || {};
+  if (typeof d.weight === 'number') return d.weight;
+  if (typeof d.value === 'number') return d.value;
+  if (typeof d.kg === 'number') return d.kg;
+  return null;
+}
+
+module.exports = async function summary(ctx) {
+  const { familyId } = ctx;
+  const { petId, wtPetId, expPetId, heatPetId, range = 'half_year' } = ctx.payload || {};
+  const now = Date.now();
+  const start = rangeStart(range, now);
+
+  // 三张卡各自独立选宠物（'' = 全部）；兼容旧契约 petId 作为三张卡共同的回退
+  const legacyPet = petId || '';
+  const expPet = expPetId !== undefined ? expPetId : legacyPet;
+  const heatPet = heatPetId !== undefined ? heatPetId : legacyPet;
+  const wtPetKnown = (wtPetId !== undefined ? wtPetId : legacyPet) || '';
+
+  // 第一批并行：宠物名册 + 花销 + 热力（体重若已指定宠物也并入；未指定要等名册默认第一只）
+  const eWhere = { familyId, type: 'expense', date: _.gte(start) };
+  if (expPet) eWhere.petId = expPet;
+  const cWhere = { familyId, date: _.gte(startOfDay(now) - (HEAT_DAYS - 1) * DAY) };
+  if (heatPet) cWhere.petId = heatPet;
+  const weightQuery = (pid) => {
+    const wWhere = { familyId, type: 'weight', date: _.gte(start) };
+    if (pid) wWhere.petId = pid;
+    return col(COLLECTIONS.records).where(wWhere).orderBy('date', 'asc').limit(365).get();
+  };
+  const batch = [
+    col(COLLECTIONS.pets).where({ familyId, archived: false }).field({ name: true, avatar: true, order: true }).orderBy('order', 'asc').get(),
+    col(COLLECTIONS.records).where(eWhere).orderBy('date', 'asc').limit(1000).get(),
+    col(COLLECTIONS.records).where(cWhere).field({ date: true }).limit(1000).get()
+  ];
+  if (wtPetKnown) batch.push(weightQuery(wtPetKnown));
+  const [petsRes, expenseRes, checkRes, weightRes0] = await Promise.all(batch);
+
+  // 体重未指定宠物：默认第一只未归档宠物（省掉前端二次往返）
+  let wtPet = wtPetKnown;
+  let weightRes = weightRes0;
+  if (!wtPet) {
+    const first = (petsRes.data || [])[0];
+    wtPet = first ? first._id : '';
+    weightRes = wtPet ? await weightQuery(wtPet) : { data: [] };
   }
-
-  // 体重序列 + 花销明细并行拉取，各自封顶 1000 条
-  var results = await Promise.all([
-    db.collection('records')
-      .where(Object.assign({}, baseWhere, { type: 'weight' }))
-      .field({ petId: true, date: true, data: true })
-      .orderBy('date', 'asc')
-      .limit(1000)
-      .get(),
-    db.collection('records')
-      .where(Object.assign({}, baseWhere, { type: 'expense' }))
-      .field({ date: true, data: true })
-      .orderBy('date', 'asc')
-      .limit(1000)
-      .get(),
-  ]);
-
-  // 体重折线：按宠物分组（多宠物多线）
-  var weightMap = {};
-  results[0].data.forEach(function (r) {
-    if (!weightMap[r.petId]) {
-      weightMap[r.petId] = [];
-    }
-    weightMap[r.petId].push({ date: r.date, value: r.data.value });
-  });
-  var weights = Object.keys(weightMap).map(function (petId) {
-    return { petId: petId, points: weightMap[petId] };
-  });
-
-  // 花销聚合：按月（柱状）+ 按分类（饼图），金额单位分
-  var monthMap = {};
-  var categoryMap = {};
-  results[1].data.forEach(function (r) {
-    var amount = (r.data && r.data.amount) || 0;
-    var mk = monthKey(r.date);
-    monthMap[mk] = (monthMap[mk] || 0) + amount;
-    var cat = (r.data && r.data.category) || 'other';
-    categoryMap[cat] = (categoryMap[cat] || 0) + amount;
-  });
-  var expenseByMonth = Object.keys(monthMap).sort().map(function (m) {
-    return { month: m, total: monthMap[m] };
-  });
-  var expenseByCategory = Object.keys(categoryMap).map(function (c) {
-    return { category: c, total: categoryMap[c] };
-  }).sort(function (a, b) { return b.total - a.total; });
 
   return {
-    weights: weights,
-    expenseByMonth: expenseByMonth,
-    expenseByCategory: expenseByCategory,
+    range,
+    wtPetId: wtPet, // 实际使用的体重卡宠物（含默认回退），前端同步选择器
+    pets: (petsRes.data || []).map((p) => ({ _id: p._id, name: p.name, avatar: p.avatar || '' })),
+    weight: (weightRes.data || [])
+      .map((r) => ({ date: r.date, value: readWeight(r) }))
+      .filter((p) => typeof p.value === 'number'),
+    expenses: (expenseRes.data || []).map((r) => ({
+      date: r.date,
+      amount: (r.data && r.data.amount) || 0,
+      category: (r.data && r.data.category) || ''
+    })),
+    checks: (checkRes.data || []).map((r) => startOfDay(r.date)).filter((t) => t > 0)
   };
-}
-
-module.exports = {
-  getStats: getStats,
 };

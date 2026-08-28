@@ -1,0 +1,76 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">{{editingId ? '编辑物品' : '入库'}}</view>
+  </view>
+
+  <view class="body">
+    <view class="crd">
+      <p-input label="名称" value="{{name}}" placeholder="如：猫粮 · 鸡肉冻干" bold="{{true}}" bind:input="onName"></p-input>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="field-block">
+        <view class="field-label">分类</view>
+        <view class="chips-wrap">
+          <view class="chip {{catIdx === index ? 'on' : ''}}" wx:for="{{categories}}" wx:key="index" data-index="{{index}}" bindtap="onCat">{{item}}</view>
+        </view>
+      </view>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <p-input label="数量" value="{{amount}}" type="digit" placeholder="如：3" bold="{{true}}" bind:input="onAmount"></p-input>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <p-input label="单位" value="{{unit}}" placeholder="袋 / 支 / kg" bind:input="onUnit"></p-input>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <picker mode="date" value="{{expireDate}}" bind:change="onExpire">
+        <view class="frow" style="min-height:88rpx">
+          <text class="k">保质期</text>
+          <text class="val {{expireDate ? 'b' : ''}}">{{expireDate || '选填'}}</text>
+          <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+        </view>
+      </picker>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="frow" style="min-height:88rpx">
+        <view class="grow"><view class="t">补货阈值</view><view class="s">余量低于该值时提醒补货</view></view>
+        <p-input value="{{threshold}}" type="digit" placeholder="选填" bind:input="onThreshold"></p-input>
+      </view>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="frow" style="min-height:88rpx">
+        <view class="grow"><view class="t">日均消耗</view><view class="s">用于估算「还能撑几天」</view></view>
+        <p-input value="{{dailyConsume}}" type="digit" placeholder="选填" bind:input="onDailyConsume"></p-input>
+      </view>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="field-block">
+        <view class="field-label">扣减模式</view>
+        <view class="chips-wrap">
+          <view class="chip {{modeIdx === index ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-index="{{index}}" bindtap="onMode">{{item.name}}</view>
+        </view>
+        <view class="s" style="margin-top:9rpx">{{modes[modeIdx].sub}}</view>
+      </view>
+      <block wx:if="{{modeIdx === 1}}">
+        <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+        <view class="field-block">
+          <view class="field-label">关联记录类型</view>
+          <view class="chips-wrap">
+            <view class="chip {{linkType === item ? 'on' : ''}}" wx:for="{{linkTypes}}" wx:key="*this" data-index="{{index}}" bindtap="onLinkType">{{item === 'deworm' ? '驱虫' : '用药'}}</view>
+          </view>
+        </view>
+      </block>
+      <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+      <view class="frow" style="min-height:88rpx">
+        <view class="grow"><view class="t">计入本月账单</view><view class="s">保存时同步记一笔「用品」花销</view></view>
+        <p-switch checked="{{toBill}}" bind:change="onToBill" />
+      </view>
+      <block wx:if="{{toBill}}">
+        <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
+        <view class="frow" style="min-height:88rpx">
+          <view class="grow"><view class="t">金额</view></view>
+          <p-input value="{{price}}" type="digit" unit="元" placeholder="如：156" bind:input="onPrice"></p-input>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="foot">
+    <view class="btn btn-p {{saving ? 'btn-disabled' : ''}}" bindtap="onSave">{{saving ? '保存中…' : (editingId ? '保存修改' : '保存')}}</view>
+  </view>
+  <p-toast id="toast"></p-toast>
+</view>

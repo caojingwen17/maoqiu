@@ -1,0 +1,83 @@
+/* 宠物详情页 */
+.head-card {
+  margin: 0 35rpx 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+}
+.grow { flex: 1; min-width: 0; }
+.head-card .avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--fill);
+}
+.head-avatar-img { object-fit: contain; }
+.pet-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 9rpx;
+}
+.gender { font-size: 29rpx; }
+.gender.male { color: var(--info); }
+.gender.female { color: var(--pink); }
+.pet-home {
+  font-size: 23rpx;
+  color: var(--t3);
+  margin-top: 4rpx;
+}
+
+/* 头卡右侧：目标 pill + 编辑入口（原右上角「编辑」下移，避让微信胶囊） */
+.head-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16rpx;
+  flex: none;
+}
+.edit-btn {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 50%;
+  background: var(--fill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.edit-btn:active {
+  background: var(--fill-deep);
+}
+/* 时间线：日常条目正文与照片条 */
+.tl-note {
+  font-size: 27rpx;
+  line-height: 1.65;
+  color: var(--text);
+  margin-top: 18rpx;
+}
+.tl-album {
+  margin-top: 18rpx;
+}
+.tl-video {
+  width: 100%;
+  height: 380rpx;
+  margin-top: 18rpx;
+  border-radius: 18rpx;
+  background: #1C1814;
+}
+.al .al-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 18rpx;
+}
+.diary-body { padding-bottom: 40rpx; }
+.page-more { padding: 24rpx 0 40rpx; text-align: center; color: var(--t3); font-size: 22rpx; }
+.diary-loading { padding: 58rpx 35rpx; text-align: center; color: var(--t2); }
+.diary-error, .diary-empty { padding: 35rpx; }
+.diary-card { padding: 31rpx 35rpx 34rpx; margin-bottom: 22rpx; }
+.diary-date { color: var(--t3); font-size: 23rpx; }
+.diary-title { margin-top: 13rpx; font-size: 35rpx; font-weight: 700; color: var(--text); }
+.diary-content { margin-top: 22rpx; color: var(--text); font-size: 29rpx; line-height: 1.8; white-space: pre-wrap; }
+.diary-sign { margin-top: 20rpx; text-align: right; color: var(--t2); font-size: 24rpx; }

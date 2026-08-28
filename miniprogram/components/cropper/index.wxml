@@ -1,0 +1,23 @@
+<view class="cropper {{show ? 'show' : ''}}" catchtouchmove="noop">
+  <view class="crop-stage">
+    <movable-area class="crop-area" style="{{areaStyle}}" scale-area>
+      <movable-view wx:if="{{ready}}" class="crop-view" style="width:{{viewW}}px;height:{{viewH}}px"
+        x="{{x}}" y="{{y}}" scale scale-min="{{1}}" scale-max="{{4}}" scale-value="{{scale}}"
+        direction="all" bindchange="onMove" bindscale="onScale">
+        <image class="crop-img" src="{{src}}" mode="fill" />
+      </movable-view>
+    </movable-area>
+    <!-- 四周半透明遮罩 + 居中正方形取景框 -->
+    <view class="crop-mask" style="{{maskTop}}"></view>
+    <view class="crop-mask" style="{{maskBottom}}"></view>
+    <view class="crop-mask" style="{{maskLeft}}"></view>
+    <view class="crop-mask" style="{{maskRight}}"></view>
+    <view class="crop-frame" style="{{frameStyle}}"></view>
+  </view>
+  <view class="crop-bar">
+    <view class="crop-btn" bindtap="onCancel">取消</view>
+    <view class="crop-btn ok" bindtap="onConfirm">确认</view>
+  </view>
+  <!-- 离屏 canvas：确认时按裁剪区域绘制正方形 -->
+  <canvas type="2d" id="pCropCanvas" class="crop-canvas" style="width:{{out}}px;height:{{out}}px"></canvas>
+</view>

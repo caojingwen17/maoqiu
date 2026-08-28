@@ -1,0 +1,55 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="nav">
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="nt">家庭成员</view>
+  </view>
+
+  <view class="body">
+    <view class="crd fam-head">
+      <view class="avatar a1"><p-icon name="paw" color="#B0803B" size="{{52}}" /></view>
+      <view class="grow"><view class="t" style="font-size:33rpx;font-weight:700">{{family.name}}</view><view class="s">{{family.sub}}</view></view>
+    </view>
+
+    <view class="crd" style="padding:9rpx 35rpx">
+      <view class="frow member-row" wx:for="{{members}}" wx:key="openid" data-idx="{{index}}" bindtap="onMember" style="min-height:114rpx">
+        <view class="avatar {{item.av}}">
+          <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+          <p-icon wx:else name="paw" color="{{item.paw}}" size="{{40}}" />
+        </view>
+        <view class="grow" style="margin-left:22rpx">
+          <view class="t">{{item.name}}</view>
+          <view class="s">{{item.joined}}</view>
+        </view>
+        <text class="pill warn" wx:if="{{item.owner}}">创建者</text>
+        <view class="chev" wx:else><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+      </view>
+    </view>
+
+    <view class="fam-note">所有成员可查看全部档案并添加记录；移出成员后其历史记录仍会保留并显示昵称。</view>
+  </view>
+
+  <view class="foot">
+    <button class="btn btn-p invite-share-btn" open-type="share" disabled="{{!familyId}}">邀请家庭成员</button>
+    <view class="invite-share-tip">点击后直接选择聊天发送邀请卡片</view>
+    <view wx:if="{{isOwner && members.length > 1}}" class="btn btn-s" style="margin-top:18rpx;color:var(--danger)" bindtap="onDissolve">解散家庭空间</view>
+    <view wx:elif="{{!isOwner && members.length > 0}}" class="btn btn-s" style="margin-top:18rpx" bindtap="onLeave">退出家庭空间</view>
+  </view>
+
+  <!-- 移出确认面板 -->
+  <p-sheet show="{{showSheet}}" bind:close="closeSheet">
+    <view class="sheet-title">移出成员</view>
+    <view class="s sheet-sub">移出后该成员将失去家庭空间访问，历史记录保留。</view>
+    <view class="btn btn-p" style="margin-top:26rpx" bindtap="onRemove">确认移出</view>
+    <view class="sheet-cancel" bindtap="closeSheet">取消</view>
+  </p-sheet>
+
+  <!-- 退出家庭确认弹窗 -->
+  <p-dialog show="{{dlgLeave}}" title="退出家庭空间？" content="退出后将无法查看家庭数据。" confirm-text="退出" bind:confirm="confirmLeave" bind:cancel="closeLeave" />
+
+  <!-- 解散确认弹窗：输入家庭名称完全一致才点亮解散按钮 -->
+  <p-dialog show="{{showDissolve}}" title="解散家庭空间" content="解散后所有成员失去家庭访问，数据将归还到创建者个人空间。请输入家庭名称以确认操作。" input input-placeholder="{{family.name}}" confirm-text="确认解散" danger confirm-disabled="{{dissolveInput !== family.name}}" bind:input="onDissolveInput" bind:confirm="confirmDissolve" bind:cancel="closeDissolve" />
+
+  <p-toast id="toast"></p-toast>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

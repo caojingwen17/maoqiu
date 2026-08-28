@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "paw-loading": "/components/paw-loading/paw-loading"
+  }
+}

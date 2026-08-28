@@ -1,0 +1,198 @@
+<view class="page" bindtouchstart="onPageTouch">
+  <!-- 被移出/解散全屏拦截 -->
+  <view class="kicked-mask" wx:if="{{kicked}}">
+    <view class="kicked-card">
+      <p-empty sketch="dogCable" title="你已不在该家庭" sub="家庭数据不再可见；你加入前的个人数据仍保留" btn="回到我的个人空间" bind:action="onBackToMine"></p-empty>
+    </view>
+  </view>
+
+  <view class="statusbar" style="height:{{sb}}px"></view>
+
+  <!-- 大标题行：成员头像组在标题左侧 -->
+  <view class="home-title">
+    <view class="members" bindtap="goMembers">
+      <view class="avatar {{item.av}}" wx:for="{{members.list}}" wx:key="nickname">
+        <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+        <p-icon wx:else name="paw" color="{{item.paw}}" size="{{22}}" />
+      </view>
+      <view class="avatar av-a4 members-more" wx:if="{{members.more}}">+{{members.more}}</view>
+    </view>
+    <view class="large-title">我的毛孩子们</view>
+  </view>
+
+  <!-- 首屏加载：统一爪印动效（与其他页一致） -->
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+
+  <!-- 数据态 -->
+  <view class="body" wx:else>
+    <!-- 加载失败错误态（不伪装成空态，避免误导老用户） -->
+    <block wx:if="{{loadError}}">
+      <view class="crd" style="padding:75rpx 35rpx 62rpx">
+        <p-empty sketch="dogCable" title="加载失败" sub="网络或云服务开小差了，数据都还在" btn="重新加载" bind:action="onRetry"></p-empty>
+      </view>
+    </block>
+
+    <!-- 无宠物空状态 -->
+    <block wx:elif="{{!hasPets}}">
+      <view class="crd" style="padding:75rpx 35rpx 62rpx">
+        <p-empty sketch="boxCat" title="还没有毛孩子" sub="建立第一份档案，疫苗驱虫不再靠脑记" btn="+ 添加第一只毛孩子" bind:action="onAddPet"></p-empty>
+      </view>
+    </block>
+
+    <block wx:else>
+      <!-- 今日待办（逾期/今天/提前窗口内，整行点→记一笔，左滑→完成/忽略） -->
+      <view class="crd">
+        <view class="crd-h">
+          <text class="b">今日待办</text>
+          <view class="crd-h-side">
+            <text wx:if="{{todos.length >= 2}}" class="hs todo-ignore-all {{todoIgnoringAll ? 'off' : ''}}" bindtap="onTodoIgnoreAll">{{todoIgnoringAll ? '忽略中…' : '忽略全部'}}</text>
+            <text class="hs" bindtap="goReminder">全部提醒 ›</text>
+          </view>
+        </view>
+        <block wx:if="{{todos.length}}">
+          <block wx:for="{{todos}}" wx:key="id">
+            <p-swipe id="todo-swipe-{{item.id}}" actions="{{todoActions}}" data-id="{{item.id}}" bind:action="onTodoAction" bind:openchange="onTodoSwipeOpen">
+              <view class="row press" data-id="{{item.id}}" bindtap="onTodo">
+                <view class="avatar todo-avatar {{item.av}}">
+                  <image wx:if="{{item.petAvatar}}" class="avatar-img" src="{{item.petAvatar}}" mode="aspectFill" />
+                  <p-icon wx:else name="paw" color="{{item.paw}}" size="{{33}}" />
+                </view>
+                <view class="grow"><view class="t">{{item.pet}} · {{item.task}}</view></view>
+                <text class="pill {{item.kind}}">{{item.pill}}</text>
+                <p-icon name="chevR" color="#B9AE9E" size="{{29}}" />
+              </view>
+            </p-swipe>
+            <view class="hl" wx:if="{{index < todos.length - 1}}" style="margin-left:-35rpx"></view>
+          </block>
+        </block>
+        <view class="calm" wx:else>
+          <view class="esk"><image src="{{calmSrc}}" mode="aspectFit" style="width:141rpx;height:106rpx" /></view>
+          <view>
+            <view class="t" style="font-weight:600">今天一切安好</view>
+            <view class="s">所有待办已完成 · 家庭成员同步可见</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 统计速览条（可点击下钻） -->
+      <view class="stat-strip">
+        <view class="st press" bindtap="goExpense"><view class="v">¥{{strip.monthExpense}}</view><view class="k">本月花销</view></view>
+        <view class="st press" bindtap="goStats"><view class="v">{{strip.weekChecks}}<text class="em"> 次</text></view><view class="k">本周打卡</view></view>
+        <view class="st press" bindtap="goWeight"><view class="v"><text class="em">{{strip.wtText}}</text></view><view class="k">{{strip.wtLabel}}</view></view>
+      </view>
+
+      <!-- 显示已归档开关（归档宠物置底展示，卡片弱化但可点击） -->
+      <view class="archived-toggle">
+        <text class="archived-toggle-label">显示已归档</text>
+        <p-switch checked="{{showArchived}}" bind:change="onArchivedSwitch" />
+      </view>
+
+      <!-- 宠物卡片：单宠展示信息更完整，多宠保持紧凑卡片墙 -->
+      <block wx:if="{{pets.length === 1}}">
+        <view class="pet-card pet-card-single {{pets[0].archived ? 'archived' : ''}}" data-id="{{pets[0].id}}" bindtap="onPet" bindlongpress="onPetLong">
+          <view class="mp" wx:if="{{!pets[0].archived}}" data-id="{{pets[0].id}}" catchtap="onQuickAdd"><p-icon name="plus" color="#FAF6EF" size="{{24}}" /></view>
+          <view class="single-head">
+            <view class="avatar {{pets[0].av}} single-avatar">
+              <image wx:if="{{pets[0].avatar}}" class="avatar-img pet-avatar-img" src="{{pets[0].avatar}}" mode="aspectFit" />
+              <p-icon wx:else name="paw" color="{{pets[0].paw}}" size="{{72}}" />
+            </view>
+            <view class="grow">
+              <view class="pet-name single-name">{{pets[0].name}}<text class="pet-gender {{pets[0].genderCls}}" wx:if="{{pets[0].gender}}">{{pets[0].gender}}</text><text class="pill grey archived-tag" wx:if="{{pets[0].archived}}">已归档</text></view>
+              <view class="pet-breed">{{pets[0].species}} · {{pets[0].breed || '品种未填写'}}</view>
+              <view class="pet-age">{{pets[0].age || '生日未填写'}} · {{pets[0].adoptText}}</view>
+            </view>
+          </view>
+          <view class="hl-full" style="margin:25rpx -29rpx 20rpx"></view>
+          <view class="single-info">
+            <view><text class="single-label">最近体重</text><text class="pet-weight">{{pets[0].weight}}</text></view>
+            <view wx:if="{{pets[0].traits.length}}"><text class="single-label">性格</text><view class="trait-mini"><text wx:for="{{pets[0].traits}}" wx:key="*this">{{item}}</text></view></view>
+          </view>
+          <view class="single-next" wx:if="{{pets[0].meta}}" data-id="{{pets[0].id}}" catchtap="onPetMeta"><p-icon name="{{pets[0].diaryUnread ? 'heart' : 'bell'}}" color="#C08A4E" size="{{28}}" />{{pets[0].meta}}</view>
+        </view>
+      </block>
+      <view class="pet-grid" wx:else>
+        <view class="pet-card {{item.archived ? 'archived' : ''}}" wx:for="{{pets}}" wx:key="id" data-id="{{item.id}}" bindtap="onPet" bindlongpress="onPetLong">
+          <view class="mp" wx:if="{{!item.archived}}" data-id="{{item.id}}" catchtap="onQuickAdd"><p-icon name="plus" color="#FAF6EF" size="{{24}}" /></view>
+          <view class="pet-row">
+            <view class="avatar {{item.av}}">
+              <image wx:if="{{item.avatar}}" class="avatar-img pet-avatar-img" src="{{item.avatar}}" mode="aspectFit" />
+              <p-icon wx:else name="paw" color="{{item.paw}}" size="{{52}}" />
+            </view>
+            <view class="grow">
+              <view class="pet-name">{{item.name}}<text class="pet-gender {{item.genderCls}}" wx:if="{{item.gender}}">{{item.gender}}</text><text class="pill grey archived-tag" wx:if="{{item.archived}}">已归档</text></view>
+              <view class="pet-breed">{{item.breed}}</view>
+              <view class="pet-age">{{item.age}}</view>
+            </view>
+          </view>
+          <view class="hl-full" style="margin:20rpx -29rpx 18rpx"></view>
+          <view class="pet-meta"><text class="pet-weight">{{item.weight}}</text><text class="pet-todo {{item.diaryUnread ? 'diary-hint' : ''}}" wx:if="{{item.meta}}" data-id="{{item.id}}" catchtap="onPetMeta">{{item.meta}}</text></view>
+        </view>
+      </view>
+      <view class="pet-add" bindtap="onAddPet"><p-icon name="plus" color="#B9AE9E" size="{{31}}" /> 添加宠物</view>
+      <view class="pet-long-hint">长按宠物卡片，可编辑资料、排序或归档</view>
+    </block>
+  </view>
+
+  <!-- 快捷记录 FAB -->
+  <p-fab bind:tap="openSheet"></p-fab>
+
+  <!-- 快捷记录九宫格弹层 -->
+  <p-sheet show="{{showSheet}}" bind:close="closeSheet">
+    <view class="qa-head">
+      <view class="qa-title">记一笔</view>
+      <view class="qa-pets">
+        <view class="qa-pet {{item.id === qaPetId ? 'on' : ''}}" wx:for="{{qaPets}}" wx:key="id" data-pet="{{item.id}}" bindtap="onQuickPet">
+          <view class="avatar {{item.av}}">
+            <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+            <p-icon wx:else name="paw" color="{{item.paw}}" size="{{24}}" />
+          </view>
+          <text>{{item.name}}</text>
+          <p-icon wx:if="{{item.id === qaPetId}}" name="check" color="#3E362C" size="{{24}}" />
+        </view>
+      </view>
+    </view>
+    <swiper class="qa-swiper" current="{{qaPage}}" bindchange="onGridSwipe">
+      <swiper-item>
+        <view class="grid9">
+          <view class="g9" wx:for="{{grid0}}" wx:key="label" data-type="{{item[3]}}" bindtap="onPickType">
+            <view class="gi" style="background:{{item[2]}}1A"><p-icon name="{{item[0]}}" color="{{item[2]}}" size="{{48}}" /></view>
+            <view class="gk">{{item[1]}}</view>
+          </view>
+        </view>
+      </swiper-item>
+      <swiper-item>
+        <view class="grid9">
+          <view class="g9" wx:for="{{grid1}}" wx:key="label" data-type="{{item[3]}}" bindtap="onPickType">
+            <view class="gi" style="background:{{item[2]}}1A"><p-icon name="{{item[0]}}" color="{{item[2]}}" size="{{48}}" /></view>
+            <view class="gk">{{item[1]}}</view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+    <view class="qa-dots">
+      <view class="dot {{qaPage === 0 ? 'on' : ''}}" data-page="0" bindtap="onSheetPage"></view>
+      <view class="dot {{qaPage === 1 ? 'on' : ''}}" data-page="1" bindtap="onSheetPage"></view>
+    </view>
+  </p-sheet>
+
+  <!-- 宠物长按编辑弹层：编辑资料 / 排序 / 归档；已归档宠物只提供取消归档 -->
+  <p-sheet show="{{petSheet}}" bind:close="closePetSheet">
+    <view class="act-head" wx:if="{{activePetIdx >= 0}}">
+      <view class="act-title">{{pets[activePetIdx].name}}</view>
+      <view class="act-sub">{{pets[activePetIdx].archived ? '已归档 · 时间线只读' : '编辑模式 · 更多操作在宠物详情页'}}</view>
+    </view>
+    <block wx:if="{{activePetIdx >= 0 && pets[activePetIdx].archived}}">
+      <view class="btn btn-s" bindtap="onPetUnarchive">取消归档</view>
+    </block>
+    <block wx:elif="{{activePetIdx >= 0}}">
+      <view class="btn btn-s" bindtap="onPetEdit">编辑资料</view>
+      <view class="btn btn-s" style="margin-top:18rpx" data-dir="-1" bindtap="onPetMove">上移一位</view>
+      <view class="btn btn-s" style="margin-top:18rpx" data-dir="1" bindtap="onPetMove">下移一位</view>
+      <view class="btn btn-s" style="margin-top:18rpx" bindtap="onPetArchive">归档</view>
+    </block>
+    <view class="act-cancel" bindtap="closePetSheet">取消</view>
+  </p-sheet>
+
+  <!-- 统一确认弹窗：忽略全部待办 / 归档宠物 -->
+  <p-dialog show="{{dlg.show}}" title="{{dlg.title}}" content="{{dlg.content}}" confirm-text="{{dlg.confirmText}}" bind:confirm="onDlgConfirm" bind:cancel="closeDlg" />
+</view>

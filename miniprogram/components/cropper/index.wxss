@@ -1,0 +1,66 @@
+/* p-cropper · 全屏正方形裁剪浮层（黑底，对齐微信头像裁剪） */
+.cropper {
+  position: fixed;
+  inset: 0;
+  z-index: 45; /* 低于 toast(50) 与 paw-loader(60) */
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.cropper.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.crop-stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.crop-area {
+  position: absolute;
+}
+.crop-view {
+  display: flex;
+}
+.crop-img {
+  width: 100%;
+  height: 100%;
+}
+.crop-mask {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.crop-frame {
+  position: absolute;
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+.crop-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 48rpx calc(30rpx + env(safe-area-inset-bottom));
+}
+.crop-btn {
+  font-size: 31rpx;
+  color: #FAF6EF;
+  padding: 13rpx 9rpx;
+  transition: opacity 0.12s;
+}
+.crop-btn:active {
+  opacity: 0.6;
+}
+.crop-btn.ok {
+  color: var(--pop);
+  font-weight: 600;
+}
+.crop-canvas {
+  position: fixed;
+  left: -1999rpx;
+  top: 0;
+}

@@ -1,0 +1,14 @@
+<block>
+  <view class="dlg-mask {{show ? 'show' : ''}}" bindtap="onMask"></view>
+  <view class="dlg {{show ? 'show' : ''}}" catchtouchmove="noop">
+    <view class="dlg-title" wx:if="{{title}}">{{title}}</view>
+    <view class="dlg-content" wx:if="{{content}}">{{content}}</view>
+    <view class="dlg-input-wrap" wx:if="{{input}}">
+      <input class="dlg-input" type="{{inputType}}" value="{{inputValue}}" placeholder="{{inputPlaceholder}}" focus="{{show}}" bindinput="onInput" />
+    </view>
+    <view class="dlg-btns {{showCancel ? '' : 'single'}}">
+      <view class="dlg-btn dlg-btn-cancel" wx:if="{{showCancel}}" bindtap="onCancel">{{cancelText}}</view>
+      <view class="dlg-btn dlg-btn-confirm {{danger ? 'danger' : ''}} {{confirmDisabled ? 'off' : ''}}" bindtap="onConfirm">{{confirmText}}</view>
+    </view>
+  </view>
+</block>

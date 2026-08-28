@@ -1,0 +1,4 @@
+<view class="crd cell-group">
+  <view class="crd-h" wx:if="{{title}}"><text class="b">{{title}}</text></view>
+  <slot></slot>
+</view>

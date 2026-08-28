@@ -1,0 +1,67 @@
+<view class="page">
+  <view class="statusbar" style="height:{{sb}}px"></view>
+  <view class="large-title">我的</view>
+
+  <view class="body">
+    <!-- 应用头卡（品牌名 + tagline + 版本 pill，无 chevron） -->
+    <view class="crd family-card press" bindtap="openProfile">
+      <user-avatar url="{{me.avatarUrl}}" size="{{97}}" paw-color="#B0803B" />
+      <view class="grow">
+        <view class="t" style="font-size:35rpx;font-weight:700">{{me.nickName || '毛球家长'}}</view>
+        <view class="s">{{me.nickName ? '已补全资料' : '补全头像昵称，让家人认出你 ›'}}</view>
+      </view>
+      <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+    </view>
+
+    <!-- 四组设置 -->
+    <block wx:for="{{groups}}" wx:for-item="g" wx:key="title">
+      <view class="group-title">{{g.title}}</view>
+      <view class="crd" style="padding:9rpx 35rpx">
+        <block wx:for="{{g.items}}" wx:for-item="it" wx:key="label">
+          <view wx:if="{{it.share}}" class="row press share-wrap">
+            <view class="ticon" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
+            <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>
+            <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+            <button class="share-mask" hover-class="share-mask-hover" open-type="share"></button>
+          </view>
+          <view wx:else class="row press" data-url="{{it.url}}" bindtap="onTap">
+            <view class="ticon" wx:if="{{!it.noIcon}}" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
+            <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>
+            <text class="v" wx:if="{{it.value}}">{{it.value}}</text>
+            <view class="chev" wx:if="{{it.url}}"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+          </view>
+        </block>
+      </view>
+    </block>
+  </view>
+
+  <!-- 资料编辑弹层 -->
+  <p-sheet show="{{showProfile}}" bind:close="closeProfile">
+    <view class="profile-body">
+      <view class="profile-title">我的资料</view>
+      <view class="s profile-sub">头像昵称用于家人识别与「谁记的」展示，不强制，可随时留空</view>
+      <view class="crd profile-avatar-crd">
+        <button class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <user-avatar url="{{editAvatarUrl || me.avatarUrl}}" size="{{158}}" paw-color="#B9AE9E" />
+          <text class="profile-avatar-tip">点击更换头像</text>
+        </button>
+      </view>
+      <view class="crd" style="padding:9rpx 35rpx">
+        <view class="frow" style="min-height:88rpx">
+          <text class="k">昵称</text>
+          <input class="profile-input" type="nickname" value="{{editNickName}}" placeholder="输入昵称（可选微信昵称）" bindinput="onNickInput" />
+        </view>
+        <view class="hl" style="margin:0 -35rpx"></view>
+        <view class="frow" style="min-height:88rpx">
+          <text class="k">家庭内称呼</text>
+          <input class="profile-input" value="{{editFamilyNick}}" placeholder="如：爸爸（仅本空间显示）" bindinput="onFamilyNickInput" />
+        </view>
+      </view>
+      <view class="btn btn-p" style="margin-top:31rpx" bindtap="saveProfile">保存</view>
+      <view class="profile-cancel" bindtap="closeProfile">取消</view>
+    </view>
+  </p-sheet>
+
+  <p-toast id="toast"></p-toast>
+  <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+</view>

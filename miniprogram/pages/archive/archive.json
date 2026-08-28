@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "p-icon": "/components/icon/icon",
+    "p-empty": "/components/empty-state/empty-state",
+    "paw-loading": "/components/paw-loading/paw-loading",
+    "p-dialog": "/components/dialog/dialog"
+  }
+}

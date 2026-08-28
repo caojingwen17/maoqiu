@@ -1,0 +1,44 @@
+/* 记录详情页 */
+.grow { flex: 1; min-width: 0; }
+.rec-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 7rpx;
+}
+.rem-label {
+  font-size: 24rpx;
+  color: var(--t2);
+  margin-bottom: 13rpx;
+}
+.rem-note {
+  font-size: 32rpx;
+  line-height: 1.65;
+  color: var(--text);
+}
+.del-btn {
+  text-align: center;
+  padding: 29rpx;
+  font-size: 31rpx;
+  font-weight: 600;
+  color: var(--danger);
+  background: var(--card);
+  border-radius: 31rpx;
+}
+/* 编辑入口（原右上角「编辑」下移，避让微信胶囊） */
+.edit-entry {
+  color: var(--pop-deep);
+  margin-bottom: 18rpx;
+}
+.al-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 18rpx;
+}
+.dt-video {
+  width: 100%;
+  height: 400rpx;
+  margin-top: 22rpx;
+  border-radius: 18rpx;
+  background: #1C1814;
+}

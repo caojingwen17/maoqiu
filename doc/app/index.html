@@ -301,7 +301,7 @@ const ICON = {
   pencil: s => I('<path d="M4 20l1-4.2L16.6 4.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19z"/><path d="M14.5 6.3l3.2 3.2"/>', s),
   walk: s => I('<circle cx="13" cy="5" r="1.8"/><path d="M9 20.5l2.2-5-2-2.2 2.3-4.3M11.5 9l2.5 2.5 3.5.8M11.5 9l-3 1.6-1.6 3"/>', s),
 };
-const TC = {weight:'#C08A4E',vaccine:'#4A7FC7',deworm:'#7D6BAE',medical:'#D24B42',medication:'#A87BA8',feed:'#B0803B',expense:'#4E8A68',groom:'#5A9EA8',poop:'#8A7355',milestone:'#A8902E',walk:'#6B8F4E',water:'#5E8FB8',vomit:'#B26E4B',surgery:'#C25B5B',snack:'#B39A4A',heat:'#C77F9A',custom:'#8A8378',daily:'#CB7A5A'};
+const TC = {weight:'#C08A4E',vaccine:'#4A7FC7',deworm:'#7D6BAE',medical:'#D24B42',medication:'#A87BA8',feed:'#B0803B',expense:'#4E8A68',groom:'#5A9EA8',poop:'#8A7355',milestone:'#A8902E',walk:'#6B8F4E',water:'#5E8FB8',vomit:'#B26E4B',surgery:'#C25B5B',snack:'#B39A4A',heat:'#C77F9A',custom:'#8A8378',daily:'#CB7A5A',litter:'#8F7E5E'};
 const tint = h => h + '1A';
 
 /* ================= 公共构建器 ================= */
@@ -338,12 +338,11 @@ ${sb()}<div style="flex:none;display:flex;align-items:flex-end;gap:10px;padding:
   </div>
   ${newPet&&showGuide?`<div class="crd" style="padding:12px 14px 6px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-      <b style="font-size:13px">三件事，让档案更好用</b>
+    <b style="font-size:13px">两件事，让档案更好用</b>
       <span class="press" data-guide-close style="color:var(--t3);font-size:12px;padding:4px 6px;cursor:pointer;line-height:1">✕</span>
     </div>
     ${[['1','补全生日','有生日才有年龄和纪念日提醒','已打开档案编辑 · 生日行聚焦（演示略）'],
-       ['2','记第一条体重','开始生成趋势曲线','已打开体重表单（演示略）'],
-       ['3','开启微信提醒','疫苗到期直接服务通知你','调起订阅消息授权（演示略）']].map(([n,t,s,ts])=>`
+       ['2','记第一条体重','开始生成趋势曲线','已打开体重表单（演示略）']].map(([n,t,s,ts])=>`
     <div class="row press" data-toast="${ts}" style="min-height:40px;padding:7px 0">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--pop-tint);color:var(--pop-deep);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">${n}</span>
       <div class="grow"><div class="t" style="font-size:13px">${t}</div><div class="s">${s}</div></div>
@@ -492,7 +491,7 @@ ${sb()}${nav('记体重')}
 </div>`;
 
 /* ---------- 通用记录表单（PRD §8：共用骨架 + 类型专属字段区） ---------- */
-const NAME2KEY = {'体重':'weight','喂食':'feed','日常':'daily','疫苗':'vaccine','驱虫':'deworm','就医':'medical','花销':'expense','便便':'poop','洗护':'groom','呕吐':'vomit','用药':'medication','手术':'surgery','遛狗':'walk','饮水':'water','零食':'snack','发情':'heat','里程碑':'milestone','自定义':'custom'};
+const NAME2KEY = {'体重':'weight','喂食':'feed','日常':'daily','疫苗':'vaccine','驱虫':'deworm','就医':'medical','花销':'expense','便便':'poop','洗护':'groom','呕吐':'vomit','用药':'medication','手术':'surgery','遛狗':'walk','铲屎':'litter','饮水':'water','零食':'snack','发情':'heat','里程碑':'milestone','自定义':'custom'};
 const FORM_DEF = {
   daily:{name:'日常',color:TC.daily,icon:'camera',again:1,saveToast:'已记下啦 · 已存入时间线'},
   feed:{name:'喂食',color:TC.feed,icon:'bowl',again:1,fields:[
@@ -514,6 +513,7 @@ const FORM_DEF = {
     {k:'chips',label:'周期',opts:['15 天','30 天','90 天'],sel:1},
     {k:'switch',label:'下次到期提醒',hint:'做完一次，自动安排下次',on:1}]},
   medical:{name:'就医',color:TC.medical,icon:'fileText',fields:[
+    {k:'input',label:'手术名称',ph:'选填，如：绝育'},
     {k:'input',label:'医院',val:'瑞鹏宠物医院'},
     {k:'input',label:'症状',ph:'如：呕吐两天'},
     {k:'input',label:'诊断',ph:'选填'},
@@ -543,6 +543,7 @@ const FORM_DEF = {
     {k:'input',label:'费用',unit:'元',ph:'选填，计入账单'}]},
   walk:{name:'遛狗',color:TC.walk,icon:'walk',again:1,fields:[
     {k:'input',label:'时长',val:'35',unit:'分钟'}]},
+  litter:{name:'铲屎',color:TC.litter,icon:'box',again:1},
   water:{name:'饮水',color:TC.water,icon:'glass',again:1,fields:[
     {k:'input',label:'水量',val:'120',unit:'ml'}]},
   snack:{name:'零食',color:TC.snack,icon:'bone',again:1,fields:[
@@ -610,8 +611,7 @@ ${sb()}${asTab
 <div class="body">
   <div class="crd" style="background:rgba(74,127,199,.07);display:flex;gap:10px;align-items:center;padding:12px 14px">
     ${ticon('bell','#4A7FC7',30,16)}
-    <div class="grow"><div class="t" style="font-size:12.5px">开启微信通知，不再错过疫苗提醒</div></div>
-    <span style="font-size:12px;font-weight:600;color:var(--info);cursor:pointer" data-toast="调起订阅消息授权（演示略）">去开启</span>
+    <div class="grow"><div class="t" style="font-size:12.5px">打开提醒中心查看待办</div></div>
   </div>
   <div class="crd">
     <div style="font-size:11px;font-weight:600;color:var(--danger);margin-bottom:4px">已逾期</div>
@@ -642,11 +642,14 @@ ${sb()}${nav('新建提醒')}
   <div class="crd" style="padding:11px 16px 5px">
     <div style="font-size:12px;color:var(--t2);margin-bottom:8px">事项</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px">
-      ${['梳毛','刷牙','剪指甲','清理猫砂','洗水碗','滴眼药','自定义'].map((o,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s">${o}</div>`).join('')}
+      ${['梳毛','刷牙','洗澡','剪指甲','洁耳','铲屎','洗猫砂盆','洗碗','称体重','驱虫','复查','自定义'].map((o,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s">${o}</div>`).join('')}
     </div>
   </div>
   <div class="crd" style="padding:11px 16px 5px">
-    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">周期</div>
+    <div style="font-size:12px;color:var(--t2);margin-bottom:8px">类型</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:6px">
+      ${['周期提醒','一次性提醒'].map((o,i)=>`<div class="chip${i===0?' on':''}" data-fchip="s">${o}</div>`).join('')}
+    </div>
     <div class="frow" style="min-height:52px;gap:10px;padding-bottom:6px">
       <span style="font-size:14px;color:var(--text)">每</span>
       <span class="press" data-toast="唤起数字键盘 · 1~99（演示略）" style="min-width:44px;text-align:center;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;padding:6px 10px;border-radius:10px;background:var(--fill);cursor:pointer">1</span>
@@ -682,13 +685,19 @@ const SPECIES_FORM = {
 V.petForm = (species='猫') => { const f = SPECIES_FORM[species] || SPECIES_FORM['其他']; return `
 ${sb()}${nav('新增宠物')}
 <div class="body">
-  <div class="crd press" data-toast="调起相机/相册选头像（演示略）" style="display:flex;flex-direction:column;align-items:center;padding:20px 16px 16px;gap:8px">
-    ${avatar('a4',64,32,18)}
-    <span style="font-size:11px;color:var(--pop-deep);font-weight:600">上传照片</span>
+  <!-- 头部：左上传头像 + 右名字/生日 -->
+  <div class="crd" style="display:flex;gap:28px;align-items:center;padding:18px 16px">
+    <div class="press" data-toast="调起相机/相册选头像（演示略）" style="display:flex;flex-direction:column;align-items:center;gap:8px;flex:none;cursor:pointer">
+      ${avatar('a4',88,44,18)}
+      <span style="font-size:10px;color:var(--pop-deep);font-weight:600">上传照片</span>
+    </div>
+    <div class="grow" style="min-width:0">
+      <div class="frow"><span class="k" style="width:48px">名字</span><span class="val b">煤球</span></div>
+      <div class="hl" style="margin:2px 0 2px 48px"></div>
+      <div class="frow"><span class="k" style="width:48px">生日</span><span class="val b">2026年5月12日</span></div>
+    </div>
   </div>
   <div class="crd">
-    <div class="frow"><span class="k">名字</span><span class="val b">煤球</span></div>
-    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
     <div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">类型</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">${Object.keys(SPECIES_FORM).map(o=>`<div class="chip${o===species?' on':''}" data-species="${o}">${o}</div>`).join('')}</div>
       <div class="s" style="margin-top:8px">选择类型后，只展示适合它的档案字段</div></div>
@@ -699,8 +708,6 @@ ${sb()}${nav('新增宠物')}
       <div style="display:flex;flex-wrap:wrap;gap:8px">${f.identityOpts.map((o,i)=>`<div class="chip${i===1?' on':''}" data-fchip="s">${o}</div>`).join('')}</div></div>
   </div>
   <div class="crd">
-    <div class="frow"><span class="k">生日</span><span class="val b">2026年5月12日</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl-full" style="margin:2px -16px 2px 0"></div>
     <div class="frow"><span class="k">到家日期</span><span class="val b">2026年8月12日 · 今天</span><span class="chev">${ICON.chevR(14)}</span></div>
     <div class="hl-full" style="margin:2px -16px 2px 0"></div>
     ${['猫','狗','兔'].includes(species)?`<div style="padding:11px 0 5px"><div style="font-size:12px;color:var(--t2);margin-bottom:8px">绝育</div><div style="display:flex;flex-wrap:wrap;gap:8px">${['已绝育','未绝育','不确定'].map((o,i)=>`<div class="chip${i===1?' on':''}" data-fchip="s">${o}</div>`).join('')}</div></div>`:''}
@@ -762,21 +769,16 @@ V.stats = () => `${sb()}${lt('统计')}
     <div class="crd-h"><b>打卡热力</b><span>近 98 天</span></div>
     <div class="heat">${Array.from({length:98},()=>{const r=Math.random();return `<i class="${r>.82?'l3':r>.62?'l2':r>.42?'l1':''}"></i>`}).join('')}</div>
   </div>
-  <div class="crd press" data-toast="12 月可生成年度报告分享图（演示略）" style="display:flex;gap:10px;align-items:center;background:var(--pop-tint)">
-    ${ticon('flag',TC.milestone)}
-    <div class="grow"><div class="t" style="font-weight:600">2026 年度报告 · 12 月生成</div><div class="s">疫苗/就医/花销/体重变化年度总结，届时可生成分享图</div></div>
-    <span class="chev">${ICON.chevR(14)}</span>
-  </div>
 </div>
 ${tabbar('stats')}`;
 
 /* ---------- 我的（Tab） ---------- */
 V.mine = () => `${sb()}${lt('我的')}
 <div class="body" style="gap:10px">
-  <div class="crd" style="display:flex;gap:12px;align-items:center;padding:14px 16px">
+  <div class="crd press" data-profile-open style="display:flex;gap:12px;align-items:center;padding:14px 16px;cursor:pointer">
     ${avatar('a1',44,24)}
     <div class="grow"><div style="font-size:16px;font-weight:700">毛球档案袋</div><div class="s" style="margin-top:2px">每只毛孩子，都值得一个装满成长的档案袋</div></div>
-    <span class="pill grey">v1.0.0</span>
+    <span class="chev">${ICON.chevR(14)}</span>
   </div>
   <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">协作与数据</div>
   <div class="crd" style="padding:4px 16px">
@@ -786,21 +788,7 @@ V.mine = () => `${sb()}${lt('我的')}
     <div class="hl" style="margin:0 -16px 0 40px"></div>
     <div class="frow press" data-push="expenses" style="min-height:46px">${ticon('coin',TC.weight,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">记账与预算</span><span class="val">本月 ¥326 / ¥600</span><span class="chev">${ICON.chevR(14)}</span></div>
     <div class="hl" style="margin:0 -16px 0 40px"></div>
-    <div class="frow press" data-push="backup" style="min-height:46px">${ticon('download',TC.vaccine,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">数据备份</span><span class="val">上次 8月1日</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl" style="margin:0 -16px 0 40px"></div>
     <div class="frow press" data-toast="归档宠物列表（演示略）" style="min-height:46px">${ticon('fileText',TC.custom,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">归档宠物</span><span class="val">时间线只读 · 可恢复</span><span class="chev">${ICON.chevR(14)}</span></div>
-  </div>
-  <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">偏好</div>
-  <div class="crd" style="padding:4px 16px">
-    <div class="frow" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">外观模式</span><span class="val">跟随系统</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl" style="margin:0 -16px"></div>
-    <div class="frow press" data-toast="默认提醒周期设置（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">默认周期</span><span class="val">疫苗 1 年 · 驱虫 30 天</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl" style="margin:0 -16px"></div>
-    <div class="frow press" data-toast="提醒提前天数设置（演示略）" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">提醒提前天数</span><span class="val">提前 7 天进待办</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl" style="margin:0 -16px"></div>
-    <div class="frow" style="min-height:46px"><div class="grow"><div class="t" style="font-size:14px">微信提醒通知</div><div class="s">已授权 · 剩余 3 次推送额度 · 管理授权需在微信设置中操作</div></div><span class="pill ok">已授权</span></div>
-    <div class="hl" style="margin:0 -16px"></div>
-    <div class="frow" style="min-height:46px"><span class="k" style="width:auto;flex:1;text-align:left">小程序内待办提醒</span><div class="sw on"><i></i></div></div>
   </div>
   <div style="font-size:11px;font-weight:600;color:var(--t3);padding:0 6px">工具箱</div>
   <div class="crd" style="padding:4px 16px">
@@ -823,7 +811,7 @@ V.mine = () => `${sb()}${lt('我的')}
 </div>
 ${tabbar('mine')}`;
 
-/* ---------- 记账 / 备份（push，精简版） ---------- */
+/* ---------- 记账（push，精简版） ---------- */
 V.expenses = () => `${sb()}${nav('账单')}
 <div style="flex:none;display:flex;align-items:center;justify-content:center;gap:18px;padding:0 16px 6px">
   <span class="chev press" data-toast="上一月（演示略）" style="padding:6px">${ICON.chevL(16)}</span><b style="font-size:15px">2026年8月</b><span class="chev press" data-toast="下一月（演示略）" style="padding:6px">${ICON.chevR(16)}</span>
@@ -898,21 +886,6 @@ ${sb()}${nav('入库')}
   <div class="btn btn-p" data-save data-stoast="已入库 · 大宠爱 +3 支">入库</div>
 </div>`;
 
-V.backup = () => `${sb()}${nav('数据备份与导出')}
-<div class="body">
-  <div class="crd" style="text-align:center;padding:24px 16px">
-    ${ticon('download',TC.weight,52,26)}
-    <div style="font-size:15px;font-weight:700;margin-top:10px">全部数据安全</div>
-    <div style="font-size:11px;color:var(--t2);margin-top:5px;line-height:1.7">2 只宠物 · 486 条记录 · 132 张照片 · 共 2.4MB<br>上次备份：2026年8月1日 22:14</div>
-    <div class="btn btn-p" style="margin:16px 24px 0;height:42px" data-toast="备份完成，已保存至云端">立即备份</div>
-  </div>
-  <div class="crd" style="padding:4px 16px">
-    <div class="frow" style="min-height:50px">${ticon('refresh','#7A7A76',30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">从备份恢复</span><span class="chev">${ICON.chevR(14)}</span></div>
-    <div class="hl" style="margin:0 -16px 0 40px"></div>
-    <div class="frow" style="min-height:50px">${ticon('fileText',TC.medical,30,15)}<span class="k" style="width:auto;flex:1;text-align:left;margin-left:10px">导出病历 PDF</span><span class="val">就诊时给医生看</span><span class="chev">${ICON.chevR(14)}</span></div>
-  </div>
-</div>`;
-
 /* ---------- 工具箱（push） ---------- */
 V.toolbox = () => `${sb()}${nav('工具箱')}
 <div class="body">
@@ -966,7 +939,7 @@ V.toolFood = () => `${sb()}${nav('安全食物查询')}
 V.invite = () => `${sb()}
 <div class="body" style="justify-content:center;gap:14px">
   <div style="text-align:center;padding:4px 0">
-    <div style="font-size:11.5px;color:var(--t2)">爸爸 邀请你加入家庭空间</div>
+    <div style="font-size:11.5px;color:var(--t2)"><span data-inviter>毛球家长</span> 邀请你加入家庭空间</div>
     <div style="font-size:21px;font-weight:700;margin-top:6px">三口之家的档案袋</div>
   </div>
   <div style="display:flex;gap:10px">
@@ -1000,6 +973,27 @@ V.kicked = () => `${sb()}
 </div>
 <div style="flex:none;padding:6px 16px 26px"><div class="btn btn-p" data-toast="回到个人空间（演示略）">回到我的个人空间</div></div>`;
 
+/* ---------- 我的资料编辑（sheet，头像昵称自主填写，非登录页） ---------- */
+V.profileSheet = () => `
+<div class="grip"></div>
+<div style="padding:0 16px 20px">
+  <div style="font-size:17px;font-weight:700;text-align:center">我的资料</div>
+  <div style="font-size:11.5px;color:var(--t2);text-align:center;margin-top:4px;line-height:1.6">头像昵称用于家人识别与「谁记的」展示<br>不强制，可随时留空</div>
+  <div class="crd" style="margin-top:14px;display:flex;flex-direction:column;align-items:center;padding:20px 16px;gap:8px">
+    <button class="press" data-profile-avatar style="padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+      ${avatar('a2',72,36,20)}
+      <span style="font-size:10.5px;color:var(--pop-deep);font-weight:600">点击更换头像</span>
+    </button>
+  </div>
+  <div class="crd" style="padding:4px 16px">
+    <div class="frow"><span class="k">昵称</span><input data-profile-nick type="text" placeholder="输入昵称（可选微信昵称）" style="flex:1;text-align:right;font-size:14px;color:var(--text);border:0;outline:0;background:none"/></div>
+    <div class="hl" style="margin:0 -16px"></div>
+    <div class="frow"><span class="k">家庭内称呼</span><input data-profile-familynick type="text" placeholder="如：爸爸（仅本空间显示）" style="flex:1;text-align:right;font-size:14px;color:var(--text);border:0;outline:0;background:none"/></div>
+  </div>
+  <div class="btn btn-p" data-profile-save style="margin-top:14px">保存</div>
+  <div data-close-sheet style="text-align:center;padding:14px 0 2px;color:var(--pop-deep);font-weight:600;cursor:pointer">取消</div>
+</div>`;
+
 /* ---------- 记录详情卡（时间线单条点击展开） ---------- */
 V.recordDetail = (id) => { const r = REC[id]; return `
 ${sb()}${nav('记录详情','<div class="act" data-toast="进入编辑模式（演示略）">编辑</div>')}
@@ -1028,12 +1022,11 @@ ${sb()}${nav('记录详情','<div class="act" data-toast="进入编辑模式（�
 /* ---------- 快捷记录弹层（评审意见 #4：FAB 唤起带宠物选择行；两页分类可翻页） ---------- */
 const QA_PAGES = [
   [['scale','体重',TC.weight],['bowl','喂食',TC.feed],['camera','日常',TC.daily],
-   ['syringe','疫苗',TC.vaccine],['shield','驱虫',TC.deworm],['fileText','就医',TC.medical],
-   ['pill','用药',TC.medication],['coin','花销',TC.expense],['dots','更多','#7A7A76']],
-  [['poop','便便',TC.poop],['drop','洗护',TC.groom],['vomit','呕吐',TC.vomit],
-   ['cross','手术',TC.surgery],['walk','遛狗',TC.walk],['glass','饮水',TC.water],
-   ['bone','零食',TC.snack],['heart','发情',TC.heat],['flag','里程碑',TC.milestone],
-   ['pencil','自定义',TC.custom]]
+   ['syringe','疫苗',TC.vaccine],['shield','驱虫',TC.deworm],['pill','用药',TC.medication],
+   ['coin','花销',TC.expense],['walk','遛狗',TC.walk],['box','铲屎',TC.litter]],
+  [['fileText','就医',TC.medical],['poop','便便',TC.poop],['drop','洗护',TC.groom],
+   ['vomit','呕吐',TC.vomit],['glass','饮水',TC.water],['bone','零食',TC.snack],
+   ['heart','发情',TC.heat],['flag','里程碑',TC.milestone],['pencil','自定义',TC.custom]]
 ];
 V.quickAddSheet = (pet='豆豆', page=1) => `
 <div class="grip"></div>
@@ -1192,6 +1185,9 @@ document.addEventListener('click', e => {
     if (b.dataset.result) { showSheet(V.resultSheet(b.dataset.result)); return; }
     toast(b.dataset.stoast || '已记下啦'); setTimeout(pop, 600); return; }
   if (q('[data-save-more]')) { toast('已保存，继续记下一笔'); return; }
+  if (q('[data-profile-open]')) { showSheet(V.profileSheet()); return; }
+  if (q('[data-profile-avatar]')) { toast('调起微信选头像（chooseAvatar，演示略）'); return; }
+  if (q('[data-profile-save]')) { closeSheet(); toast('已保存资料'); return; }
   const recEl = q('[data-rec]');
   if (recEl) { push('recordDetail', +recEl.dataset.rec); return; }
   const chipEl = q('[data-chip]');
@@ -1247,7 +1243,7 @@ const SKETCH = {
   framePaw: SK('<rect x="18" y="8" width="52" height="42" rx="5"/><path d="M18 42l14-12 10 9 8-7 20 16"/><circle cx="60" cy="18" r="3"/><circle cx="38" cy="24" r="1.6"/><circle cx="44" cy="21" r="1.7"/><circle cx="50" cy="24" r="1.6"/><path d="M44 27c3.4 0 6 2.5 6 5.4 0 2.2-1.8 4-4 4-1.2 0-1.5-.5-2-.5s-.8.5-2 .5c-2.2 0-4-1.8-4-4 0-2.9 2.6-5.4 6-5.4z"/>'),
   // 咬网线的狗：网络错误
   dogCable: SK('<circle cx="26" cy="32" r="11"/><path d="M17 26q-9 2-7 12M35 26q9 2 7 12"/><path d="M22 32h.01M30 32h.01M26 37h.01"/><rect x="54" y="28" width="11" height="9" rx="2.5"/><path d="M54 30.5h-5M54 34.5h-5M65 32.5h4"/><path d="M71 32.5q9 0 9 9v6"/><path d="M76 50l4 4M80 50l-4 4"/>'),
-  // 猫守纸箱：暂无备份
+  // 猫守纸箱：当前无本地缓存数据
   catBox: SK('<rect x="22" y="34" width="44" height="24" rx="2"/><path d="M22 40h44"/><circle cx="44" cy="24" r="9"/><path d="M37 18l-3-7 8 3M51 18l3-7-8 3"/><path d="M40.5 24h.01M47.5 24h.01"/><path d="M50 33q8 4 2 9"/>'),
   // 空纸箱：库存为空
   openBox: SK('<path d="M20 32h48v26H20z"/><path d="M20 32l-8-8M20 32l10-8M68 32l8-8M68 32l-10-8"/><path d="M44 18v-6M36 16l-3-4M52 16l3-4" stroke-dasharray="3 4"/><path d="M34 46h20"/>'),
@@ -1290,10 +1286,9 @@ const GALLERY = [
   ['健康与提醒', [['reminders','提醒管理','逾期/今天/未来7天分组；点整行弹完成面板（同时记一笔 / 仅完成 / 延后 3 天）。'],
     ['stock','囤货','余量条 + 保质期 + 记录联动扣减；FAB 进入库表单。'],
     ['stockForm','入库表单','名称/分类/数量/保质期/补货阈值/扣减模式/记账开关，驱虫缺货红色行的落点。']]],
-  ['数据视图', [['stats','统计页','顶部宠物筛选横条 + 折线/柱状/热力三卡 + 底部常驻年度报告卡。'],
-    ['expenses','记账页','月份切换 + 分类筛选 chip + 预算进度条。'],
-    ['backup','数据备份与导出','工具产品的信任基石。']]],
-  ['系统', [['mine','我的 · 设置','协作与数据 / 偏好 / 工具箱 / 关于 四组；微信通知改为授权状态行。'],
+  ['数据视图', [['stats','统计页','顶部宠物筛选横条 + 折线/柱状/热力三卡。'],
+    ['expenses','记账页','月份切换 + 分类筛选 chip + 预算进度条。']]],
+  ['系统', [['mine','我的','协作与数据 / 工具箱 / 关于。'],
     ['toolbox','工具箱','年龄换算 / 喂食量计算 / 安全食物查询 / 附近医院，档案的延伸。'],
     ['toolAge','工具 · 年龄换算','「用档案里的毛孩子」chips 一键带入生日，结果卡直接出换算。'],
     ['toolFood','工具 · 安全食物查询','剧毒/有害/少量可/安全 四档色标 + 底部固定免责声明。'],
