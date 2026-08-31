@@ -9,7 +9,7 @@
 miniprogram/
 ├── app.json / app.wxss      # 宠物 / 提醒 / 统计 / 我的四 Tab；设计 token（§10）+ hairline/glass 工具类
 ├── services/                # api.js（云函数调用封装：失败重试 1 次 + 错误归一化）+ 各域薄封装
-├── utils/                   # date / validate / dict（品种·疫苗·禁忌食物离线字典）/ recordMeta（18 类型元数据）/ tracker
+├── utils/                   # date / validate / dict（品种·疫苗·禁忌食物离线字典）/ recordMeta（18 类型元数据）/ tracker / guard（写操作防重复守卫：在飞锁 + 冷却窗）
 ├── components/              # 17 个公共组件
 └── pages/                   # 22 个页面
     ├── home/                # Tab1 首页：卡片墙（含「显示已归档」开关，归档置底 + 已归档 tag）+ 待办 + 统计条 + 快捷九宫格

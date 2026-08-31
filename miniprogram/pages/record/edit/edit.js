@@ -7,6 +7,7 @@ const inventoryService = require('../../../services/inventory.js');
 const reminderService = require('../../../services/reminder.js');
 const subscription = require('../../../services/subscription.js');
 const tracker = require('../../../utils/tracker.js');
+const { guard } = require('../../../utils/guard.js');
 const { SPECIES, VACCINES } = require('../../../utils/dict.js');
 
 /** 日常视频大小上限（云存储与内容安全考虑，单个 ≤ 10MB） */
@@ -432,7 +433,8 @@ Page({
     return fileIDs;
   },
 
-  async onSave() {
+  // 保存防重复：在飞锁 + 500ms 冷却窗（utils/guard.js），配合 doCreate 里的会话级 requestId 双保险
+  onSave: guard('save', async function () {
     const toast = this.selectComponent('#toast');
     if (!this.data.petId) {
       if (toast) toast.show('请先添加一只毛孩子');
@@ -457,10 +459,10 @@ Page({
       if (this.isReminderRelevant()) await subscription.guide('record_' + this.data.type, { once: true });
       setTimeout(() => this.goBack(), 500);
     }
-  },
+  }, { flag: 'saving' }),
 
   // 保存并再记一条：真实保存后重置表单，留在当前页
-  async onSaveMore() {
+  onSaveMore: guard('saveMore', async function () {
     const toast = this.selectComponent('#toast');
     if (!this.data.petId) {
       if (toast) toast.show('请先添加一只毛孩子');
@@ -479,7 +481,7 @@ Page({
     this.applyType(this.data.type);
     this.setData({ note, photos, videos, editing: false });
     this.applyFeedDefault();
-  },
+  }, { flag: 'saving' }),
 
   async doCreate() {
     const toast = this.selectComponent('#toast');
@@ -507,7 +509,12 @@ Page({
       if (this._editId) {
         await recordService.update(Object.assign({ _id: this._editId }, payload));
       } else {
+        // 会话级幂等键：同一次填写期间连点共享一键，云端按 familyId+requestId 去重兜底；
+        // 保存成功后换新键，下一次保存才是新的业务意图（「保存并再记一条」因此不会误伤）。
+        if (!this._requestId) this._requestId = recordService.newRequestId();
+        payload.requestId = this._requestId;
         await recordService.create(payload);
+        this._requestId = recordService.newRequestId();
       }
       // 待办联动：从首页待办进入的新记录，保存后完成原提醒
       // （疫苗除外：云端 deriveFromRecord 已按新周期自动重排原提醒）

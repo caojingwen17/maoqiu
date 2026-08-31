@@ -2,6 +2,7 @@ const app = getApp();
 const inventoryService = require('../../services/inventory.js');
 const { startOfDay, DAY } = require('../../utils/date.js');
 const subscription = require('../../services/subscription.js');
+const { guard } = require('../../utils/guard.js');
 
 // 分类 → 图标/配色
 const CAT_STYLE = {
@@ -55,7 +56,7 @@ Page({
   },
 
   // 左滑动作：补货（余量回满）/ 删除
-  async onAction(e) {
+  onAction: guard('action', async function (e) {
     const idx = e.detail.index;
     const id = e.currentTarget.dataset.id;
     const item = this.data.items.find((it) => it.id === id);
@@ -74,11 +75,11 @@ Page({
     this.setData({
       dlg: { show: true, title: '删除 ' + item.name, content: '删除后不再提醒补货与临期，且不可恢复', delId: id }
     });
-  },
+  }),
   closeDlg() {
     this.setData({ 'dlg.show': false });
   },
-  async onDlgConfirm() {
+  onDlgConfirm: guard('dlg', async function () {
     const id = this.data.dlg.delId;
     this.closeDlg();
     if (!id) return;
@@ -88,7 +89,7 @@ Page({
     } catch (err) {
       wx.showToast({ title: (err && err.message) || '删除失败', icon: 'none' });
     }
-  }
+  })
 });
 
 function mapItem(it, highlightId) {

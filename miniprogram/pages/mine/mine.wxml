@@ -18,12 +18,11 @@
       <view class="group-title">{{g.title}}</view>
       <view class="crd" style="padding:9rpx 35rpx">
         <block wx:for="{{g.items}}" wx:for-item="it" wx:key="label">
-          <view wx:if="{{it.share}}" class="row press share-wrap">
+          <button wx:if="{{it.share}}" class="row press share-btn" hover-class="none" open-type="share">
             <view class="ticon" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
             <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>
             <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
-            <button class="share-mask" hover-class="share-mask-hover" open-type="share"></button>
-          </view>
+          </button>
           <view wx:else class="row press" data-url="{{it.url}}" bindtap="onTap">
             <view class="ticon" wx:if="{{!it.noIcon}}" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
             <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>

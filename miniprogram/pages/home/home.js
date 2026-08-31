@@ -8,6 +8,7 @@ const subscription = require('../../services/subscription.js');
 const petService = require('../../services/pet.js');
 const tracker = require('../../utils/tracker.js');
 const share = require('../../utils/share.js');
+const { guard } = require('../../utils/guard.js');
 
 // 头像配色（a1-a4 + paw 染色），按 _id 稳定分配
 const AV = [
@@ -86,6 +87,7 @@ Page({
       kickedName: app.globalData.kickedName || ''
     });
     tracker.track(tracker.EVENTS.HOME_SHOW);
+    tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'home' });
     this.loadHome();
   },
 
@@ -229,7 +231,7 @@ Page({
     wx.navigateTo({ url });
   },
   // 待办左滑操作：0=完成（周期推进/一次性 done），1=忽略本次
-  onTodoAction(e) {
+  onTodoAction: guard('todoAction', async function (e) {
     const id = e.currentTarget.dataset.id;
     this.setData({ openTodoId: '' });
     if (e.detail.index === 0) {
@@ -237,7 +239,7 @@ Page({
     } else {
       this._ignoreTodo(id);
     }
-  },
+  }),
   // 滑开新行时自动收回上一行（组件 action 点击会自行收回，但 close() 不发事件，这里也同步清状态）
   onTodoSwipeOpen(e) {
     const id = e.currentTarget.dataset.id;
@@ -292,7 +294,7 @@ Page({
   closeDlg() {
     this.setData({ 'dlg.show': false });
   },
-  onDlgConfirm() {
+  onDlgConfirm: guard('dlg', async function () {
     const action = this.data.dlg.action;
     this.closeDlg();
     if (action === 'ignoreAll') {
@@ -305,7 +307,7 @@ Page({
         .then(() => this.loadHome())
         .catch((e) => wx.showToast({ title: (e && e.message) || '归档失败', icon: 'none' }));
     }
-  },
+  }),
   async _ignoreAllTodos(ids) {
     this.setData({ todoIgnoringAll: true });
     subscription.silentRefill('home_reminder_ignore');
@@ -350,7 +352,7 @@ Page({
     this.closePetSheet();
     if (pet) wx.navigateTo({ url: '/pages/pet/edit/edit?id=' + pet.id });
   },
-  async onPetMove(e) {
+  onPetMove: guard('petMove', async function (e) {
     const dir = Number(e.currentTarget.dataset.dir); // -1 上移 / +1 下移
     const pets = this.data.pets;
     const i = this.data.activePetIdx;
@@ -367,7 +369,7 @@ Page({
     } catch (e2) {
       wx.showToast({ title: (e2 && e2.message) || '排序失败', icon: 'none' });
     }
-  },
+  }),
   onPetArchive() {
     const pet = this.data.pets[this.data.activePetIdx];
     this.closePetSheet();

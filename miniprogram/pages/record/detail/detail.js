@@ -2,6 +2,8 @@ const app = getApp();
 const { TC, ICON_OF, NAME } = require('../../../utils/recordMeta.js');
 const { fmtDateFull } = require('../../../utils/date.js');
 const recordService = require('../../../services/record.js');
+const { guard } = require('../../../utils/guard.js');
+const subscription = require('../../../services/subscription.js');
 
 Page({
   data: {
@@ -19,6 +21,9 @@ Page({
       this.setData({ _id: id });
       this.loadRecord(id);
     }
+    // 浏览型触点：同 pet_detail_view，进入详情页做一次性订阅引导（全局 once，
+    // 已持久授权/持久拒绝时 guide 内部跳过），弹窗走 wx.showModal 降级（本页未挂 sub-guide）
+    setTimeout(() => subscription.guide('record_detail_view', { once: true }), 600);
   },
 
   async loadRecord(id) {
@@ -47,7 +52,7 @@ Page({
   cancelDel() {
     this.setData({ showDel: false });
   },
-  async confirmDel() {
+  confirmDel: guard('del', async function () {
     this.setData({ showDel: false });
     try {
       await recordService.remove(this.data._id);
@@ -56,7 +61,7 @@ Page({
     } catch (e) {
       wx.showToast({ title: (e && e.message) || '删除失败', icon: 'none' });
     }
-  },
+  }),
   noop() { },
 
   // 照片预览：cloud:// fileID 先转临时 URL（参考 pet/detail 的做法）

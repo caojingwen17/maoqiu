@@ -6,16 +6,9 @@
 
 const { db, _, COLLECTIONS, col } = require('./db.js');
 const CONFIG = require('../config.js');
+const core = require('./familyCore.js');
 
 const FAMILY_MAX_MEMBERS = CONFIG.FAMILY_MAX_MEMBERS;
-const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 邀请 7 天有效
-
-/** 邀请过期校验：family.lastInviteAt 距今超过 7 天则拒绝 */
-function assertInviteFresh(family) {
-  if (family.lastInviteAt && Date.now() - Number(family.lastInviteAt) > INVITE_TTL_MS) {
-    throw { code: 'INVITE_EXPIRED', message: '邀请已过期，请让家人重新分享' };
-  }
-}
 
 /** 查询当前家庭空间全貌 */
 async function resolve(ctx) {
@@ -58,7 +51,7 @@ async function invite(ctx) {
     familyId,
     familyName: family.name,
     invitedBy: invitedBy ? (invitedBy.nickname || '成员') : '成员',
-    expireIn: INVITE_TTL_MS
+    expireIn: core.INVITE_TTL_MS
   };
 }
 
@@ -66,17 +59,14 @@ async function invite(ctx) {
 async function join(ctx) {
   const { openid, familyId, family, previousFamilyId } = ctx;
   if (!familyId) throw { code: 'INVALID', message: '缺少 familyId' };
-  assertInviteFresh(family);
-
-  const already = (family.members || []).some((m) => m.openid === openid);
-  if (already) throw { code: 'EXISTS', message: '你已在该家庭空间中' };
-  if (family.members && family.members.length >= FAMILY_MAX_MEMBERS) {
-    throw { code: 'FULL', message: '该家庭空间已满（5 人）' };
-  }
-
-  if (previousFamilyId && previousFamilyId !== familyId && !String(previousFamilyId).startsWith('personal_')) {
-    throw { code: 'ALREADY_IN_FAMILY', message: '你已在另一个家庭空间中，需先退出' };
-  }
+  const chk = core.checkJoin(family, {
+    openid,
+    familyId,
+    previousFamilyId,
+    petIds: ctx.payload && ctx.payload.petIds
+  });
+  if (!chk.ok) throw { code: chk.code, message: chk.message };
+  const bringPetIds = chk.petIds;
 
   const member = { openid, nickname: ctx.payload && ctx.payload.nickname || '', avatar: '', role: 'member', joinedAt: Date.now() };
   // 入空间快照：取用户全局资料（settings.nickName/avatarUrl），供成员列表与记录归属展示
@@ -98,15 +88,27 @@ async function join(ctx) {
     if ((fam.members || []).length >= FAMILY_MAX_MEMBERS) throw { code: 'FULL', message: '该家庭空间已满（5 人）' };
     await famCol.doc(familyId).update({ data: { members: _.push(member) } });
   });
-  // 将个人空间数据迁移到目标家庭，避免加入后丢失自己原有档案。
-  const personalId = previousFamilyId || ('personal_' + openid);
-  if (personalId !== familyId) {
-    for (const name of [COLLECTIONS.pets, COLLECTIONS.records, COLLECTIONS.reminders, COLLECTIONS.diaries, COLLECTIONS.inventories]) {
-      await col(name).where({ familyId: personalId }).update({ data: { familyId } });
+  // 选择性迁入（PRD §16）：被邀请人按宠物勾选要带入的档案，宠物与其名下数据
+  // （records/reminders/diaries/inventories 按 petId 挂靠）整体迁移；无宠物归属的
+  // 家庭级数据（petId 为空）不迁，未勾中的留在个人空间、加入期间不可见、退出后恢复。
+  // 迁移源固定为 personal_<openid>：服务端逐个校验勾选的宠物确实属于本人个人空间，
+  // 不信任客户端清单；settings 指针异常时也绝不可能搬走他人空间的数据。
+  const personalId = core.personalSpaceId(openid);
+  if (personalId !== familyId && bringPetIds.length) {
+    const owned = await col(COLLECTIONS.pets)
+      .where({ familyId: personalId, _id: _.in(bringPetIds) })
+      .field({ _id: true })
+      .limit(core.PET_IDS_MAX)
+      .get();
+    const verified = (owned.data || []).map((p) => p._id);
+    if (verified.length) {
+      await col(COLLECTIONS.pets).where({ familyId: personalId, _id: _.in(verified) }).update({ data: { familyId } });
+      for (const name of [COLLECTIONS.records, COLLECTIONS.reminders, COLLECTIONS.diaries, COLLECTIONS.inventories]) {
+        await col(name).where({ familyId: personalId, petId: _.in(verified) }).update({ data: { familyId } });
+      }
     }
   }
-  // 记录归属：个人空间数据合并进家庭空间（PRD §16 数据归属，v1 简化）。
-  // 注意对称行为：leave/removeMember 时数据仍留在原家庭空间不回迁，成员回到个人空间后看不到历史数据。
+  // 注意对称行为：leave/removeMember 时不回迁，带入与加入后产生的数据都留在家庭空间。
   await col(COLLECTIONS.settings).where({ _openid: openid }).update({ data: { familyId } });
   return { familyId, member };
 }
@@ -177,16 +179,38 @@ async function preview(ctx) {
     family = null;
   }
   if (!family || family.dissolved) throw { code: 'NOT_FOUND', message: '家庭空间不存在或已解散' };
-  assertInviteFresh(family);
+  // 已是本家庭成员（如自己点开自己发的邀请）：跳过过期校验直接标记，落地页据此自动回家庭首页
+  const isMember = (family.members || []).some((m) => m && m.openid === ctx.openid);
+  if (!isMember && core.inviteExpired(family)) throw { code: 'INVITE_EXPIRED', message: '邀请已过期，请让家人重新分享' };
   const petsRes = await col(COLLECTIONS.pets).where({ familyId, archived: false }).limit(3).get();
+  // 被邀请人当前可携带的宠物清单（加入确认页勾选用）：仅当请求人还在自己的个人空间时
+  // 才有意义（已在其他家庭时 join 会被拦截）；归档宠物一并返回，由勾选默认选中带入。
+  let myPets = [];
+  if (ctx.familyId === core.personalSpaceId(ctx.openid)) {
+    const mine = await col(COLLECTIONS.pets)
+      .where({ familyId: ctx.familyId })
+      .field({ name: true, breed: true, avatar: true, archived: true, order: true })
+      .orderBy('order', 'asc')
+      .limit(core.PET_IDS_MAX)
+      .get();
+    myPets = (mine.data || []).map((p) => ({
+      _id: p._id,
+      name: p.name || '',
+      breed: p.breed || '',
+      avatar: p.avatar || '',
+      archived: !!p.archived
+    }));
+  }
   return {
     familyId,
+    isMember,
     name: family.name,
     ownerName: ((family.members || []).find((m) => m.openid === family.ownerOpenid) || {}).nickname || '家庭创建者',
     memberCount: (family.members || []).length,
     // 成员昵称+头像快照（邀请落地页展示用，不含 openid）
     members: (family.members || []).slice(0, 5).map((m) => ({ nickname: m.nickname || '', avatar: m.avatar || '' })),
-    pets: (petsRes.data || []).map((p) => ({ _id: p._id, name: p.name, breed: p.breed || '', avatar: p.avatar || '' }))
+    pets: (petsRes.data || []).map((p) => ({ _id: p._id, name: p.name, breed: p.breed || '' })),
+    myPets
   };
 }
 

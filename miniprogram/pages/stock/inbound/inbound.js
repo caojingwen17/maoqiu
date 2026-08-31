@@ -2,6 +2,7 @@ const app = getApp();
 const inventoryService = require('../../../services/inventory.js');
 const recordService = require('../../../services/record.js');
 const subscription = require('../../../services/subscription.js');
+const { guard } = require('../../../utils/guard.js');
 
 const CATEGORIES = ['粮食', '猫砂', '药品', '用品'];
 const MODES = [
@@ -61,8 +62,7 @@ Page({
   onToBill(e) { this.setData({ toBill: !!e.detail.value }); },
   onPrice(e) { this.setData({ price: e.detail.value }); },
 
-  async onSave() {
-    if (this.data.saving) return;
+  onSave: guard('save', async function () {
     const toast = this.selectComponent('#toast');
     const name = (this.data.name || '').trim();
     if (!name) { if (toast) toast.show('请填写物品名称'); return; }
@@ -88,7 +88,6 @@ Page({
     const price = Number(this.data.price);
     const withBill = this.data.toBill && price > 0;
 
-    this.setData({ saving: true });
     subscription.silentRefill('inventory_save');
     try {
       if (this.data.editingId) {
@@ -120,8 +119,7 @@ Page({
       if (this.data.expireDate || threshold > 0) await subscription.guide('inventory_reminder', { once: true });
       setTimeout(() => this.goBack(), 600);
     } catch (e) {
-      this.setData({ saving: false });
       if (toast) toast.show((e && e.message) || '保存失败');
     }
-  }
+  }, { flag: 'saving' })
 });

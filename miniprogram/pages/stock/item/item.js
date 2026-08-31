@@ -2,6 +2,7 @@ const app = getApp();
 const inventoryService = require('../../../services/inventory.js');
 const subscription = require('../../../services/subscription.js');
 const { startOfDay, DAY } = require('../../../utils/date.js');
+const { guard } = require('../../../utils/guard.js');
 
 // 分类 → 图标/配色（与列表页一致）
 const CAT_STYLE = {
@@ -67,7 +68,7 @@ Page({
   onConsumeInput(e) {
     this.setData({ consumeVal: e.detail.value });
   },
-  async confirmConsume() {
+  confirmConsume: guard('consume', async function () {
     const item = this.data.item;
     const toast = this.selectComponent('#toast');
     const amount = Number(this.data.consumeVal);
@@ -84,7 +85,7 @@ Page({
     } catch (e) {
       if (toast) toast.show((e && e.message) || '扣减失败');
     }
-  },
+  }),
   onEdit() {
     wx.navigateTo({ url: '/pages/stock/inbound/inbound?id=' + this._id });
   }

@@ -19,7 +19,7 @@
           <view class="chart-fill" wx:if="{{wtFill}}" style="clip-path:polygon({{wtFill}})"></view>
           <view class="chart-line" wx:if="{{wtLine}}" style="clip-path:polygon({{wtLine}})"></view>
           <view class="chart-dot" wx:for="{{wtDots}}" wx:key="index" data-index="{{index}}" bindtap="onWtDotTap" style="left:{{item.x}}%;top:{{item.y}}%">
-            <text wx:if="{{index === wtDots.length - 1}}" class="chart-dot-val">{{item.value}}kg</text>
+            <text class="chart-dot-val {{item.valPos === 'below' ? 'below' : ''}}">{{item.value}}kg</text>
           </view>
         </view>
         <view class="heat-tip {{wtTip ? 'show' : ''}}">{{wtTip}}</view>

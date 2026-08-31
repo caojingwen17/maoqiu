@@ -120,14 +120,15 @@ const FIELD = {
 };
 
 /**
- * 时间线筛选分组（对齐原型 GROUPS，覆盖全部 18 类型 —— G4）
+ * 时间线筛选分组（对齐原型 GROUPS —— G4）
+ * 「日常」只含 daily 一类；poop/groom/walk/litter/custom 等生活类类型不归属任何分组，在「全部」中查看
  */
 const GROUPS = {
   '全部': null,
   '健康': ['weight', 'vaccine', 'deworm', 'medical', 'medication', 'surgery'],
   '喂养': ['feed', 'water', 'snack'],
   '花销': ['expense'],
-  '日常': ['daily', 'poop', 'vomit', 'groom', 'walk', 'heat', 'milestone', 'litter', 'custom']
+  '日常': ['daily']
 };
 
 /**

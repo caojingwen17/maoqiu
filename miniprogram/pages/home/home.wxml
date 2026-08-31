@@ -195,4 +195,5 @@
 
   <!-- 统一确认弹窗：忽略全部待办 / 归档宠物 -->
   <p-dialog show="{{dlg.show}}" title="{{dlg.title}}" content="{{dlg.content}}" confirm-text="{{dlg.confirmText}}" bind:confirm="onDlgConfirm" bind:cancel="closeDlg" />
+  <sub-guide />
 </view>

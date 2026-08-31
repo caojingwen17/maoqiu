@@ -1,4 +1,4 @@
-<view class="row {{hairline ? 'hairline-b' : ''}}" hover-class="press" hover-stay-time="80" bindtap="onTap">
+<view class="row {{hairline ? 'hairline-b' : ''}}" hover-class="press" hover-stay-time="80" catchtap="onTap">
   <view class="ticon" wx:if="{{icon}}" style="background:{{iconColor}}1A">
     <p-icon name="{{icon}}" color="{{iconColor}}" size="{{34}}" />
   </view>

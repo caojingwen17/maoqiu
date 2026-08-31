@@ -1,0 +1,9 @@
+<p-dialog
+  show="{{show}}"
+  title="开启微信提醒"
+  content="开启后，微信会在事项时间提醒你。若希望以后不用重复确认，可在下一步勾选「总是保持以上选择，不再询问」，再点允许。"
+  confirmText="去开启"
+  cancelText="暂不开启"
+  bind:confirm="onConfirm"
+  bind:cancel="onCancel"
+/>

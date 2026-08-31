@@ -4,6 +4,7 @@
     "p-input": "/components/input/input",
     "p-switch": "/components/switch/switch",
     "p-sheet": "/components/sheet/sheet",
-    "p-toast": "/components/toast/toast"
+    "p-toast": "/components/toast/toast",
+    "sub-guide": "/components/sub-guide/sub-guide"
   }
 }

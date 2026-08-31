@@ -3,6 +3,7 @@
     "p-icon": "/components/icon/icon",
     "p-input": "/components/input/input",
     "p-toast": "/components/toast/toast",
-    "p-cropper": "/components/cropper/index"
+    "p-cropper": "/components/cropper/index",
+    "sub-guide": "/components/sub-guide/sub-guide"
   }
 }

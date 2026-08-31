@@ -3,6 +3,7 @@ const { EXPENSE_CATEGORIES } = require('../../utils/recordMeta.js');
 const recordService = require('../../services/record.js');
 const settingsService = require('../../services/settings.js');
 const { startOfDay } = require('../../utils/date.js');
+const { guard } = require('../../utils/guard.js');
 
 Page({
   data: {
@@ -97,8 +98,7 @@ Page({
   onBudgetInput(e) {
     this.setData({ budgetInput: e.detail.value });
   },
-  async saveBudget() {
-    if (this.data.budgetSaving) return;
+  saveBudget: guard('budget', async function () {
     const toast = this.selectComponent('#toast');
     const n = Number(this.data.budgetInput);
     if (!(n > 0)) {
@@ -110,7 +110,6 @@ Page({
       return;
     }
     const budget = Math.round(n * 100) / 100;
-    this.setData({ budgetSaving: true });
     try {
       await settingsService.update({ budget });
       this.setData({ showBudget: false });
@@ -118,10 +117,8 @@ Page({
       this.loadData();
     } catch (e) {
       if (toast) toast.show((e && e.message) || '保存失败，请重试', 'warn');
-    } finally {
-      this.setData({ budgetSaving: false });
     }
-  }
+  }, { flag: 'budgetSaving' })
 });
 
 function mapExpense(r) {

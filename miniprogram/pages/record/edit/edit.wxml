@@ -132,8 +132,8 @@
   </view>
 
   <view class="foot">
-    <view class="btn btn-p" bindtap="onSave">保存</view>
-    <view class="save-more" wx:if="{{again}}" bindtap="onSaveMore">保存并再记一条</view>
+    <view class="btn btn-p {{saving ? 'btn-off' : ''}}" bindtap="onSave">{{saving ? '保存中…' : '保存'}}</view>
+    <view class="save-more {{saving ? 'btn-off' : ''}}" wx:if="{{again}}" bindtap="onSaveMore">保存并再记一条</view>
   </view>
 
   <!-- 结果卡（低频高价值类型） -->
@@ -152,4 +152,5 @@
   </p-sheet>
 
   <p-toast id="toast"></p-toast>
+  <sub-guide />
 </view>

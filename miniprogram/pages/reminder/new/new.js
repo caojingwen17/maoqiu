@@ -3,6 +3,7 @@ const { DAY, fmtDate, fmtDateCn } = require('../../../utils/date.js');
 const homeService = require('../../../services/home.js');
 const reminderService = require('../../../services/reminder.js');
 const subscription = require('../../../services/subscription.js');
+const { guard } = require('../../../utils/guard.js');
 
 // 预设事项（最后一个为自定义入口）
 const TASK_OPTS = ['梳毛', '刷牙', '洗澡', '剪指甲', '洁耳', '擦眼睛', '铲屎', '洗猫砂盆', '洗碗', '称体重', '驱虫', '复查', '自定义'];
@@ -129,8 +130,7 @@ Page({
     });
   },
 
-  async onCreate() {
-    if (this.data.saving) return;
+  onCreate: guard('save', async function () {
     const pets = this.data.pets || [];
     if (!pets.length) { wx.showToast({ title: '请先添加一只毛孩子', icon: 'none' }); return; }
     const pet = pets[Math.min(this.data.petIdx, pets.length - 1)];
@@ -155,7 +155,6 @@ Page({
       : new Date();
     t.setHours(Number(hm[0]) || 21, Number(hm[1]) || 0, 0, 0);
 
-    this.setData({ saving: true });
     // 必须在用户点击保存的同步调用栈中补充额度；未持久允许时不会弹窗。
     subscription.silentRefill('reminder_save');
     try {
@@ -183,8 +182,7 @@ Page({
       }
       setTimeout(() => this.goBack(), 500);
     } catch (e) {
-      this.setData({ saving: false });
       wx.showToast({ title: (e && e.message) || '创建失败', icon: 'none' });
     }
-  }
+  }, { flag: 'saving' })
 });

@@ -88,9 +88,10 @@
   </view>
 
   <view class="foot">
-    <view class="btn btn-p" bindtap="onSave">{{_id ? '保存' : '加入档案袋'}}</view>
+    <view class="btn btn-p {{saving ? 'btn-off' : ''}}" bindtap="onSave">{{saving ? '保存中…' : (_id ? '保存' : '加入档案袋')}}</view>
   </view>
 
   <p-toast id="toast"></p-toast>
   <p-cropper show="{{cropShow}}" src="{{cropSrc}}" bind:confirm="onCropConfirm" bind:cancel="onCropCancel" />
+  <sub-guide />
 </view>

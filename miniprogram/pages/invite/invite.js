@@ -1,6 +1,8 @@
 const app = getApp();
 const { pickAv } = require('../../utils/avatar.js');
+const { guard } = require('../../utils/guard.js');
 const familyService = require('../../services/family.js');
+const subscription = require('../../services/subscription.js');
 
 Page({
   data: {
@@ -9,7 +11,9 @@ Page({
     full: false,
     previewFailed: false,
     inviter: '家人',
-    family: { name: '', memberCount: 0, pets: [] }
+    family: { name: '', memberCount: 0, pets: [] },
+    // 我可携带的宠物（preview.myPets）：默认全选，加入时按勾选迁入家庭空间
+    myPets: []
   },
 
   onLoad(options) {
@@ -26,6 +30,11 @@ Page({
   async loadPreview(familyId) {
     try {
       const p = await familyService.preview(familyId);
+      // 已在该家庭（如自己点开自己发的邀请链接）：不展示加入确认页，直接回家庭首页
+      if (p.isMember) {
+        wx.switchTab({ url: '/pages/home/home' });
+        return;
+      }
       const pets = (p.pets || []).slice(0, 2).map((pet) => {
         const c = pickAv(pet._id);
         return { av: c.av, paw: c.paw, avatar: pet.avatar || '', name: pet.name, sub: pet.breed || '' };
@@ -38,7 +47,20 @@ Page({
       this.setData({
         family: { name: p.name, memberCount: p.memberCount, pets, memberAvatars },
         inviter: p.ownerName || '家庭创建者',
-        full: p.memberCount >= 5
+        full: p.memberCount >= 5,
+        myPets: (p.myPets || []).map((pet) => {
+          const c = pickAv(pet._id);
+          return {
+            _id: pet._id,
+            av: c.av,
+            paw: c.paw,
+            avatar: pet.avatar || '',
+            name: pet.name || '',
+            sub: pet.breed || '',
+            archived: !!pet.archived,
+            checked: true
+          };
+        })
       });
     } catch (e) {
       console.error('[invite] 加载失败', e);
@@ -52,18 +74,29 @@ Page({
     if (pages.length > 1) wx.navigateBack();
     else wx.switchTab({ url: '/pages/mine/mine' });
   },
-  async onJoin() {
+  togglePet(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({
+      myPets: this.data.myPets.map((p) => (p._id === id ? Object.assign({}, p, { checked: !p.checked }) : p))
+    });
+  },
+  onJoin: guard('join', async function () {
     const toast = this.selectComponent('#toast');
     if (!this.data.familyId || this.data.previewFailed) {
       if (toast) toast.show(this.data.previewFailed ? '预览加载失败，暂不能加入' : '邀请链接无效');
       return;
     }
+    const petIds = this.data.myPets.filter((p) => p.checked).map((p) => p._id);
     try {
-      await familyService.join(this.data.familyId);
+      await familyService.join(this.data.familyId, petIds);
       if (toast) toast.show('已加入家庭空间');
-      setTimeout(() => wx.switchTab({ url: '/pages/home/home' }), 500);
+      // 加入家庭后引导开启微信提醒：弹自绘引导弹窗（sub-guide），
+      // 用户在弹窗里点「去开启」这次新的点击才调系统授权，满足手势调用栈约束；
+      // 已持久授权/已拒绝时 guide 直接返回，不打扰。处理完（或跳过）再回首页。
+      await subscription.guide('family_join');
+      wx.switchTab({ url: '/pages/home/home' });
     } catch (e) {
       if (toast) toast.show((e && e.message) || '加入失败');
     }
-  }
+  }, { flag: 'joining' })
 });

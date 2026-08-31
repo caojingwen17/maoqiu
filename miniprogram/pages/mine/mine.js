@@ -3,6 +3,8 @@ const userService = require('../../services/user.js');
 const homeService = require('../../services/home.js');
 const { startOfDay, DAY } = require('../../utils/date.js');
 const share = require('../../utils/share.js');
+const tracker = require('../../utils/tracker.js');
+const { guard } = require('../../utils/guard.js');
 
 Page({
   data: {
@@ -47,6 +49,7 @@ Page({
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
   },
   onShow() {
+    tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'mine' });
     Promise.allSettled([this.loadProfile(), this.loadMine()]).then(() => {
       if (this.data.loading) this.setData({ loading: false });
     });
@@ -117,7 +120,7 @@ Page({
   onFamilyNickInput(e) {
     this.setData({ editFamilyNick: e.detail.value });
   },
-  async saveProfile() {
+  saveProfile: guard('profile', async function () {
     const toast = this.selectComponent('#toast');
     const payload = {
       nickName: this.data.editNickName,
@@ -151,7 +154,7 @@ Page({
     } catch (e) {
       if (toast) toast.show((e && e.message) || '保存失败');
     }
-  }
+  }, { flag: 'saving' })
 });
 
 /** 版本号：体验版/开发版 version 可能为空，回退 1.0.0 */

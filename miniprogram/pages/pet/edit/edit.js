@@ -5,6 +5,7 @@ const petService = require('../../../services/pet.js');
 const homeService = require('../../../services/home.js');
 const subscription = require('../../../services/subscription.js');
 const tracker = require('../../../utils/tracker.js');
+const { guard } = require('../../../utils/guard.js');
 
 const TRAIT_OPTIONS = ['亲人', '胆小', '活泼', '拆家', '高冷', '吃货', '粘人', '爱玩', '安静', '怕生'];
 
@@ -172,7 +173,7 @@ Page({
     this.setData({ adoptDate: e.detail.value });
   },
 
-  async onSave() {
+  onSave: guard('save', async function () {
     const toast = this.selectComponent('#toast');
     const chk = validate.petName(this.data.name);
     if (!chk.ok) { if (toast) toast.show(chk.msg); return; }
@@ -219,5 +220,5 @@ Page({
     } catch (e) {
       if (toast) toast.show((e && e.message) || '保存失败，请重试');
     }
-  }
+  }, { flag: 'saving' })
 });

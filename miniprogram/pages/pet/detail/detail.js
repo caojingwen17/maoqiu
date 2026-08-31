@@ -5,6 +5,7 @@ const homeService = require('../../../services/home.js');
 const recordService = require('../../../services/record.js');
 const diaryService = require('../../../services/diary.js');
 const tracker = require('../../../utils/tracker.js');
+const subscription = require('../../../services/subscription.js');
 
 // 头像配色（与首页一致，按 _id 稳定分配）
 const AV = [
@@ -52,6 +53,10 @@ Page({
     const diaryTab = options && options.tab === 'diary';
     const albumTab = options && options.tab === 'album';
     if (id) this.setData({ petId: id, seg: diaryTab ? 2 : (albumTab ? 1 : 0) });
+    // 浏览型触点（被邀请者高频路径）：进入详情页引导开启提醒。guide 先弹自绘/原生弹窗，
+    // 点「去开启」那一次新点击才调系统授权，故无需手势调用栈；once 是全局一次性标记，
+    // 与其他 once 来源共享，装机至多弹一次；已持久授权/持久拒绝时 guide 内部直接跳过
+    setTimeout(() => subscription.guide('pet_detail_view', { once: true }), 600);
     this.load(id, diaryTab, albumTab);
   },
 
@@ -122,7 +127,12 @@ Page({
   onSeg(e) {
     const index = Number(e.detail.index);
     this.setData({ seg: index });
-    if (index === 2 && !this._diaryLoaded) this.loadDiary(this.data.petId);
+    if (index === 2 && !this._diaryLoaded) {
+      // 点击栈内静默补订：已持久授权的用户借浏览动作补足一次性下发额度；
+      // 未持久授权时 silentRefill 是空操作，绝不会弹窗
+      subscription.silentRefill('pet_diary_tab');
+      this.loadDiary(this.data.petId);
+    }
     if (index === 1 && !this._albumLoaded) this.loadAlbum(this.data.petId);
   },
   onGroup(e) {

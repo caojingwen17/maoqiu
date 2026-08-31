@@ -30,9 +30,26 @@
           <view class="s">加入后可查看全部档案并共同记录</view>
         </view>
       </view>
+      <view class="crd inv-mine" wx:if="{{myPets.length}}">
+        <view class="inv-mine-h">携带我的宠物</view>
+        <view class="inv-mine-row" wx:for="{{myPets}}" wx:key="_id" data-id="{{item._id}}" bindtap="togglePet">
+          <view class="avatar {{item.av}} mine-av">
+            <image wx:if="{{item.avatar}}" class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+            <p-icon wx:else name="paw" color="{{item.paw}}" size="{{26}}" />
+          </view>
+          <view class="grow">
+            <view class="t inv-mine-name">{{item.name}}<text class="pill grey" wx:if="{{item.archived}}">已归档</text></view>
+            <view class="s">{{item.sub || '未填品种'}}</view>
+          </view>
+          <view class="ck {{item.checked ? 'on' : ''}}">
+            <p-icon wx:if="{{item.checked}}" name="check" color="#FFFFFF" size="{{22}}" />
+          </view>
+        </view>
+        <view class="inv-mine-note">未选中的宠物将留在你的个人空间：加入家庭期间不可见，退出后恢复可见。带入的宠物档案加入后由家庭共同维护，退出时不随人迁回。</view>
+      </view>
     </view>
     <view class="foot">
-      <view class="btn btn-p {{previewFailed ? 'inv-btn-off' : ''}}" bindtap="onJoin">加入家庭</view>
+      <view class="btn btn-p {{joining || previewFailed ? 'inv-btn-off' : ''}}" bindtap="onJoin">{{joining ? '加入中…' : '加入家庭'}}</view>
       <view class="inv-consent">加入即表示同意家庭成员可见你的记录</view>
     </view>
   </block>
@@ -50,4 +67,5 @@
   </block>
 
   <p-toast id="toast"></p-toast>
+  <sub-guide />
 </view>

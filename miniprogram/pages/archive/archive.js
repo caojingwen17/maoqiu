@@ -1,6 +1,7 @@
 const app = getApp();
 const homeService = require('../../services/home.js');
 const petService = require('../../services/pet.js');
+const { guard } = require('../../utils/guard.js');
 
 Page({
   data: {
@@ -39,7 +40,7 @@ Page({
   closeDlg() {
     this.setData({ 'dlg.show': false });
   },
-  async onDlgConfirm() {
+  onDlgConfirm: guard('restore', async function () {
     const id = this.data.dlg.restoreId;
     this.closeDlg();
     if (!id) return;
@@ -50,7 +51,7 @@ Page({
     } catch (e2) {
       wx.showToast({ title: (e2 && e2.message) || '恢复失败', icon: 'none' });
     }
-  },
+  }),
 
   goBack() {
     const pages = getCurrentPages();

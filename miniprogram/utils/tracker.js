@@ -6,6 +6,10 @@
 
 const EVENTS = {
   HOME_SHOW: 'home_show',
+  // 底部四 tab（宠物/提醒/统计/我的）每次进入记一次，作为订阅机会漏斗计数：
+  // 微信限制 requestSubscribeMessage 必须在点击栈内调用，tab 的 onShow 不属于点击栈，
+  // 不能在进 tab 时真的发起订阅，只能记录曝光时机
+  TAB_SHOW: 'tab_show',
   PET_CREATED: 'pet_created',
   RECORD_SUBMIT: 'record_submit',
   REMINDER_DONE: 'reminder_done',

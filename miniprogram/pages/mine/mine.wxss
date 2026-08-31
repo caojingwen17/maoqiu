@@ -19,27 +19,27 @@
   cursor: default;
 }
 
-/* 推荐给朋友：普通 .row 布局 + 透明 button 蒙层触发分享（button 内部会强制居中，不当布局容器用） */
-.share-wrap {
-  position: relative;
-}
-.share-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* 推荐给朋友：整行就是 button（open-type=share）。glass-easel 下 wx-button 的内建样式会把
+   width/margin 压过普通类选择器（行收缩为内容宽并被居中），关键属性须 !important 压回；
+   行内子元素样式依赖 .row 后代选择器，故保留 .row 类，布局属性在此完整覆写 */
+.share-btn {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100% !important;
+  min-width: 100%;
+  margin: 0 !important;
+  padding: 20rpx 0;
+  min-height: 97rpx;
+  gap: 26rpx;
+  text-align: left;
   background: none;
   border: 0;
-  opacity: 0;
+  border-radius: 31rpx;
+  transition: background 0.15s;
 }
-.share-mask::after {
-  border: none;
-}
-.share-mask-hover {
-  opacity: 1;
+.share-btn:active {
   background: var(--fill);
 }
 

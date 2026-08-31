@@ -5,8 +5,14 @@
 const api = require('./api.js');
 const { ACTIONS } = require('./constants.js');
 
+/** 会话级幂等键：一次「填写表单」共享一键，保存成功后由调用方换新键。
+ *  双击/在飞重复提交共享同一 requestId，云端按 familyId+requestId 去重兜底。 */
+function newRequestId() {
+  return 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+}
+
 function create(payload) {
-  const p = Object.assign({}, payload, { requestId: payload && payload.requestId || ('rec_' + Date.now() + '_' + Math.random().toString(36).slice(2)) });
+  const p = Object.assign({}, payload, { requestId: (payload && payload.requestId) || newRequestId() });
   return api.call(ACTIONS.RECORD_CREATE, p);
 }
 
@@ -50,6 +56,7 @@ function get(_id) {
 }
 
 module.exports = {
+  newRequestId,
   create,
   update,
   remove,

@@ -73,4 +73,5 @@
     <view class="btn btn-p {{saving ? 'btn-disabled' : ''}}" bindtap="onSave">{{saving ? '保存中…' : (editingId ? '保存修改' : '保存')}}</view>
   </view>
   <p-toast id="toast"></p-toast>
+  <sub-guide />
 </view>

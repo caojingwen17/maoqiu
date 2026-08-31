@@ -91,4 +91,5 @@
   <p-fab bind:tap="goNew"></p-fab>
   <p-toast id="toast"></p-toast>
   <paw-loading wx:if="{{loading}}" primary="{{true}}" />
+  <sub-guide />
 </view>

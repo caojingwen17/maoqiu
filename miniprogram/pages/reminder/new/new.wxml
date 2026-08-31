@@ -74,4 +74,5 @@
   <view class="foot">
     <view class="btn btn-p {{saving ? 'btn-loading' : ''}}" bindtap="onCreate">{{editingId ? '保存提醒' : '创建提醒'}}</view>
   </view>
+  <sub-guide />
 </view>

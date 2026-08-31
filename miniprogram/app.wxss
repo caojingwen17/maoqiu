@@ -301,6 +301,10 @@ button::after {
 .btn-s:active {
   opacity: 0.75;
 }
+/* 处理中禁用态：配合 utils/guard.js 的 flag（点击仍会发生，由守卫忽略） */
+.btn-off {
+  opacity: 0.5;
+}
 
 /* ============ ⑨ 分段选择器 ============ */
 .seg {

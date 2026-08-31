@@ -95,6 +95,10 @@ function request(source) {
 }
 
 /** 首次显式入口：不会阻断业务，用户可以选择暂不开启。 */
+let guideRef = null; // 当前页面挂载的 sub-guide 组件实例；有则走自绘弹窗，否则降级原生弹窗
+function _registerGuide(c) { guideRef = c; }
+function _unregisterGuide(c) { if (guideRef === c) guideRef = null; }
+
 function guide(source, options) {
   if (state.status === 'accept' && state.persistent) return Promise.resolve({ result: 'already' });
   if (state.persistent && (state.status === 'reject' || state.status === 'ban')) return Promise.resolve({ result: state.status });
@@ -104,10 +108,12 @@ function guide(source, options) {
     try { wx.setStorageSync(GUIDE_KEY, 1); } catch (e) { /* ignore */ }
   }
   tracker.track(tracker.EVENTS.SUBSCRIPTION_GUIDE_SHOW, { source });
+  // 优先走自绘弹窗（sub-guide 组件，页面已挂载时）
+  if (guideRef) return guideRef.open(source);
   return new Promise((resolve) => {
     wx.showModal({
       title: '开启微信提醒',
-      content: '开启后，微信会在事项时间提醒你。若希望以后不用重复确认，可在下一步勾选“总是保持以上选择，不再询问”，再点允许。暂不开启不影响使用。',
+      content: '开启后，微信会在事项时间提醒你。若希望以后不用重复确认，可在下一步勾选“总是保持以上选择，不再询问”，再点允许。',
       confirmText: '去开启',
       cancelText: '暂不开启',
       success: (res) => {
@@ -139,5 +145,7 @@ module.exports = {
   guide,
   silentRefill,
   openSettings,
-  getState
+  getState,
+  _registerGuide,
+  _unregisterGuide
 };

@@ -2,6 +2,7 @@ const app = getApp();
 const statsService = require('../../services/stats.js');
 const { startOfDay, DAY } = require('../../utils/date.js');
 const share = require('../../utils/share.js');
+const tracker = require('../../utils/tracker.js');
 
 const RANGES = ['month', 'half_year', 'year'];
 const RANGE_LABEL = { month: '本月', half_year: '半年', year: '今年' };
@@ -65,6 +66,7 @@ Page({
   },
 
   onShow() {
+    tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'stats' });
     // 首次进入时 onLoad 已触发加载，跳过避免重复请求
     if (this._firstShow) {
       this._firstShow = false;
@@ -205,12 +207,20 @@ function buildWeight(points, name, range) {
   const span = max - min || 1;
   const n = points.length;
   // x 均匀分布（留边），y 映射到 15%..85%（越小越靠上）
-  const coords = points.map((p, i) => ({
-    x: n === 1 ? 50 : Math.round((4 + (92 * i) / (n - 1)) * 10) / 10,
-    y: Math.round((85 - ((p.value - min) / span) * 70) * 10) / 10,
-    value: p.value,
-    dateLabel: wtDateLabel(p.date)
-  }));
+  // valPos：数值标签上下交错防水平重叠；贴近上下边缘的点强制往内侧放
+  const coords = points.map((p, i) => {
+    const y = Math.round((85 - ((p.value - min) / span) * 70) * 10) / 10;
+    let valPos = i % 2 === 0 ? 'above' : 'below';
+    if (y <= 24) valPos = 'below';
+    else if (y >= 76) valPos = 'above';
+    return {
+      x: n === 1 ? 50 : Math.round((4 + (92 * i) / (n - 1)) * 10) / 10,
+      y,
+      value: p.value,
+      valPos,
+      dateLabel: wtDateLabel(p.date)
+    };
+  });
   const t = 2.2; // 折线半宽（%）
   const top = coords.map((c) => c.x + '% ' + Math.max(c.y - t, 0) + '%').join(', ');
   const bottom = coords.slice().reverse().map((c) => c.x + '% ' + Math.min(c.y + t, 100) + '%').join(', ');

@@ -6,6 +6,7 @@ const homeService = require('../../services/home.js');
 const subscription = require('../../services/subscription.js');
 const { fmtDateCn } = require('../../utils/date.js');
 const { SPECIES } = require('../../utils/dict.js');
+const { guard } = require('../../utils/guard.js');
 
 /** 物种英文 key -> 中文名；拼品种展示 */
 function speciesLabel(pet) {
@@ -107,8 +108,7 @@ Page({
   },
 
   // stay=false 保存后返回；stay=true「保存并再记一条」：重置数值输入，停留本页继续记
-  async _save(stay) {
-    if (this.data.saving) return;
+  _save: guard('save', async function (stay) {
     const toast = this.selectComponent('#toast');
     if (!this.data.petId) {
       if (toast) toast.show('请先添加一只毛孩子', 'warn');
@@ -120,7 +120,6 @@ Page({
       return;
     }
     subscription.silentRefill(stay ? 'weight_save_more' : 'weight_save');
-    this.setData({ saving: true });
     try {
       await recordService.create({
         petId: this.data.petId,
@@ -145,7 +144,6 @@ Page({
         // 再记一条：清空数值、刷新「上次记录」为刚保存的这条，宠物与日期（今天）保持不变
         this._prevWeight = chk.value;
         this.setData({
-          saving: false,
           value: '',
           prev: { date: fmtDateCn(Date.now()), val: chk.value + ' kg', diff: '' }
         });
@@ -154,9 +152,8 @@ Page({
       }
     } catch (e) {
       if (toast) toast.show((e && e.message) || '保存失败，请重试', 'warn');
-      this.setData({ saving: false });
     }
-  },
+  }, { flag: 'saving' }),
 
   onSave() {
     this._save(false);

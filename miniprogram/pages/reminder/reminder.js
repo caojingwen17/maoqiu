@@ -5,6 +5,7 @@ const reminderService = require('../../services/reminder.js');
 const subscription = require('../../services/subscription.js');
 const tracker = require('../../utils/tracker.js');
 const share = require('../../utils/share.js');
+const { guard } = require('../../utils/guard.js');
 
 // 完成面板「同时记一笔」：提醒分类 → 记录类型
 const DONE_RECORD_TYPE = {
@@ -35,6 +36,7 @@ Page({
   },
 
   onShow() {
+    tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'reminder' });
     this.refreshSubscription();
     this.loadData();
   },
@@ -105,7 +107,7 @@ Page({
     });
   },
 
-  async onDoneChoice(e) {
+  onDoneChoice: guard('doneChoice', async function (e) {
     const choice = e.currentTarget.dataset.choice;
     const t = this.data.pending;
     this.setData({ showSheet: false });
@@ -143,7 +145,7 @@ Page({
     } catch (err) {
       if (toast) toast.show((err && err.message) || '操作失败');
     }
-  },
+  }, { cooldown: 0 }),
 
   onEdit(e) {
     const gi = e.currentTarget.dataset.gi;

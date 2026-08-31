@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "p-dialog": "/components/dialog/dialog"
+  }
+}

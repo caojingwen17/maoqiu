@@ -42,16 +42,20 @@
   transform: translate(-50%, -50%);
   box-sizing: border-box;
 }
-/* 最新一点的常驻体重标签（跟随最后一个 dot） */
+/* 每个节点常驻体重标签（跟随 dot，上下交错防重叠） */
 .chart-dot-val {
   position: absolute;
-  bottom: 20rpx;
+  bottom: 18rpx;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
   color: var(--primary);
+}
+.chart-dot-val.below {
+  bottom: auto;
+  top: 18rpx;
 }
 .chart-empty {
   height: 211rpx;

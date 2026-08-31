@@ -1,5 +1,6 @@
 {
   "usingComponents": {
-    "p-icon": "/components/icon/icon"
+    "p-icon": "/components/icon/icon",
+    "sub-guide": "/components/sub-guide/sub-guide"
   }
 }

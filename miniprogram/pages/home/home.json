@@ -7,6 +7,7 @@
     "paw-loading": "/components/paw-loading/paw-loading",
     "p-switch": "/components/switch/switch",
     "p-dialog": "/components/dialog/dialog",
-    "p-swipe": "/components/swipe-actions/swipe-actions"
+    "p-swipe": "/components/swipe-actions/swipe-actions",
+    "sub-guide": "/components/sub-guide/sub-guide"
   }
 }

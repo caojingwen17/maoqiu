@@ -4,9 +4,10 @@
   "description": "毛球档案袋 PawLog 单云函数（多 action 路由）",
   "main": "index.js",
   "scripts": {
-    "test": "node __tests__/reminder.test.js && node __tests__/diary.test.js",
+    "test": "node __tests__/reminder.test.js && node __tests__/diary.test.js && node __tests__/family.test.js",
     "test:reminder": "node __tests__/reminder.test.js",
-    "test:diary": "node __tests__/diary.test.js"
+    "test:diary": "node __tests__/diary.test.js",
+    "test:family": "node __tests__/family.test.js"
   },
   "dependencies": {
     "wx-server-sdk": "~2.6.3"
