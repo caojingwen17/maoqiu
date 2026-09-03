@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="nav">
-    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="{{textColor}}" size="{{44}}" /></view>
     <view class="nt">记{{name}}</view>
   </view>
 
@@ -56,9 +56,9 @@
       </view>
     </block>
 
-    <!-- 其余类型：字段卡（单卡 + 发丝线分隔）+ 日期/照片/备注卡 -->
+    <!-- 其余类型：字段卡（无字段类型如铲屎不渲染空卡）+ 日期/照片/备注卡 -->
     <block wx:else>
-      <view class="crd">
+      <view class="crd" wx:if="{{fields.length}}">
         <block wx:for="{{fields}}" wx:for-item="f" wx:for-index="fi" wx:key="label">
           <view wx:if="{{fi > 0}}" class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
           <!-- 单选 chips -->

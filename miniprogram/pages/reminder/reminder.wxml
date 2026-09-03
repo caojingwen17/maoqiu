@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
 
   <!-- 大标题（新建入口走右下角 FAB，避让右上角微信胶囊） -->
@@ -10,13 +10,15 @@
     <view class="guide" bindtap="onSubscriptionGuide">
       <view class="guide-ic"><p-icon name="bell" color="#4A7FC7" size="36" /></view>
       <view class="grow">
-        <view class="t" wx:if="{{subscriptionEnabled}}">微信提醒已开启</view>
+        <view class="t" wx:if="{{subscriptionSwOff}}">微信通知已关闭</view>
+        <view class="t" wx:elif="{{subscriptionEnabled}}">微信提醒已开启</view>
         <view class="t" wx:elif="{{subscriptionRejected}}">微信提醒已关闭</view>
         <view class="t" wx:else>开启微信提醒</view>
-        <view class="s" wx:if="{{subscriptionRejected}}">点此进入微信设置重新开启</view>
+        <view class="s" wx:if="{{subscriptionSwOff}}">微信的通知总开关已关闭，到点提醒无法送达，点此去开启</view>
+        <view class="s" wx:elif="{{subscriptionRejected}}">点此进入微信设置重新开启</view>
         <view class="s" wx:else>到点提醒待办，不影响小程序内使用</view>
       </view>
-      <text class="guide-go">{{subscriptionRejected ? '去设置' : (subscriptionEnabled ? '查看' : '开启')}}</text>
+      <text class="guide-go">{{subscriptionRejected || subscriptionSwOff ? '去设置' : (subscriptionEnabled ? '查看' : '开启')}}</text>
     </view>
   </view>
 
@@ -88,7 +90,7 @@
     </block>
   </p-sheet>
 
-  <p-fab bind:tap="goNew"></p-fab>
+  <p-fab bind:tap="goNew" color="{{onPrimary}}"></p-fab>
   <p-toast id="toast"></p-toast>
   <paw-loading wx:if="{{loading}}" primary="{{true}}" />
   <sub-guide />

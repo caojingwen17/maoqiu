@@ -28,10 +28,19 @@ function parseSetting(res) {
   const settings = (res && res.subscriptionsSetting) || {};
   const item = settings.itemSettings || {};
   const status = item[TEMPLATE_ID];
+  // 微信「订阅消息」总开关：false = 用户在微信设置里关掉了通知，授权记录虽在但消息不送达。
+  // 未回传该字段的环境按开启处理，避免误报“已关闭”
+  const mainSwitch = settings.mainSwitch !== false;
   if (status === 'accept' || status === 'reject' || status === 'ban') {
-    return { status, persistent: true };
+    return { status, persistent: true, mainSwitch };
   }
-  return { status: state.status === 'accept' && state.persistent ? 'accept' : 'unknown', persistent: false };
+  // itemSettings 查不到该模板：可能是开发者工具不回传、或用户授权时未勾选“总是保持”。
+  // 不能据此降级——否则已确认的持久授权会被洗掉，导致引导弹窗反复出现。
+  // 本地有授权记录就原样保留（一次性授权保持非持久，引导仍会按设计出现）；完全没有记录才视为未知。
+  if (state.status === 'accept' || state.status === 'reject' || state.status === 'ban') {
+    return { status: state.status, persistent: state.persistent, mainSwitch };
+  }
+  return { status: 'unknown', persistent: false, mainSwitch };
 }
 
 function refresh() {
@@ -77,7 +86,9 @@ function request(source) {
       tmplIds: [TEMPLATE_ID],
       success: (res) => {
         const result = res && res[TEMPLATE_ID] ? res[TEMPLATE_ID] : 'reject';
-        if (result === 'accept' || result === 'reject' || result === 'ban') save({ status: result, persistent: false });
+        // 保留现有持久标记（refresh 会用 getSetting 权威校正），避免 refresh 未回传时把已勾选
+        // “总是保持”的持久授权先洗成非持久
+        if (result === 'accept' || result === 'reject' || result === 'ban') save({ status: result, persistent: state.persistent });
         refresh().then((next) => {
           const persistentState = next.persistent ? (result === 'accept' ? 'accept' : 'reject') : 'once';
           report(requestId, result, persistentState, source);

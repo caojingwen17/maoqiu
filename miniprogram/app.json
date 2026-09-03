@@ -24,15 +24,15 @@
   "window": {
     "navigationStyle": "custom",
     "backgroundTextStyle": "dark",
-    "backgroundColor": "#FAF6EF",
-    "backgroundColorTop": "#FAF6EF",
-    "backgroundColorBottom": "#FAF6EF"
+    "backgroundColor": "@bgColor",
+    "backgroundColorTop": "@bgColorTop",
+    "backgroundColorBottom": "@bgColorBottom"
   },
   "tabBar": {
-    "color": "#B9AE9E",
-    "selectedColor": "#C08A4E",
-    "backgroundColor": "#FAF6EF",
-    "borderStyle": "black",
+    "color": "@tabColor",
+    "selectedColor": "@tabSelectedColor",
+    "backgroundColor": "@tabBg",
+    "borderStyle": "@tabBorder",
     "list": [
       {
         "pagePath": "pages/home/home",

@@ -9,14 +9,31 @@ const { guard } = require('../../../utils/guard.js');
 
 const TRAIT_OPTIONS = ['亲人', '胆小', '活泼', '拆家', '高冷', '吃货', '粘人', '爱玩', '安静', '怕生'];
 
+/** 身份选项拆成「符号 + 文字」：♀/♂ 符号字形在 iOS 上基线与中文不齐，
+ *  拆开后符号用内联 SVG 图片渲染（见 app.wxss .chip .g-sym），保证各端一致。
+ *  非性别选项（如鱼的「数量」）sym 为空。 */
+function identityChipsOf(form) {
+  return ((form && form.identityOpts) || []).map((s) => {
+    const m = /^([♀♂])\s+(.+)$/.exec(s);
+    return m ? { sym: m[1], cls: m[1] === '♀' ? 'female' : 'male', label: m[2] } : { sym: '', cls: '', label: s };
+  });
+}
+
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     title: '新增宠物',
     _id: '',
     speciesKeys: SPECIES.map((s) => s.name),
     species: '猫',
     form: SPECIES_FORM['猫'],
+    identityChips: identityChipsOf(SPECIES_FORM['猫']),
     speciesIdx: 0,
     name: '',
     birthDate: '',
@@ -35,6 +52,9 @@ Page({
     cropSrc: ''
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad(options) {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
     if (options && options.id) {
@@ -55,6 +75,7 @@ Page({
       this.setData({
         species,
         form,
+        identityChips: identityChipsOf(form),
         speciesIdx: this.data.speciesKeys.indexOf(species),
         name: pet.name || '',
         avatar: pet.avatar || '',
@@ -102,7 +123,7 @@ Page({
   onSpecies(e) {
     const name = e.currentTarget.dataset.name;
     const idx = this.data.speciesKeys.indexOf(name);
-    this.setData({ species: name, speciesIdx: idx, form: SPECIES_FORM[name], identityIdx: 1 });
+    this.setData({ species: name, speciesIdx: idx, form: SPECIES_FORM[name], identityChips: identityChipsOf(SPECIES_FORM[name]), identityIdx: 1 });
   },
   onIdentity(e) {
     this.setData({ identityIdx: Number(e.currentTarget.dataset.index) });

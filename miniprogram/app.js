@@ -22,8 +22,15 @@ App({
     }
     // 只读取订阅状态，不在生命周期中申请授权；授权必须由用户点击触发。
     try { require('./services/subscription.js').refresh(); } catch (e) { /* ignore */ }
+    // 深浅主题：应用本地偏好（tabBar 运行时配色）并监听系统主题变化
+    try { require('./utils/theme.js').init(); } catch (e) { /* ignore */ }
     this.initWindow();
     this.boot();
+  },
+
+  onShow() {
+    // 切前台时原生 tabBar/窗口配色可能被微信重置，重申主题偏好
+    try { require('./utils/theme.js').applyTabBar(); } catch (e) { /* ignore */ }
   },
 
   // 启动守卫：检测是否被移出/解散（settings.kickedFrom），用于全屏拦截

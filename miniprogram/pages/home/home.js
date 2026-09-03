@@ -36,8 +36,14 @@ const TODO_TYPE = {
   checkup: 'medical', litter: 'litter', weight: 'weight', custom: 'custom'
 };
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     loading: true,
     loadError: false,
@@ -82,6 +88,7 @@ Page({
   },
 
   onShow() {
+    theme.attach(this);
     this.setData({
       kicked: app.globalData.kicked === 'kicked',
       kickedName: app.globalData.kickedName || ''

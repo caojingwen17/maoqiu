@@ -46,7 +46,7 @@
   height: 62rpx;
   line-height: 62rpx;
 }
-.breed-ph {
+.input-ph {
   color: var(--t3);
   font-weight: 400;
 }

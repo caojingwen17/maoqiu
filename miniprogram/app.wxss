@@ -18,6 +18,10 @@ page {
   --primary: #3E362C;
   --primary-pressed: #322B22;
   --primary-tint: rgba(62, 54, 44, 0.06);
+  --on-primary: #FAF6EF; /* primary/pop 实底上的文字/图标色（深色下 primary 翻转成浅色，文字须换深色） */
+  --toast-bg: rgba(250, 246, 239, 0.92);
+  --shimmer: rgba(255, 255, 255, 0.75);
+  --seg-on-bg: #FFFFFF; /* 分段控件选中滑块底 */
   --pop: #C08A4E;
   --pop-deep: #9C6B33;
   --pop-tint: rgba(192, 138, 78, 0.10);
@@ -51,7 +55,8 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
-/* 深色模式（依据设计语言 v2.2 §10） */
+/* 深色模式（依据设计语言 v2.2 §10；跟随系统）。
+   注意：手动切换（我的·深浅切换）走 .theme-dark / .theme-light 类（见下方），两处 token 须同步维护 */
 @media (prefers-color-scheme: dark) {
   page {
     --bg: #0E0E0D;
@@ -65,12 +70,79 @@ page {
     --primary: #EAE4D8;
     --primary-pressed: #D8D1C2;
     --primary-tint: rgba(234, 228, 216, 0.10);
+    --on-primary: #262019;
     --pop: #D3A266;
     --pop-deep: #D3A266;
     --pop-tint: rgba(211, 162, 102, 0.14);
+    /* 状态色提亮一档，保证深底上的可读性 */
+    --success: #4CC272;
+    --danger: #E0684F;
+    --info: #7AA3E8;
+    --pink: #E191B4;
+    --toast-bg: rgba(28, 28, 26, 0.92);
+    --shimmer: rgba(255, 255, 255, 0.10);
+    --seg-on-bg: #3A3A35;
     background: var(--bg);
     color: var(--text);
   }
+}
+
+/* 手动深浅切换（我的·深浅切换）：挂在页面根节点上。
+   CSS 变量取最近祖先的值，类节点必然覆盖 page 节点上的媒体查询结果：
+   - .theme-dark：系统浅色时强制深色
+   - .theme-light：系统深色时强制浅色（把浅色 token 重新钉回来）
+   token 与上方两个 page 块保持一致，改动须三处同步 */
+.theme-dark {
+  --bg: #0E0E0D;
+  --card: #1C1C1A;
+  --fill: rgba(255, 255, 255, 0.07);
+  --fill-deep: rgba(255, 255, 255, 0.11);
+  --text: #F0F0EE;
+  --t2: #9A9A95;
+  --t3: #5E5E5A;
+  --line: rgba(255, 255, 255, 0.09);
+  --primary: #EAE4D8;
+  --primary-pressed: #D8D1C2;
+  --primary-tint: rgba(234, 228, 216, 0.10);
+  --on-primary: #262019;
+  --pop: #D3A266;
+  --pop-deep: #D3A266;
+  --pop-tint: rgba(211, 162, 102, 0.14);
+  --success: #4CC272;
+  --danger: #E0684F;
+  --info: #7AA3E8;
+  --pink: #E191B4;
+  --toast-bg: rgba(28, 28, 26, 0.92);
+  --shimmer: rgba(255, 255, 255, 0.10);
+  --seg-on-bg: #3A3A35;
+  background: var(--bg);
+  color: var(--text);
+}
+.theme-light {
+  --bg: #FAF6EF;
+  --card: #FFFFFF;
+  --fill: rgba(70, 55, 30, 0.045);
+  --fill-deep: rgba(70, 55, 30, 0.085);
+  --text: #2C2620;
+  --t2: #7E7264;
+  --t3: #B9AE9E;
+  --line: rgba(70, 55, 30, 0.08);
+  --primary: #3E362C;
+  --primary-pressed: #322B22;
+  --primary-tint: rgba(62, 54, 44, 0.06);
+  --on-primary: #FAF6EF;
+  --pop: #C08A4E;
+  --pop-deep: #9C6B33;
+  --pop-tint: rgba(192, 138, 78, 0.10);
+  --success: #34A05C;
+  --danger: #C24E3A;
+  --info: #4A7FC7;
+  --pink: #D4789B;
+  --toast-bg: rgba(250, 246, 239, 0.92);
+  --shimmer: rgba(255, 255, 255, 0.75);
+  --seg-on-bg: #FFFFFF; /* 分段控件选中滑块底 */
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* ============ ② 基础重置（对齐原型 * 选择器） ============ */
@@ -101,7 +173,7 @@ button::after {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--bg); /* 根节点自绘背景：手动深浅切换时覆盖 page 节点的系统底色 */
 }
 .statusbar {
   flex: none;
@@ -289,7 +361,7 @@ button::after {
 }
 .btn-p {
   background: var(--primary);
-  color: #FAF6EF;
+  color: var(--on-primary);
 }
 .btn-p:active {
   background: var(--primary-pressed);
@@ -326,7 +398,7 @@ button::after {
   transition: all 0.2s var(--snap);
 }
 .seg .seg-item.on {
-  background: #ffffff;
+  background: var(--seg-on-bg);
   color: var(--text);
   font-weight: 600;
   box-shadow: 0 4rpx 13rpx rgba(62, 54, 44, 0.08);
@@ -355,6 +427,11 @@ button::after {
   color: var(--text);
   font-weight: 500;
 }
+/* 空态占位：与输入框 placeholder 一致的浅灰正常字重，区别于已填值 */
+.frow .val.ph {
+  color: var(--t3);
+  font-weight: 400;
+}
 .frow .frow-body {
   flex: 1;
 }
@@ -370,6 +447,9 @@ button::after {
 }
 .chip {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 26rpx;
   padding: 13rpx 31rpx;
   border-radius: 999rpx;
@@ -377,12 +457,24 @@ button::after {
   color: var(--t2);
   transition: all 0.2s var(--snap);
 }
+/* 性别符号：iOS 上 ♀/♂ 字符字形基线与中文不一致，改用内联 SVG 图片保证两端渲染一致 */
+.chip .g-sym { width: 20rpx; height: 20rpx; margin-right: 8rpx; background-repeat: no-repeat; background-size: contain; background-position: center; }
+.chip .g-sym.female { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjN0U3MjY0JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJz48Y2lyY2xlIGN4PScxMicgY3k9JzguNScgcj0nNS41Jy8+PHBhdGggZD0nTTEyIDE0djdNOC41IDE4aDcnLz48L3N2Zz4="); }
+.chip .g-sym.male { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjN0U3MjY0JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48Y2lyY2xlIGN4PSc5JyBjeT0nMTUnIHI9JzUuNScvPjxwYXRoIGQ9J00xMyAxMWw3LTdNMTQgNGg2djYnLz48L3N2Zz4="); }
+.chip.on .g-sym.female { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjRkFGNkVGJyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJz48Y2lyY2xlIGN4PScxMicgY3k9JzguNScgcj0nNS41Jy8+PHBhdGggZD0nTTEyIDE0djdNOC41IDE4aDcnLz48L3N2Zz4="); }
+.chip.on .g-sym.male { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjRkFGNkVGJyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48Y2lyY2xlIGN4PSc5JyBjeT0nMTUnIHI9JzUuNScvPjxwYXRoIGQ9J00xMyAxMWw3LTdNMTQgNGg2djYnLz48L3N2Zz4="); }
+@media (prefers-color-scheme: dark) {
+  .chip .g-sym.female { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjOUE5QTk1JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJz48Y2lyY2xlIGN4PScxMicgY3k9JzguNScgcj0nNS41Jy8+PHBhdGggZD0nTTEyIDE0djdNOC41IDE4aDcnLz48L3N2Zz4="); }
+  .chip .g-sym.male { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjOUE5QTk1JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48Y2lyY2xlIGN4PSc5JyBjeT0nMTUnIHI9JzUuNScvPjxwYXRoIGQ9J00xMyAxMWw3LTdNMTQgNGg2djYnLz48L3N2Zz4="); }
+  .chip.on .g-sym.female { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjMjYyMDE5JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJz48Y2lyY2xlIGN4PScxMicgY3k9JzguNScgcj0nNS41Jy8+PHBhdGggZD0nTTEyIDE0djdNOC41IDE4aDcnLz48L3N2Zz4="); }
+  .chip.on .g-sym.male { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjMjYyMDE5JyBzdHJva2Utd2lkdGg9JzIuNCcgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48Y2lyY2xlIGN4PSc5JyBjeT0nMTUnIHI9JzUuNScvPjxwYXRoIGQ9J00xMyAxMWw3LTdNMTQgNGg2djYnLz48L3N2Zz4="); }
+}
 .chip:active {
   background: var(--fill-deep);
 }
 .chip.on {
   background: var(--primary);
-  color: #FAF6EF;
+  color: var(--on-primary);
   font-weight: 600;
 }
 
@@ -412,6 +504,15 @@ button::after {
 }
 .sw.on i {
   left: 44rpx;
+}
+/* 深色下 --primary 翻转为浅米色，与白色滑块对比不足，ON 轨道改用 pop 橙（浅色主题不变） */
+@media (prefers-color-scheme: dark) {
+  .sw.on {
+    background: var(--pop);
+  }
+}
+.theme-dark .sw.on {
+  background: var(--pop);
 }
 
 /* ============ ⑬ 进度条 ============ */
@@ -452,7 +553,7 @@ button::after {
   height: 44rpx;
   border-radius: 50%;
   background: var(--primary);
-  color: #FAF6EF;
+  color: var(--on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -728,7 +829,7 @@ button::after {
   pointer-events: none;
   visibility: hidden;
   z-index: 50;
-  background: rgba(250, 246, 239, 0.92);
+  background: var(--toast-bg);
   backdrop-filter: blur(16px);
   border-radius: 999rpx;
   padding: 20rpx 40rpx;
@@ -786,7 +887,7 @@ button::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.75) 50%, transparent 70%);
+  background: linear-gradient(100deg, transparent 30%, var(--shimmer) 50%, transparent 70%);
   animation: shim 1.4s infinite;
   transform: translateX(-100%);
 }
@@ -867,7 +968,7 @@ button::after {
   height: 110rpx;
   border-radius: 50%;
   background: var(--primary);
-  color: #FAF6EF;
+  color: var(--on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -909,6 +1010,13 @@ button::after {
   .glass {
     background: rgba(14, 14, 13, 0.78);
   }
+}
+/* 手动切换时 glass 同步强制（与上方媒体查询等价，token 改动两处同步） */
+.theme-dark .glass {
+  background: rgba(14, 14, 13, 0.78);
+}
+.theme-light .glass {
+  background: rgba(250, 246, 239, 0.82);
 }
 
 /* 通用：小圆点 */

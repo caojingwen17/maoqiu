@@ -13,8 +13,14 @@ const DONE_RECORD_TYPE = {
   checkup: 'medical', stock: 'expense', litter: 'litter', custom: 'custom'
 };
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     seg: 0,
     segItems: ['进行中', '已完成'],
@@ -23,6 +29,7 @@ Page({
     pets: [],
     subscriptionEnabled: false,
     subscriptionRejected: false,
+    subscriptionSwOff: false, // 授权仍在但微信订阅消息总开关被关
     loadError: false,
     loading: true, // 首次加载中（paw-loading 全屏动效）
     showSheet: false,
@@ -36,6 +43,7 @@ Page({
   },
 
   onShow() {
+    theme.attach(this);
     tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'reminder' });
     this.refreshSubscription();
     this.loadData();
@@ -44,7 +52,11 @@ Page({
   async refreshSubscription() {
     await subscription.refresh();
     const s = subscription.getState();
-    this.setData({ subscriptionEnabled: s.status === 'accept' && s.persistent, subscriptionRejected: s.persistent && (s.status === 'reject' || s.status === 'ban') });
+    this.setData({
+      subscriptionEnabled: s.status === 'accept' && s.persistent && s.mainSwitch !== false,
+      subscriptionRejected: s.persistent && (s.status === 'reject' || s.status === 'ban'),
+      subscriptionSwOff: s.status === 'accept' && s.persistent && s.mainSwitch === false
+    });
   },
 
   async onSubscriptionGuide() {
@@ -116,6 +128,11 @@ Page({
     const toast = this.selectComponent('#toast');
     try {
       if (choice === 'record') {
+        // 称体重：走独立体重表单页（大数字键盘），与首页待办行为一致，保存后联动完成原提醒
+        if (t.category === 'weight') {
+          wx.navigateTo({ url: '/pages/weight/weight?petId=' + (t.petId || '') + '&reminderId=' + t.id });
+          return;
+        }
         const type = DONE_RECORD_TYPE[t.category] || 'custom';
         let url = '/pages/record/edit/edit?type=' + type + '&petId=' + (t.petId || '') + '&reminderId=' + t.id;
         // 洗护类（梳毛/刷牙/剪指甲）：预选中对应项目

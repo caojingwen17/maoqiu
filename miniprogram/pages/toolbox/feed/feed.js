@@ -16,8 +16,14 @@ const SPECIES_OPTS = ['猫', '狗'];
 const AGE_OPTS = ['幼年', '成年', '老年'];
 const NEUTER_OPTS = ['已绝育', '未绝育'];
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     speciesOpts: SPECIES_OPTS,
     ageOpts: AGE_OPTS,
@@ -31,6 +37,9 @@ Page({
     note: '按 RER/MER 标准公式估算，干粮按 3.8 kcal/g 折算；不同品牌热量差异较大，请以粮袋建议与兽医意见为准'
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad() {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
   },

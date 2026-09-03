@@ -1,4 +1,4 @@
-<view class="page" bindtouchstart="onPageTouch">
+<view class="page {{themeClass}}" bindtouchstart="onPageTouch">
   <!-- 被移出/解散全屏拦截 -->
   <view class="kicked-mask" wx:if="{{kicked}}">
     <view class="kicked-card">
@@ -90,7 +90,7 @@
       <!-- 宠物卡片：单宠展示信息更完整，多宠保持紧凑卡片墙 -->
       <block wx:if="{{pets.length === 1}}">
         <view class="pet-card pet-card-single {{pets[0].archived ? 'archived' : ''}}" data-id="{{pets[0].id}}" bindtap="onPet" bindlongpress="onPetLong">
-          <view class="mp" wx:if="{{!pets[0].archived}}" data-id="{{pets[0].id}}" catchtap="onQuickAdd"><p-icon name="plus" color="#FAF6EF" size="{{24}}" /></view>
+          <view class="mp" wx:if="{{!pets[0].archived}}" data-id="{{pets[0].id}}" catchtap="onQuickAdd"><p-icon name="plus" color="{{onPrimary}}" size="{{24}}" /></view>
           <view class="single-head">
             <view class="avatar {{pets[0].av}} single-avatar">
               <image wx:if="{{pets[0].avatar}}" class="avatar-img pet-avatar-img" src="{{pets[0].avatar}}" mode="aspectFit" />
@@ -112,7 +112,7 @@
       </block>
       <view class="pet-grid" wx:else>
         <view class="pet-card {{item.archived ? 'archived' : ''}}" wx:for="{{pets}}" wx:key="id" data-id="{{item.id}}" bindtap="onPet" bindlongpress="onPetLong">
-          <view class="mp" wx:if="{{!item.archived}}" data-id="{{item.id}}" catchtap="onQuickAdd"><p-icon name="plus" color="#FAF6EF" size="{{24}}" /></view>
+          <view class="mp" wx:if="{{!item.archived}}" data-id="{{item.id}}" catchtap="onQuickAdd"><p-icon name="plus" color="{{onPrimary}}" size="{{24}}" /></view>
           <view class="pet-row">
             <view class="avatar {{item.av}}">
               <image wx:if="{{item.avatar}}" class="avatar-img pet-avatar-img" src="{{item.avatar}}" mode="aspectFit" />
@@ -134,7 +134,7 @@
   </view>
 
   <!-- 快捷记录 FAB -->
-  <p-fab bind:tap="openSheet"></p-fab>
+  <p-fab bind:tap="openSheet" color="{{onPrimary}}"></p-fab>
 
   <!-- 快捷记录九宫格弹层 -->
   <p-sheet show="{{showSheet}}" bind:close="closeSheet">
@@ -147,7 +147,7 @@
             <p-icon wx:else name="paw" color="{{item.paw}}" size="{{24}}" />
           </view>
           <text>{{item.name}}</text>
-          <p-icon wx:if="{{item.id === qaPetId}}" name="check" color="#3E362C" size="{{24}}" />
+          <p-icon wx:if="{{item.id === qaPetId}}" name="check" color="{{textColor}}" size="{{24}}" />
         </view>
       </view>
     </view>

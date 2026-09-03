@@ -6,8 +6,14 @@ const share = require('../../utils/share.js');
 const tracker = require('../../utils/tracker.js');
 const { guard } = require('../../utils/guard.js');
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     loading: true, // 首次加载中（paw-loading 全屏动效）
     // 我的资料（头像昵称 · 自主填写，对齐《账号与登录设计》）
@@ -39,9 +45,18 @@ Page({
         title: '关于',
         items: [
           { share: true, icon: 'heart', color: '#C77F9A', label: '推荐给朋友', sub: '分享小程序卡片给微信好友' },
+          { theme: true, icon: 'moon', color: '#5A9EA8', label: '系统主题', value: '' },
           { noIcon: true, label: '版本', value: 'v' + versionText() }
         ]
       }
+    ],
+    // 深浅切换（跟随系统 / 浅色 / 深色）：偏好与应用在 utils/theme.js
+    showTheme: false,
+    themePref: 'auto',
+    themeOptions: [
+      { value: 'auto', label: '跟随系统' },
+      { value: 'light', label: '浅色' },
+      { value: 'dark', label: '深色' }
     ]
   },
 
@@ -49,6 +64,8 @@ Page({
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
   },
   onShow() {
+    theme.attach(this);
+    this.refreshTheme();
     tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'mine' });
     Promise.allSettled([this.loadProfile(), this.loadMine()]).then(() => {
       if (this.data.loading) this.setData({ loading: false });
@@ -88,6 +105,27 @@ Page({
   onTap(e) {
     const url = e.currentTarget.dataset.url;
     if (url) wx.navigateTo({ url });
+  },
+
+  // ===== 深浅切换 =====
+  openTheme() {
+    this.refreshTheme();
+    this.setData({ showTheme: true });
+  },
+  closeTheme() {
+    this.setData({ showTheme: false });
+  },
+  refreshTheme() {
+    const pref = theme.getPref();
+    const hit = this.data.themeOptions.find((o) => o.value === pref);
+    this.setData({ themePref: pref, 'groups[2].items[1].value': hit ? hit.label : '' });
+  },
+  onThemePick(e) {
+    const value = e.currentTarget.dataset.value;
+    theme.setPref(value);
+    theme.attach(this); // 当前页立即生效，其余页面在各自 onShow 同步
+    this.refreshTheme();
+    this.closeTheme();
   },
 
   onShareAppMessage() {

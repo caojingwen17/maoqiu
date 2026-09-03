@@ -3,7 +3,7 @@
  * 所有类型记录统一集合 records（PRD §4.2）。写入经 schema 白名单校验。
  */
 
-const { db, _, COLLECTIONS, col, assertOwned, ensureCollections, removeWhere, getDoc } = require('./db.js');
+const { db, _, COLLECTIONS, col, assertOwned, ensureCollections, removeWhere, getDoc, getSettingsMerged } = require('./db.js');
 const { validateWrite } = require('../schema.js');
 const core = require('./reminderCore.js');
 const timeUtil = require('./timeUtil.js');
@@ -22,7 +22,7 @@ function recordTexts(clean) {
 const TYPES = [
   'weight', 'vaccine', 'deworm', 'medical', 'medication', 'surgery',
   'feed', 'water', 'snack', 'groom', 'poop', 'vomit', 'heat',
-  'expense', 'walk', 'milestone', 'custom', 'daily'
+  'expense', 'walk', 'milestone', 'custom', 'daily', 'litter'
 ];
 
 async function create(ctx) {
@@ -127,7 +127,8 @@ async function remove(ctx) {
 
 function memberName(family, openid) {
   const m = (family && family.members || []).find((x) => x.openid === openid);
-  return (m && m.nickname) || '';
+  // 显示名优先级：家庭内称呼 > 微信昵称（与 members 页/createdByName 回填一致）
+  return (m && ((m.familyNick || '').trim() || m.nickname)) || '';
 }
 
 /** 记录列表（宠物详情时间线 / 类型筛选，PRD §8） */
@@ -153,7 +154,7 @@ async function list(ctx) {
     .get();
   const rows = res.data || [];
   const items = rows.slice(0, pageSize);
-  await applyFreshNames(items);
+  await applyFreshNames(items, familyId);
   const hasMore = rows.length > pageSize;
   const last = items[items.length - 1];
   const nextCursor = hasMore && last && last.date != null
@@ -168,7 +169,7 @@ async function get(ctx) {
   const { _id } = ctx.payload || {};
   if (!_id) throw { code: 'INVALID', message: '缺少 _id' };
   const record = await assertOwned(COLLECTIONS.records, familyId, _id);
-  const jobs = [applyFreshNames([record])];
+  const jobs = [applyFreshNames([record], familyId)];
   if (record.petId) {
     jobs.push(getDoc(COLLECTIONS.pets, record.petId).then((p) => {
       if (p) record.petName = p.name || '';
@@ -182,18 +183,16 @@ async function get(ctx) {
  * 记录人显示名以 settings.familyNick（家庭内称呼）为最新准：
  * createdByName 只是写入时的快照，用户后补称呼或回填未跑时快照会停留在微信昵称，
  * 读取时统一覆盖，保证时间线/记录详情展示与「我的」资料一致。
+ * 称呼按当前家庭 familyId 关联（同一用户可能有多条 settings 文档，见 db.getSettingsMerged）。
  */
-async function applyFreshNames(records) {
+async function applyFreshNames(records, familyId) {
   const openids = Array.from(new Set(records.map((r) => r && r.createdBy).filter(Boolean)));
   if (!openids.length) return;
-  const res = await col(COLLECTIONS.settings)
-    .where({ _openid: _.in(openids) })
-    .field({ _openid: true, familyNick: true })
-    .get();
+  const byId = await getSettingsMerged(openids, familyId);
   const nickOf = {};
-  (res.data || []).forEach((s) => {
-    const v = String((s && s.familyNick) || '').trim();
-    if (v) nickOf[s._openid] = v;
+  Object.keys(byId).forEach((openid) => {
+    const v = String((byId[openid] && byId[openid].familyNick) || '').trim();
+    if (v) nickOf[openid] = v;
   });
   records.forEach((r) => {
     if (r && nickOf[r.createdBy]) r.createdByName = nickOf[r.createdBy];

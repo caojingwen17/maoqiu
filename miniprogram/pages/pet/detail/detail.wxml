@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="nav">
-    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="{{textColor}}" size="{{44}}" /></view>
   </view>
 
   <!-- 头卡（头像 + 名字 + 到家 N 天 + 目标 pill + 编辑入口，避让右上角胶囊） -->

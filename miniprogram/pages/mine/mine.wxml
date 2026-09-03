@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="large-title">我的</view>
 
@@ -23,6 +23,12 @@
             <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>
             <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
           </button>
+          <view wx:elif="{{it.theme}}" class="row press" bindtap="openTheme">
+            <view class="ticon" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
+            <view class="grow"><view class="t">{{it.label}}</view></view>
+            <text class="v" wx:if="{{it.value}}">{{it.value}}</text>
+            <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
+          </view>
           <view wx:else class="row press" data-url="{{it.url}}" bindtap="onTap">
             <view class="ticon" wx:if="{{!it.noIcon}}" style="background:{{it.color}}1A"><p-icon name="{{it.icon}}" color="{{it.color}}" size="{{40}}" /></view>
             <view class="grow"><view class="t">{{it.label}}</view><view class="s" wx:if="{{it.sub}}">{{it.sub}}</view></view>
@@ -58,6 +64,22 @@
       </view>
       <view class="btn btn-p" style="margin-top:31rpx" bindtap="saveProfile">保存</view>
       <view class="profile-cancel" bindtap="closeProfile">取消</view>
+    </view>
+  </p-sheet>
+
+  <!-- 深浅切换弹层 -->
+  <p-sheet show="{{showTheme}}" bind:close="closeTheme">
+    <view class="profile-body">
+      <view class="profile-title">系统主题</view>
+      <view class="s profile-sub">「跟随系统」与微信的深色设置保持一致；手动选择后不再随系统变化</view>
+      <view class="crd" style="padding:9rpx 35rpx;margin-top:26rpx">
+        <view class="frow" wx:for="{{themeOptions}}" wx:key="value" style="min-height:97rpx" data-value="{{item.value}}" bindtap="onThemePick">
+          <text class="k">{{item.label}}</text>
+          <view class="theme-ck {{themePref === item.value ? 'on' : ''}}">
+            <p-icon wx:if="{{themePref === item.value}}" name="check" color="#FFFFFF" size="{{22}}" />
+          </view>
+        </view>
+      </view>
     </view>
   </p-sheet>
 

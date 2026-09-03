@@ -2,14 +2,15 @@
  * settings.* —— 用户资料与预算，每用户一条
  */
 
-const { db, _, COLLECTIONS, col } = require('./db.js');
+const { db, _, COLLECTIONS, col, getSettingsMerged, isBlank } = require('./db.js');
 const { validateWrite } = require('../schema.js');
 const sec = require('./sec.js');
 
 async function get(ctx) {
-  const { openid } = ctx;
-  const got = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(1).get();
-  const s = (got.data && got.data[0]) || {};
+  const { openid, familyId } = ctx;
+  // 合并读取：历史并发产生的重复 settings 文档在此对齐，称呼以当前空间为准（见 db.getSettingsMerged）
+  const byId = await getSettingsMerged([openid], familyId);
+  const s = byId[openid] || {};
   const { _openid, ...rest } = s;
   return rest;
 }
@@ -36,11 +37,27 @@ async function update(ctx) {
   await sec.assertTextsSafe(openid, [clean.nickName, clean.familyNick], sec.SCENE.profile);
   if (clean.avatarUrl) await sec.assertCloudImageSafe(clean.avatarUrl);
 
-  const got = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(1).get();
-  if (got.data && got.data.length) {
-    await col(COLLECTIONS.settings).doc(got.data[0]._id).update({
-      data: Object.assign({}, clean, { updateAt: Date.now() })
-    });
+  const got = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(100).get();
+  const all = (got.data || []).sort((a, b) => (b.updateAt || 0) - (a.updateAt || 0)); // 新的在前
+  if (all.length) {
+    // 主文档锚定当前空间：familyId 匹配的优先（称呼等空间字段属于该空间），否则最新
+    const hit = all.findIndex((s) => s.familyId && s.familyId === familyId);
+    const head = all[hit > -1 ? hit : 0];
+    const rest = all.filter((_, i) => i !== (hit > -1 ? hit : 0));
+    const patch = Object.assign({}, clean, { updateAt: Date.now() });
+    // 自愈去重：历史并发产生的重复文档，把其独有的非空字段并回主文档后删除
+    //（clean 里显式提交的字段优先，不会被旧文档覆盖，支持用户主动清空）
+    for (const s of rest) {
+      for (const k of Object.keys(s)) {
+        if (k === '_id' || k === '_openid' || k === 'updateAt') continue;
+        if (patch[k] === undefined && isBlank(head[k]) && !isBlank(s[k])) patch[k] = s[k];
+      }
+    }
+    await col(COLLECTIONS.settings).doc(head._id).update({ data: patch });
+    for (const s of rest) {
+      await col(COLLECTIONS.settings).doc(s._id).remove().catch(() => null);
+    }
+    if (rest.length) console.warn('[settings.update] 已收敛 %d 条重复 settings 文档: %s', rest.length, openid);
   } else {
     await col(COLLECTIONS.settings).add({
       data: Object.assign({ _openid: openid }, clean)
@@ -57,20 +74,26 @@ async function update(ctx) {
 
 /**
  * 把个人资料写回 families.members[] 中自己的条目，并回填历史记录的家庭内称呼。
- * 显示名优先级：家庭内称呼 > 微信昵称 > 原快照昵称。
+ * 快照里 nickname 固定存微信昵称、familyNick 单独存家庭内称呼，
+ * 「家庭成员」页统一展示「家庭内称呼 + 昵称」；记录显示名优先级：家庭内称呼 > 微信昵称。
  */
 async function syncMemberSnapshot(ctx, profile) {
   const { openid, familyId, family } = ctx;
   if (!family || !family._id || !Array.isArray(family.members)) return;
 
-  const displayName = ((profile.familyNick || '') + '').trim() || ((profile.nickName || '') + '').trim();
+  const self = family.members.find((m) => m.openid === openid) || {};
+  // 未提交的字段沿用自己旧快照，保证显示名回填时优先级正确
+  const nick = profile.nickName !== undefined ? ((profile.nickName || '') + '').trim() : ((self.nickname || '') + '').trim();
+  const fNick = profile.familyNick !== undefined ? ((profile.familyNick || '') + '').trim() : ((self.familyNick || '') + '').trim();
+  const displayName = fNick || nick;
   let changed = false;
   const members = family.members.map((m) => {
     if (m.openid !== openid) return m;
     const next = Object.assign({}, m);
-    if (displayName) next.nickname = displayName;
+    if (profile.nickName !== undefined) next.nickname = nick;
+    if (profile.familyNick !== undefined) next.familyNick = fNick;
     if (profile.avatarUrl !== undefined) next.avatar = profile.avatarUrl;
-    if (next.nickname !== m.nickname || next.avatar !== m.avatar) changed = true;
+    if (next.nickname !== m.nickname || next.familyNick !== m.familyNick || next.avatar !== m.avatar) changed = true;
     return next;
   });
   if (!changed) return;

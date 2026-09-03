@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="nav">
-    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="{{textColor}}" size="{{44}}" /></view>
     <view class="nt">喂食量计算</view>
   </view>
 

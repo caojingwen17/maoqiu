@@ -38,7 +38,7 @@
   height: 12rpx;
   border-radius: 50%;
   background: var(--primary);
-  border: 3rpx solid #fff;
+  border: 3rpx solid var(--card);
   transform: translate(-50%, -50%);
   box-sizing: border-box;
 }
@@ -201,6 +201,15 @@
 }
 .bars-item.cur {
   background: var(--primary);
+}
+/* 深色下 primary 翻转为浅色系：弱色柱提亮成浅色，否则在深色卡片上不可见（选中柱本就是浅米色） */
+@media (prefers-color-scheme: dark) {
+  .bars-item {
+    background: rgba(234, 228, 216, 0.30);
+  }
+}
+.theme-dark .bars-item {
+  background: rgba(234, 228, 216, 0.30);
 }
 
 .report-ic {

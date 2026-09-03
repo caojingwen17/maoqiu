@@ -1,16 +1,24 @@
 {
   "light": {
-    "navigationBarBackgroundColor": "#FAF6EF",
-    "navigationBarTextStyle": "black",
-    "backgroundColor": "#FAF6EF",
-    "backgroundColorTop": "#FAF6EF",
-    "backgroundColorBottom": "#FAF6EF"
+    "navBgColor": "#FAF6EF",
+    "navTxtStyle": "black",
+    "bgColor": "#FAF6EF",
+    "bgColorTop": "#FAF6EF",
+    "bgColorBottom": "#FAF6EF",
+    "tabColor": "#B9AE9E",
+    "tabSelectedColor": "#C08A4E",
+    "tabBg": "#FAF6EF",
+    "tabBorder": "black"
   },
   "dark": {
-    "navigationBarBackgroundColor": "#0E0E0D",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0E0E0D",
-    "backgroundColorTop": "#0E0E0D",
-    "backgroundColorBottom": "#0E0E0D"
+    "navBgColor": "#0E0E0D",
+    "navTxtStyle": "white",
+    "bgColor": "#0E0E0D",
+    "bgColorTop": "#0E0E0D",
+    "bgColorBottom": "#0E0E0D",
+    "tabColor": "#6E6E68",
+    "tabSelectedColor": "#D3A266",
+    "tabBg": "#1C1C1A",
+    "tabBorder": "black"
   }
 }

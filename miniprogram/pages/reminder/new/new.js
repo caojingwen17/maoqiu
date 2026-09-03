@@ -15,8 +15,14 @@ const TASK_CATEGORY = {
   '称体重': 'weight', '驱虫': 'deworm', '复查': 'checkup'
 };
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     pets: [],
     taskOpts: TASK_OPTS,
@@ -36,6 +42,9 @@ Page({
     editingId: ''
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad(options) {
     const today = fmtDate(Date.now());
     this.setData({

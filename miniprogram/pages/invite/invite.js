@@ -4,8 +4,14 @@ const { guard } = require('../../utils/guard.js');
 const familyService = require('../../services/family.js');
 const subscription = require('../../services/subscription.js');
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     familyId: '',
     full: false,
@@ -16,6 +22,9 @@ Page({
     myPets: []
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad(options) {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
     const familyId = options && options.familyId;

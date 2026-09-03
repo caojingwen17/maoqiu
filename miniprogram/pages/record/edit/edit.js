@@ -13,8 +13,14 @@ const { SPECIES, VACCINES } = require('../../../utils/dict.js');
 /** 日常视频大小上限（云存储与内容安全考虑，单个 ≤ 10MB） */
 const VIDEO_MAX_BYTES = 10 * 1024 * 1024;
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     type: 'weight',
     name: '体重',
@@ -41,6 +47,9 @@ Page({
     invSel: -1 // -1 = 不扣减（默认），>=0 为 invOptions 下标
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad(options) {
     const today = fmtDate(Date.now());
     this.setData({

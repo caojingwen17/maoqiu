@@ -2,8 +2,14 @@ const app = getApp();
 const { FOODS, FOOD_LEVELS } = require('../../../utils/dict.js');
 const tracker = require('../../../utils/tracker.js');
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     levels: [
       { key: 'toxic', name: '剧毒', color: '#D24B42' },
@@ -16,6 +22,9 @@ Page({
     items: FOODS.map((f) => ({ name: f[0], level: f[1], levelName: FOOD_LEVELS[f[1]].name, color: FOOD_LEVELS[f[1]].color }))
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad() {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
   },

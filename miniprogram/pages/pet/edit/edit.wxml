@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="nav">
-    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="{{textColor}}" size="{{44}}" /></view>
     <view class="nt">{{title}}</view>
   </view>
 
@@ -18,13 +18,13 @@
       <view class="grow head-fields">
         <view class="frow head-field">
           <text class="k">名字</text>
-          <input class="head-input" value="{{name}}" placeholder="给毛孩子起个名" bindinput="onName" />
+          <input class="head-input" value="{{name}}" placeholder="给毛孩子起个名" placeholder-class="input-ph" bindinput="onName" />
         </view>
         <view class="hl" style="margin:4rpx 0 4rpx 106rpx"></view>
         <picker class="head-picker" mode="date" value="{{birthDate || '2000-01-01'}}" bindchange="onBirth">
           <view class="frow head-field">
             <text class="k">生日</text>
-            <text class="val b">{{birthDate || '未填写'}}</text>
+            <text class="val {{birthDate ? 'b' : 'ph'}}">{{birthDate || '请选择'}}</text>
           </view>
         </picker>
       </view>
@@ -41,13 +41,13 @@
       <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
       <view class="frow" style="min-height:88rpx">
         <text class="k">{{form.breedLabel}}</text>
-        <input class="head-input" value="{{breed}}" placeholder="{{form.breed}}" placeholder-class="breed-ph" bindinput="onBreed" />
+        <input class="head-input" value="{{breed}}" placeholder="{{form.breed}}" placeholder-class="input-ph" bindinput="onBreed" />
       </view>
       <view class="hl-full" style="margin:4rpx -35rpx 4rpx 0"></view>
       <view class="field-block">
         <view class="field-label">{{form.identity}}</view>
         <view class="chips-wrap">
-          <view class="chip {{identityIdx === index ? 'on' : ''}}" wx:for="{{form.identityOpts}}" wx:key="*this" data-index="{{index}}" bindtap="onIdentity">{{item}}</view>
+          <view class="chip {{identityIdx === index ? 'on' : ''}}" wx:for="{{identityChips}}" wx:key="index" data-index="{{index}}" bindtap="onIdentity"><view wx:if="{{item.sym}}" class="g-sym {{item.cls}}"></view>{{item.label}}</view>
         </view>
       </view>
     </view>
@@ -59,7 +59,7 @@
         <view class="chips-wrap">
           <view class="chip {{item.on ? 'on' : ''}}" wx:for="{{traitItems}}" wx:key="name" data-trait="{{item.name}}" bindtap="onTrait">{{item.name}}</view>
         </view>
-        <input class="trait-input" value="{{customTrait}}" placeholder="也可以自己填写，如：爱撒娇" maxlength="8" bindinput="onCustomTrait" />
+        <input class="trait-input" value="{{customTrait}}" placeholder="也可以自己填写，如：爱撒娇" placeholder-class="input-ph" maxlength="8" bindinput="onCustomTrait" />
       </view>
     </view>
 
@@ -68,7 +68,7 @@
       <picker mode="date" value="{{adoptDate || '2000-01-01'}}" bindchange="onAdopt">
         <view class="frow" style="min-height:88rpx">
           <text class="k">到家日期</text>
-        <text class="val b">{{adoptDate || '未填写'}}</text>
+        <text class="val {{adoptDate ? 'b' : 'ph'}}">{{adoptDate || '请选择'}}</text>
           <view class="chev"><p-icon name="chevR" color="#B9AE9E" size="{{31}}" /></view>
         </view>
       </picker>

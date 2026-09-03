@@ -52,8 +52,14 @@ const AGE_RULES = {
   }
 };
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     pets: [],
     active: 0,
@@ -62,6 +68,9 @@ Page({
     result: { src: '', real: '请选择宠物', human: '—', note: '' }
   },
 
+  onShow() {
+    theme.attach(this);
+  },
   onLoad() {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
     this.loadPets();

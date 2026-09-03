@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page {{themeClass}}">
   <view class="statusbar" style="height:{{sb}}px"></view>
   <view class="nav">
-    <view class="back" bindtap="goBack"><p-icon name="chevL" color="#2C2620" size="{{44}}" /></view>
+    <view class="back" bindtap="goBack"><p-icon name="chevL" color="{{textColor}}" size="{{44}}" /></view>
     <view class="nt">账单</view>
   </view>
 
@@ -42,7 +42,7 @@
     </view>
   </view>
 
-  <p-fab bind:tap="onAdd"></p-fab>
+  <p-fab bind:tap="onAdd" color="{{onPrimary}}"></p-fab>
 
   <!-- 月度预算设置弹窗（统一 p-dialog 输入模式） -->
   <p-dialog show="{{showBudget}}" title="月度预算" content="设置后，这里会显示本月预算的使用进度。" input input-type="digit" input-value="{{budgetInput}}" input-placeholder="预算金额，如 2000" confirm-text="保存" bind:input="onBudgetInput" bind:confirm="saveBudget" bind:cancel="closeBudget" />

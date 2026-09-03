@@ -21,8 +21,14 @@ function pickAv(id) {
   return AV[h % AV.length];
 }
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     petId: '',
     pet: { name: '', gender: 'female', paw: '#B0803B', av: 'a1' },
@@ -47,6 +53,15 @@ Page({
     diaryError: false,
   },
 
+  onShow() {
+    theme.attach(this);
+    // 编辑页保存后 navigateBack 只触发 onShow：非首次显示时刷新宠物资料/头像
+    if (this._ready && this.data.petId) this.loadPet(this.data.petId);
+  },
+  onReady() {
+    // 首屏渲染完成标记：其前的 onShow 属于首次进入（onLoad 已拉取），不重复请求
+    this._ready = true;
+  },
   onLoad(options) {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
     const id = options && options.id;

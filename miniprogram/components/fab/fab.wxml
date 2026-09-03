@@ -1,1 +1,1 @@
-<view class="fab"><p-icon name="{{icon}}" color="#FAF6EF" size="{{48}}" /></view>
+<view class="fab"><p-icon name="{{icon}}" color="{{color}}" size="{{48}}" /></view>

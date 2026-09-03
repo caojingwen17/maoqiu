@@ -20,14 +20,14 @@ const SPECIES = [
  * identity: 该物种的「身份字段」语义；breedLabel: 品种/种类标签；needNeutered: 是否需要绝育字段
  */
 const SPECIES_FORM = {
-  猫: { breed: '美国短毛猫', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
-  狗: { breed: '柯基', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
-  兔: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
-  仓鼠: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
-  鸟: { breed: '选填', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
-  鱼: { breed: '品种（如：斗鱼/孔雀鱼）', breedLabel: '鱼缸/名称', identity: '数量', identityOpts: ['1 条', '2–10 条', '10 条以上'], needNeutered: false, hint: '群养鱼可填写鱼缸名称，数量与入缸日期更有用' },
-  爬宠: { breed: '种类（如：豹纹守宫）', breedLabel: '种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '可在保存后补充饲养箱、适温和湿度信息' },
-  其他: { breed: '品种或种类（选填）', breedLabel: '品种/种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '先建立档案，后续记录可使用日常和自定义类型' }
+  猫: { breed: '如：美国短毛猫', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  狗: { breed: '如：柯基', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  兔: { breed: '选填，如：垂耳兔', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: true, neuteredOpts: ['已绝育', '未绝育', '不确定'], hint: '生日与到家日期用于自动计算年龄和「到家 N 天」' },
+  仓鼠: { breed: '选填，如：金丝熊', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
+  鸟: { breed: '选填，如：玄凤鹦鹉', breedLabel: '品种', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '不知道生日也没关系，可以只记录到家日期' },
+  鱼: { breed: '如：客厅小鱼缸', breedLabel: '鱼缸/名称', identity: '数量', identityOpts: ['1 条', '2–10 条', '10 条以上'], needNeutered: false, hint: '群养鱼可填写鱼缸名称，数量与入缸日期更有用' },
+  爬宠: { breed: '如：豹纹守宫', breedLabel: '种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '可在保存后补充饲养箱、适温和湿度信息' },
+  其他: { breed: '选填，如：龙猫', breedLabel: '品种/种类', identity: '性别', identityOpts: ['♀ 雌性', '♂ 雄性', '不确定'], needNeutered: false, hint: '先建立档案，后续记录可使用日常和自定义类型' }
 };
 
 /** 猫狗品种字典（后续可扩展） */

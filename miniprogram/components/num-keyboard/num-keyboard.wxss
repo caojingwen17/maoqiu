@@ -42,7 +42,7 @@
   height: 100rpx;
   border-radius: 26rpx;
   background: var(--primary);
-  color: #FAF6EF;
+  color: var(--on-primary);
   display: flex;
   align-items: center;
   justify-content: center;

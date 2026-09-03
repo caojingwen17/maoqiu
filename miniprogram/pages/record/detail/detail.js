@@ -5,8 +5,14 @@ const recordService = require('../../../services/record.js');
 const { guard } = require('../../../utils/guard.js');
 const subscription = require('../../../services/subscription.js');
 
+const theme = require('../../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     _id: '',
     rec: {},
@@ -14,6 +20,14 @@ Page({
     showDel: false
   },
 
+  onShow() {
+    theme.attach(this);
+    // 编辑保存后返回时刷新记录内容（onLoad 只拉一次）
+    if (this._ready && this.data._id) this.loadRecord(this.data._id);
+  },
+  onReady() {
+    this._ready = true;
+  },
   onLoad(options) {
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
     const id = options && options.id;

@@ -76,6 +76,20 @@ exports.main = async (event, context) => {
     }
   }
 
+  // 控制台诊断入口（只读）：无 OPENID 且显式带 familyId 时直接调 family.resolve，
+  // 用于绕过客户端验证线上成员资料叠加逻辑（settings 实时关联）是否生效
+  if (action === 'family.resolve' && !openid && payload && payload.familyId) {
+    try {
+      console.warn('[pawlog][family.resolve.console] 控制台诊断调用', payload.familyId);
+      const fam = await dbUtil.getDoc(dbUtil.COLLECTIONS.families, payload.familyId);
+      if (!fam || fam.dissolved) return { code: 'NOT_FOUND', message: '家庭空间不存在' };
+      return { code: 0, data: await family.resolve({ openid: '', familyId: payload.familyId, family: fam, payload: {} }) };
+    } catch (e) {
+      console.error('[pawlog][family.resolve.console]', e);
+      return { code: e.code || 500, message: e.message || '诊断调用失败' };
+    }
+  }
+
   try {
     let ctx;
     if (action === 'family.join') {

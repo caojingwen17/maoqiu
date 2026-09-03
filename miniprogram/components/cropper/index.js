@@ -120,13 +120,33 @@ Component({
     onConfirm() {
       if (this._busy || !this.data.ready) return;
       this._busy = true;
+      // 以最终渲染矩形实测裁剪区域：不依赖 movable-view 的缩放锚点/坐标取整/边界回弹等
+      // 内部实现，保证“导出图 = 取景框所见”。测量失败时回退到按状态推导（_confirmByState）
+      this.createSelectorQuery()
+        .select('.crop-view')
+        .boundingClientRect((rect) => {
+          if (!rect || !rect.width || !this._natW) {
+            this._confirmByState();
+            return;
+          }
+          const k = rect.width / this._natW; // 源图像素 → 屏幕 px 的当前倍率（实测）
+          const sw = this._S / k;
+          // 取景框对应的源图区域（clamp 防浮点越界）
+          const sx = Math.max(0, Math.min((this._cropL - rect.left) / k, this._natW - sw));
+          const sy = Math.max(0, Math.min((this._cropT - rect.top) / k, this._natH - sw));
+          const out = Math.min(OUT_MAX, Math.round(sw));
+          this.setData({ out }, () => this._draw(sx, sy, sw, out));
+        })
+        .exec();
+    },
+
+    /** 兜底：按 movable-view 状态推导图片左上角（假设其以自身中心缩放） */
+    _confirmByState() {
       const c = this._scale || 1;
       const k = this._fit * c; // 源图 → 屏幕 px 的当前倍率
-      // movable-view 以自身中心缩放，图片左上角屏幕坐标需补偿放大偏移
       const imgL = this._areaL + this._x + (this._imgW - this._imgW * c) / 2;
       const imgT = this._areaT + this._y + (this._imgH - this._imgH * c) / 2;
       const sw = this._S / k;
-      // 取景框对应的源图区域（clamp 防浮点越界）
       const sx = Math.max(0, Math.min((this._cropL - imgL) / k, this._natW - sw));
       const sy = Math.max(0, Math.min((this._cropT - imgT) / k, this._natH - sw));
       const out = Math.min(OUT_MAX, Math.round(sw));

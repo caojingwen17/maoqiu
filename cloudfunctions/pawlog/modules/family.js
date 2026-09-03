@@ -13,27 +13,14 @@ const FAMILY_MAX_MEMBERS = CONFIG.FAMILY_MAX_MEMBERS;
 /** 查询当前家庭空间全貌 */
 async function resolve(ctx) {
   const { familyId, family } = ctx;
-  const members = (family.members || []).slice();
-  // 顺手刷新自己的成员快照：settings 里的昵称/头像改动后同步进家庭（其他成员保持入空间时的快照）
-  try {
-    const sGot = await col(COLLECTIONS.settings).where({ _openid: ctx.openid }).limit(1).get();
-    const s = sGot.data && sGot.data[0];
-    const idx = members.findIndex((m) => m.openid === ctx.openid);
-    if (s && idx > -1) {
-      const wantNick = s.nickName || members[idx].nickname || '';
-      const wantAvatar = s.avatarUrl || members[idx].avatar || '';
-      if (wantNick !== (members[idx].nickname || '') || wantAvatar !== (members[idx].avatar || '')) {
-        members[idx] = Object.assign({}, members[idx], { nickname: wantNick, avatar: wantAvatar });
-        await col(COLLECTIONS.families).doc(familyId).update({ data: { members } });
-      }
-    }
-  } catch (e) { /* 快照刷新失败不阻塞查询 */ }
+  // 成员昵称/称呼直接读 families.members 快照；快照的 familyNick 由
+  // settings.update（保存资料）与 family.join（加入）两个写入口负责同步
   return {
     familyId,
     openid: ctx.openid,
     name: family.name,
     ownerOpenid: family.ownerOpenid,
-    members,
+    members: family.members || [],
     createAt: family.createAt
   };
 }
@@ -68,13 +55,14 @@ async function join(ctx) {
   if (!chk.ok) throw { code: chk.code, message: chk.message };
   const bringPetIds = chk.petIds;
 
-  const member = { openid, nickname: ctx.payload && ctx.payload.nickname || '', avatar: '', role: 'member', joinedAt: Date.now() };
-  // 入空间快照：取用户全局资料（settings.nickName/avatarUrl），供成员列表与记录归属展示
+  const member = { openid, nickname: ctx.payload && ctx.payload.nickname || '', familyNick: '', avatar: '', role: 'member', joinedAt: Date.now() };
+  // 入空间快照：取用户全局资料（settings.nickName/avatarUrl/familyNick），供成员列表与记录归属展示
   try {
     const sGot = await col(COLLECTIONS.settings).where({ _openid: openid }).limit(1).get();
     const s = sGot.data && sGot.data[0];
     if (s) {
       if (!member.nickname && s.nickName) member.nickname = s.nickName;
+      if (s.familyNick) member.familyNick = (s.familyNick + '').trim();
       if (s.avatarUrl) member.avatar = s.avatarUrl;
     }
   } catch (e) { /* 快照失败不阻塞加入 */ }

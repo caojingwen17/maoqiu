@@ -43,6 +43,23 @@
   background: var(--fill);
 }
 
+/* 深浅切换选项的选中圆标 */
+.theme-ck {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--t3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+}
+.theme-ck.on {
+  background: var(--pop);
+  border-color: var(--pop);
+}
+
 /* 资料编辑弹层 */
 .profile-body { padding: 0 35rpx 18rpx; }
 .profile-title { font-size: 37rpx; font-weight: 700; text-align: center; }

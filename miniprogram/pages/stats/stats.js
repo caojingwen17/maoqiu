@@ -26,8 +26,14 @@ function pickAv(id) {
   return AV[h % AV.length];
 }
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     loading: false, // 首次加载中（paw-loading 全屏动效）
     segItems: ['本月', '近半年', '今年'],
@@ -66,6 +72,7 @@ Page({
   },
 
   onShow() {
+    theme.attach(this);
     tracker.track(tracker.EVENTS.TAB_SHOW, { tab: 'stats' });
     // 首次进入时 onLoad 已触发加载，跳过避免重复请求
     if (this._firstShow) {

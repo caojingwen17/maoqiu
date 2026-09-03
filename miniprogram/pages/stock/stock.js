@@ -13,8 +13,14 @@ const CAT_STYLE = {
 };
 const DEFAULT_STYLE = { icon: 'box', color: '#4E8A68' };
 
+const theme = require('../../utils/theme.js');
+
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     items: [],
     loading: true, // 首次加载中（paw-loading 全屏动效）
@@ -29,6 +35,7 @@ Page({
   },
 
   onShow() {
+    theme.attach(this);
     this.loadList();
   },
 

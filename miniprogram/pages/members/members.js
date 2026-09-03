@@ -2,11 +2,16 @@ const app = getApp();
 const { pickAv } = require('../../utils/avatar.js');
 const { fmtDateCn } = require('../../utils/date.js');
 const familyService = require('../../services/family.js');
-const userService = require('../../services/user.js');
 const { guard } = require('../../utils/guard.js');
+
+const theme = require('../../utils/theme.js');
 
 Page({
   data: {
+    // 主题初始值：首帧即正确，避免跳转闪浅色（onShow 里 attach 会再校正）
+    themeClass: theme.rootClass(),
+    onPrimary: theme.onPrimaryHex(),
+    textColor: theme.textHex(),
     sb: 20,
     loading: true, // 首次加载中（paw-loading 全屏动效）
     family: { name: '我的档案袋', sub: '共 0 位成员' },
@@ -26,23 +31,25 @@ Page({
     this.setData({ sb: app.globalData.statusBarHeight || 20 });
   },
   onShow() {
+    theme.attach(this);
     this.loadData();
   },
 
   async loadData() {
     try {
-      const [f, me] = await Promise.all([familyService.resolve(), userService.getProfile()]);
-      const familyNick = (me && me.familyNick) || '';
+      const f = await familyService.resolve();
       const members = (f.members || []).map((m) => {
         const c = pickAv(m.openid);
-        const isSelf = (me && me._openid === m.openid) || m.openid === f.openid;
+        const name = displayName(m);
         return {
           openid: m.openid,
-          name: displayName(m, familyNick, isSelf),
+          name,
+          // 填了家庭内称呼时，副标题带出微信昵称，统一「称呼 + 昵称」展示
+          joined: (name !== ((m.nickname || '') + '').trim() && (m.nickname || '').trim()
+            ? (m.nickname || '').trim() + ' · ' : '') + fmtDateCn(m.joinedAt) + ' 加入',
           avatar: m.avatar || '',
           av: c.av,
           paw: c.paw,
-          joined: fmtDateCn(m.joinedAt) + ' 加入',
           owner: (m.openid === f.ownerOpenid) || m.role === 'owner'
         };
       });
@@ -135,8 +142,7 @@ Page({
   })
 });
 
-// 显示名优先级：自己的家庭内称呼 > 成员快照昵称 > 「家庭成员」
-function displayName(m, familyNick, isSelf) {
-  if (isSelf && familyNick) return familyNick;
-  return m.nickname || '家庭成员';
+// 显示名：家庭内称呼 > 微信昵称 > 「家庭成员」（快照里 familyNick/nickname 分字段存储）
+function displayName(m) {
+  return ((m.familyNick || '') + '').trim() || ((m.nickname || '') + '').trim() || '家庭成员';
 }

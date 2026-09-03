@@ -1,4 +1,4 @@
-const { db, _, COLLECTIONS, col, ensureCollections, getDoc } = require('./db.js');
+const { db, _, COLLECTIONS, col, ensureCollections, getDoc, getSettingsMerged } = require('./db.js');
 const { assertOwned } = require('./db.js');
 const provider = require('./diaryProvider.js');
 const { PROMPT_VERSION } = require('./diaryPrompt.js');
@@ -28,10 +28,11 @@ async function eventsFor(familyId, petId, key, family, pet) {
   const openids = members.map((m) => m && m.openid).filter(Boolean);
   const nickMap = {};
   if (openids.length) {
-    const got = await col(COLLECTIONS.settings).where({ _openid: _.in(openids) }).limit(100).get();
-    (got.data || []).forEach((s) => {
-      const v = String((s && s.familyNick) || '').trim();
-      if (v && s._openid) nickMap[s._openid] = v;
+    // 合并视图：称呼以当前家庭 familyId 关联（同一用户多条 settings 文档时见 db.getSettingsMerged）
+    const byId = await getSettingsMerged(openids, familyId);
+    Object.keys(byId).forEach((openid) => {
+      const v = String((byId[openid] && byId[openid].familyNick) || '').trim();
+      if (v) nickMap[openid] = v;
     });
   }
   const titleOf = (record) => normalizeFamilyTitle(nickMap[record.createdBy]);
